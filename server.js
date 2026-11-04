@@ -39,7 +39,7 @@ function getLocalIp() {
 const LOCAL_IP = getLocalIp();
 
 // ==========================================
-// API UPLOAD CLOUD MENGGUNAKAN IMGBB MURNI
+// API UPLOAD KE HOSTING AGENTIC AI CENTER
 // ==========================================
 app.post('/api/upload', async (req, res) => {
     try {
@@ -50,37 +50,34 @@ app.post('/api/upload', async (req, res) => {
         const buffer = Buffer.from(base64Data, 'base64');
         const filename = `Photobooth_${Date.now()}_${Math.floor(Math.random() * 10000)}.jpg`;
         
-        // 1. Simpan selalu ke folder lokal komputer (Backup Utama di Hardisk)
+        // 1. Simpan di folder lokal komputer Photobooth sebagai cadangan fisik
         const resultsDir = path.join(__dirname, 'assets', 'results');
         if (!fs.existsSync(resultsDir)) fs.mkdirSync(resultsDir, { recursive: true });
-        const localFilePath = path.join(resultsDir, filename);
-        fs.writeFileSync(localFilePath, buffer);
+        fs.writeFileSync(path.join(resultsDir, filename), buffer);
         
-        // Default URL menggunakan jaringan lokal (WiFi) agar QR Code tetap terbentuk jika ImgBB gagal
+        // Fallback URL menggunakan jaringan lokal (WiFi)
         let finalUrl = `http://${LOCAL_IP}:3000/assets/results/${filename}`; 
         
-        // 2. Upload ke ImgBB menggunakan API Key yang baru Anda berikan
-        const IMGBB_API_KEY = "f88596463695b38c9334014dd973e06b"; 
+        // 2. Upload ke API Hosting Agentic AI Center
+        const HOSTING_API_URL = "https://api.agenticaicenter.id/upload.php"; 
         
         try {
-            const params = new URLSearchParams();
-            params.append('key', IMGBB_API_KEY);
-            params.append('image', base64Data);
-
-            const imgbbRes = await fetch('https://api.imgbb.com/1/upload', {
+            const apiRes = await fetch(HOSTING_API_URL, {
                 method: 'POST',
-                body: params
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ image: imageBase64 }) 
             });
-            const imgbbData = await imgbbRes.json();
             
-            if (imgbbData.success) {
-                finalUrl = imgbbData.data.url; 
-                console.log(`[ImgBB] Sukses upload, QR Code siap: ${finalUrl}`);
+            const apiData = await apiRes.json();
+            
+            if (apiData.success) {
+                finalUrl = apiData.url; 
+                console.log(`[API Agentic] Sukses upload, QR Code ber-HTTPS siap: ${finalUrl}`);
             } else {
-                console.log(`[ImgBB] Gagal dari server, bypass otomatis ke jaringan lokal`);
+                console.log(`[API Agentic] Server menolak: ${apiData.message}, bypass ke IP lokal`);
             }
         } catch (err) {
-            console.error(`[ImgBB] Gagal koneksi: bypass ke lokal - ${err.message}`);
+            console.error(`[API Agentic] Gagal koneksi: bypass ke lokal - ${err.message}`);
         }
 
         res.json({ success: true, url: finalUrl });
@@ -204,5 +201,5 @@ app.use('/assets', express.static(path.join(__dirname, 'assets')));
 
 const PORT = 3000;
 app.listen(PORT, () => { 
-    console.log(`🚀 Server ImgBB aktif di http://${LOCAL_IP}:${PORT}`); 
+    console.log(`🚀 Server berjalan stabil di http://${LOCAL_IP}:${PORT}`); 
 });
