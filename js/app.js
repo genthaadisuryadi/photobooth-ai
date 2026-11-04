@@ -28,6 +28,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 });
 
+// ==========================================
+// PENGAMBILAN DATA (MURNI DARI API HOSTING)
+// ==========================================
 async function loadSettings() {
     try {
         const response = await fetch(API_URLS.settings);
@@ -38,114 +41,15 @@ async function loadSettings() {
     } catch (error) { console.error("Gagal load settings:", error); }
 }
 
-// ==========================================
-// DATA HARDCODE LENGKAP (NUSANTARA)
-// ==========================================
-// PENTING: Path gambar diubah menjadi relatif dari root domain (/)
-const localNusantaraData = {
-    "boro_siang": {
-        name: "Borobudur (Siang)",
-        description: "Latar kemegahan Candi Borobudur di siang hari yang cerah.",
-        prompt_template: "Professional photo background replacement. Replace ONLY the background with Candi Borobudur at Siang. The subject — face, body, clothing, pose, and all — must remain 100% identical to the original photo. Do not regenerate, repaint, retouch, or alter the subject in any way. Wardrobe and background edit only; do not touch the face. Identity lock is the absolute highest priority: keep the same people, same person count, same perceived gender per person, same face identity, skin tone family, expression, pose, posture, head angle, gaze, hand position, body silhouette, framing, camera angle, and subject scale. Preserve the original face pixel area exactly as captured. Do not beautify, age-shift, swap faces, smooth skin into a different person, enhance features, or change eye, nose, mouth, cheek, jaw shape, or facial proportions in any way. Keep wardrobe, hairstyle, and all accessories completely unchanged — same color, same cut, same fit. If anyone wears a hijab, headscarf, veil, or religious head covering, never remove it or expose hair; keep it exactly as-is. Only the background behind the subject changes. Match perspective, light direction, and shadows so the subject feels naturally placed at the scene. Bright midday sunlight, clear blue sky, sharp natural shadows, vivid colors. High quality realistic photograph. No extra people, duplicate faces, anatomy artifacts, text, or watermark. Final output aspect ratio 16:10 (landscape widescreen).",
-        cover: "/assets/Foto Nusantara/Borobudur_Siang.png"
-    },
-    "boro_sore": {
-        name: "Borobudur (Sore)",
-        description: "Latar Candi Borobudur dengan cahaya senja keemasan.",
-        prompt_template: "Professional photo background replacement. Replace ONLY the background with Candi Borobudur at Sore. The subject — face, body, clothing, pose, and all — must remain 100% identical to the original photo. Do not regenerate, repaint, retouch, or alter the subject in any way. Wardrobe and background edit only; do not touch the face. Identity lock is the absolute highest priority: keep the same people, same person count, same perceived gender per person, same face identity, skin tone family, expression, pose, posture, head angle, gaze, hand position, body silhouette, framing, camera angle, and subject scale. Preserve the original face pixel area exactly as captured. Do not beautify, age-shift, swap faces, smooth skin into a different person, enhance features, or change eye, nose, mouth, cheek, jaw shape, or facial proportions in any way. Keep wardrobe, hairstyle, and all accessories completely unchanged — same color, same cut, same fit. If anyone wears a hijab, headscarf, veil, or religious head covering, never remove it or expose hair; keep it exactly as-is. Only the background behind the subject changes. Match perspective, light direction, and shadows so the subject feels naturally placed at the scene. Warm golden-hour light, long soft shadows, rich amber and orange sky tones, cinematic sunset atmosphere. High quality realistic photograph. No extra people, duplicate faces, anatomy artifacts, text, or watermark. Final output aspect ratio 16:10 (landscape widescreen).",
-        cover: "/assets/Foto Nusantara/Borobudur_sore.png"
-    },
-    "boro_malam": {
-        name: "Borobudur (Malam)",
-        description: "Suasana magis Candi Borobudur di malam hari.",
-        prompt_template: "Professional photo background replacement. Replace ONLY the background with Candi Borobudur at Malam. The subject — face, body, clothing, pose, and all — must remain 100% identical to the original photo. Do not regenerate, repaint, retouch, or alter the subject in any way. Wardrobe and background edit only; do not touch the face. Identity lock is the absolute highest priority: keep the same people, same person count, same perceived gender per person, same face identity, skin tone family, expression, pose, posture, head angle, gaze, hand position, body silhouette, framing, camera angle, and subject scale. Preserve the original face pixel area exactly as captured. Do not beautify, age-shift, swap faces, smooth skin into a different person, enhance features, or change eye, nose, mouth, cheek, jaw shape, or facial proportions in any way. Keep wardrobe, hairstyle, and all accessories completely unchanged — same color, same cut, same fit. If anyone wears a hijab, headscarf, veil, or religious head covering, never remove it or expose hair; keep it exactly as-is. Only the background behind the subject changes. Match perspective, light direction, and shadows so the subject feels naturally placed at the scene. Night scene, ambient artificial lighting, deep shadows, moody blue-black sky, city lights or moonlight reflecting on the landmark. High quality realistic photograph. No extra people, duplicate faces, anatomy artifacts, text, or watermark. Final output aspect ratio 16:10 (landscape widescreen).",
-        cover: "/assets/Foto Nusantara/Borobudur_malam.png"
-    },
-    "prambanan_siang": {
-        name: "Prambanan (Siang)",
-        description: "Latar Candi Prambanan di siang hari.",
-        prompt_template: "Professional photo background replacement. Replace ONLY the background with Candi Prambanan at Siang. The subject — face, body, clothing, pose, and all — must remain 100% identical to the original photo. Do not regenerate, repaint, retouch, or alter the subject in any way. Wardrobe and background edit only; do not touch the face. Identity lock is the absolute highest priority: keep the same people, same person count, same perceived gender per person, same face identity, skin tone family, expression, pose, posture, head angle, gaze, hand position, body silhouette, framing, camera angle, and subject scale. Preserve the original face pixel area exactly as captured. Do not beautify, age-shift, swap faces, smooth skin into a different person, enhance features, or change eye, nose, mouth, cheek, jaw shape, or facial proportions in any way. Keep wardrobe, hairstyle, and all accessories completely unchanged — same color, same cut, same fit. If anyone wears a hijab, headscarf, veil, or religious head covering, never remove it or expose hair; keep it exactly as-is. Only the background behind the subject changes. Match perspective, light direction, and shadows so the subject feels naturally placed at the scene. Bright midday sunlight, clear blue sky, sharp natural shadows, vivid colors. High quality realistic photograph. No extra people, duplicate faces, anatomy artifacts, text, or watermark. Final output aspect ratio 16:10 (landscape widescreen).",
-        cover: "/assets/Foto Nusantara/prambanan_siang.png"
-    },
-    "monas_siang": {
-        name: "Monas (Siang)",
-        description: "Latar Monumen Nasional Jakarta.",
-        prompt_template: "Professional photo background replacement. Replace ONLY the background with Monas Jakarta at Siang. The subject — face, body, clothing, pose, and all — must remain 100% identical to the original photo. Do not regenerate, repaint, retouch, or alter the subject in any way. Wardrobe and background edit only; do not touch the face. Identity lock is the absolute highest priority: keep the same people, same person count, same perceived gender per person, same face identity, skin tone family, expression, pose, posture, head angle, gaze, hand position, body silhouette, framing, camera angle, and subject scale. Preserve the original face pixel area exactly as captured. Do not beautify, age-shift, swap faces, smooth skin into a different person, enhance features, or change eye, nose, mouth, cheek, jaw shape, or facial proportions in any way. Keep wardrobe, hairstyle, and all accessories completely unchanged — same color, same cut, same fit. If anyone wears a hijab, headscarf, veil, or religious head covering, never remove it or expose hair; keep it exactly as-is. Only the background behind the subject changes. Match perspective, light direction, and shadows so the subject feels naturally placed at the scene. Bright midday sunlight, clear blue sky, sharp natural shadows, vivid colors. High quality realistic photograph. No extra people, duplicate faces, anatomy artifacts, text, or watermark. Final output aspect ratio 16:10 (landscape widescreen).",
-        cover: "/assets/Foto Nusantara/monas_siang.png"
-    },
-    "bromo_siang": {
-        name: "Gunung Bromo (Siang)",
-        description: "Latar pemandangan Kawah Bromo.",
-        prompt_template: "Professional photo background replacement. Replace ONLY the background with Kawah Bromo at Siang. The subject — face, body, clothing, pose, and all — must remain 100% identical to the original photo. Do not regenerate, repaint, retouch, or alter the subject in any way. Wardrobe and background edit only; do not touch the face. Identity lock is the absolute highest priority: keep the same people, same person count, same perceived gender per person, same face identity, skin tone family, expression, pose, posture, head angle, gaze, hand position, body silhouette, framing, camera angle, and subject scale. Preserve the original face pixel area exactly as captured. Do not beautify, age-shift, swap faces, smooth skin into a different person, enhance features, or change eye, nose, mouth, cheek, jaw shape, or facial proportions in any way. Keep wardrobe, hairstyle, and all accessories completely unchanged — same color, same cut, same fit. If anyone wears a hijab, headscarf, veil, or religious head covering, never remove it or expose hair; keep it exactly as-is. Only the background behind the subject changes. Match perspective, light direction, and shadows so the subject feels naturally placed at the scene. Bright midday sunlight, clear blue sky, sharp natural shadows, vivid colors. High quality realistic photograph. No extra people, duplicate faces, anatomy artifacts, text, or watermark. Final output aspect ratio 16:10 (landscape widescreen).",
-        cover: "/assets/Foto Nusantara/bromo_siang.png"
-    },
-    "gedung_sate_siang": {
-        name: "Gedung Sate (Siang)",
-        description: "Ikon kota Bandung di siang hari.",
-        prompt_template: "Professional photo background replacement. Replace ONLY the background with Gedung Sate Bandung at Siang. The subject — face, body, clothing, pose, and all — must remain 100% identical to the original photo. Do not regenerate, repaint, retouch, or alter the subject in any way. Wardrobe and background edit only; do not touch the face. Identity lock is the absolute highest priority: keep the same people, same person count, same perceived gender per person, same face identity, skin tone family, expression, pose, posture, head angle, gaze, hand position, body silhouette, framing, camera angle, and subject scale. Preserve the original face pixel area exactly as captured. Do not beautify, age-shift, swap faces, smooth skin into a different person, enhance features, or change eye, nose, mouth, cheek, jaw shape, or facial proportions in any way. Keep wardrobe, hairstyle, and all accessories completely unchanged — same color, same cut, same fit. If anyone wears a hijab, headscarf, veil, or religious head covering, never remove it or expose hair; keep it exactly as-is. Only the background behind the subject changes. Match perspective, light direction, and shadows so the subject feels naturally placed at the scene. Bright midday sunlight, clear blue sky, sharp natural shadows, vivid colors. High quality realistic photograph. No extra people, duplicate faces, anatomy artifacts, text, or watermark. Final output aspect ratio 16:10 (landscape widescreen).",
-        cover: "/assets/Foto Nusantara/gedung_sate_siang.png"
-    },
-    "gwk_siang": {
-        name: "GWK Bali (Siang)",
-        description: "Kemegahan patung Garuda Wisnu Kencana.",
-        prompt_template: "Professional photo background replacement. Replace ONLY the background with GWK Bali at Siang. The subject — face, body, clothing, pose, and all — must remain 100% identical to the original photo. Do not regenerate, repaint, retouch, or alter the subject in any way. Wardrobe and background edit only; do not touch the face. Identity lock is the absolute highest priority: keep the same people, same person count, same perceived gender per person, same face identity, skin tone family, expression, pose, posture, head angle, gaze, hand position, body silhouette, framing, camera angle, and subject scale. Preserve the original face pixel area exactly as captured. Do not beautify, age-shift, swap faces, smooth skin into a different person, enhance features, or change eye, nose, mouth, cheek, jaw shape, or facial proportions in any way. Keep wardrobe, hairstyle, and all accessories completely unchanged — same color, same cut, same fit. If anyone wears a hijab, headscarf, veil, or religious head covering, never remove it or expose hair; keep it exactly as-is. Only the background behind the subject changes. Match perspective, light direction, and shadows so the subject feels naturally placed at the scene. Bright midday sunlight, clear blue sky, sharp natural shadows, vivid colors. High quality realistic photograph. No extra people, duplicate faces, anatomy artifacts, text, or watermark. Final output aspect ratio 16:10 (landscape widescreen).",
-        cover: "/assets/Foto Nusantara/gwk_siang.png"
-    },
-    "jam_gadang_siang": {
-        name: "Jam Gadang (Siang)",
-        description: "Ikon bersejarah kota Bukittinggi.",
-        prompt_template: "Professional photo background replacement. Replace ONLY the background with Jam Gadang Bukittinggi at Siang. The subject — face, body, clothing, pose, and all — must remain 100% identical to the original photo. Do not regenerate, repaint, retouch, or alter the subject in any way. Wardrobe and background edit only; do not touch the face. Identity lock is the absolute highest priority: keep the same people, same person count, same perceived gender per person, same face identity, skin tone family, expression, pose, posture, head angle, gaze, hand position, body silhouette, framing, camera angle, and subject scale. Preserve the original face pixel area exactly as captured. Do not beautify, age-shift, swap faces, smooth skin into a different person, enhance features, or change eye, nose, mouth, cheek, jaw shape, or facial proportions in any way. Keep wardrobe, hairstyle, and all accessories completely unchanged — same color, same cut, same fit. If anyone wears a hijab, headscarf, veil, or religious head covering, never remove it or expose hair; keep it exactly as-is. Only the background behind the subject changes. Match perspective, light direction, and shadows so the subject feels naturally placed at the scene. Bright midday sunlight, clear blue sky, sharp natural shadows, vivid colors. High quality realistic photograph. No extra people, duplicate faces, anatomy artifacts, text, or watermark. Final output aspect ratio 16:10 (landscape widescreen).",
-        cover: "/assets/Foto Nusantara/jam_gadang_siang.png"
-    },
-    "ampera_siang": {
-        name: "Ampera (Siang)",
-        description: "Jembatan Ampera kebanggaan Palembang.",
-        prompt_template: "Professional photo background replacement. Replace ONLY the background with Jembatan Ampera Palembang at Siang. The subject — face, body, clothing, pose, and all — must remain 100% identical to the original photo. Do not regenerate, repaint, retouch, or alter the subject in any way. Wardrobe and background edit only; do not touch the face. Identity lock is the absolute highest priority: keep the same people, same person count, same perceived gender per person, same face identity, skin tone family, expression, pose, posture, head angle, gaze, hand position, body silhouette, framing, camera angle, and subject scale. Preserve the original face pixel area exactly as captured. Do not beautify, age-shift, swap faces, smooth skin into a different person, enhance features, or change eye, nose, mouth, cheek, jaw shape, or facial proportions in any way. Keep wardrobe, hairstyle, and all accessories completely unchanged — same color, same cut, same fit. If anyone wears a hijab, headscarf, veil, or religious head covering, never remove it or expose hair; keep it exactly as-is. Only the background behind the subject changes. Match perspective, light direction, and shadows so the subject feels naturally placed at the scene. Bright midday sunlight, clear blue sky, sharp natural shadows, vivid colors. High quality realistic photograph. No extra people, duplicate faces, anatomy artifacts, text, or watermark. Final output aspect ratio 16:10 (landscape widescreen).",
-        cover: "/assets/Foto Nusantara/jembatan_ampera_siang.png"
-    },
-    "baiturrahman_siang": {
-        name: "Baiturrahman (Siang)",
-        description: "Masjid Raya Baiturrahman Aceh.",
-        prompt_template: "Professional photo background replacement. Replace ONLY the background with Masjid Raya Baiturrahman Aceh at Siang. The subject — face, body, clothing, pose, and all — must remain 100% identical to the original photo. Do not regenerate, repaint, retouch, or alter the subject in any way. Wardrobe and background edit only; do not touch the face. Identity lock is the absolute highest priority: keep the same people, same person count, same perceived gender per person, same face identity, skin tone family, expression, pose, posture, head angle, gaze, hand position, body silhouette, framing, camera angle, and subject scale. Preserve the original face pixel area exactly as captured. Do not beautify, age-shift, swap faces, smooth skin into a different person, enhance features, or change eye, nose, mouth, cheek, jaw shape, or facial proportions in any way. Keep wardrobe, hairstyle, and all accessories completely unchanged — same color, same cut, same fit. If anyone wears a hijab, headscarf, veil, or religious head covering, never remove it or expose hair; keep it exactly as-is. Only the background behind the subject changes. Match perspective, light direction, and shadows so the subject feels naturally placed at the scene. Bright midday sunlight, clear blue sky, sharp natural shadows, vivid colors. High quality realistic photograph. No extra people, duplicate faces, anatomy artifacts, text, or watermark. Final output aspect ratio 16:10 (landscape widescreen).",
-        cover: "/assets/Foto Nusantara/Baiturahman_siang.png"
-    },
-    "masjid_99_kubah_siang": {
-        name: "Masjid 99 Kubah (Siang)",
-        description: "Ikon religi kota Makassar.",
-        prompt_template: "Professional photo background replacement. Replace ONLY the background with Masjid 99 Kubah Makassar at Siang. The subject — face, body, clothing, pose, and all — must remain 100% identical to the original photo. Do not regenerate, repaint, retouch, or alter the subject in any way. Wardrobe and background edit only; do not touch the face. Identity lock is the absolute highest priority: keep the same people, same person count, same perceived gender per person, same face identity, skin tone family, expression, pose, posture, head angle, gaze, hand position, body silhouette, framing, camera angle, and subject scale. Preserve the original face pixel area exactly as captured. Do not beautify, age-shift, swap faces, smooth skin into a different person, enhance features, or change eye, nose, mouth, cheek, jaw shape, or facial proportions in any way. Keep wardrobe, hairstyle, and all accessories completely unchanged — same color, same cut, same fit. If anyone wears a hijab, headscarf, veil, or religious head covering, never remove it or expose hair; keep it exactly as-is. Only the background behind the subject changes. Match perspective, light direction, and shadows so the subject feels naturally placed at the scene. Bright midday sunlight, clear blue sky, sharp natural shadows, vivid colors. High quality realistic photograph. No extra people, duplicate faces, anatomy artifacts, text, or watermark. Final output aspect ratio 16:10 (landscape widescreen).",
-        cover: "/assets/Foto Nusantara/masjid_99_kubah_siang.png"
-    },
-    "tugu_khatulistiwa_siang": {
-        name: "Tugu Khatulistiwa (Siang)",
-        description: "Monumen penanda garis khatulistiwa.",
-        prompt_template: "Professional photo background replacement. Replace ONLY the background with Tugu Khatulistiwa Kalimantan at Siang. The subject — face, body, clothing, pose, and all — must remain 100% identical to the original photo. Do not regenerate, repaint, retouch, or alter the subject in any way. Wardrobe and background edit only; do not touch the face. Identity lock is the absolute highest priority: keep the same people, same person count, same perceived gender per person, same face identity, skin tone family, expression, pose, posture, head angle, gaze, hand position, body silhouette, framing, camera angle, and subject scale. Preserve the original face pixel area exactly as captured. Do not beautify, age-shift, swap faces, smooth skin into a different person, enhance features, or change eye, nose, mouth, cheek, jaw shape, or facial proportions in any way. Keep wardrobe, hairstyle, and all accessories completely unchanged — same color, same cut, same fit. If anyone wears a hijab, headscarf, veil, or religious head covering, never remove it or expose hair; keep it exactly as-is. Only the background behind the subject changes. Match perspective, light direction, and shadows so the subject feels naturally placed at the scene. Bright midday sunlight, clear blue sky, sharp natural shadows, vivid colors. High quality realistic photograph. No extra people, duplicate faces, anatomy artifacts, text, or watermark. Final output aspect ratio 16:10 (landscape widescreen).",
-        cover: "/assets/Foto Nusantara/tugu_khatulistiwa_siang.png"
-    },
-    "wayag_siang": {
-        name: "Wayag Raja Ampat (Siang)",
-        description: "Keindahan alam Raja Ampat.",
-        prompt_template: "Professional photo background replacement. Replace ONLY the background with Wayag Raja Ampat at Siang. The subject — face, body, clothing, pose, and all — must remain 100% identical to the original photo. Do not regenerate, repaint, retouch, or alter the subject in any way. Wardrobe and background edit only; do not touch the face. Identity lock is the absolute highest priority: keep the same people, same person count, same perceived gender per person, same face identity, skin tone family, expression, pose, posture, head angle, gaze, hand position, body silhouette, framing, camera angle, and subject scale. Preserve the original face pixel area exactly as captured. Do not beautify, age-shift, swap faces, smooth skin into a different person, enhance features, or change eye, nose, mouth, cheek, jaw shape, or facial proportions in any way. Keep wardrobe, hairstyle, and all accessories completely unchanged — same color, same cut, same fit. If anyone wears a hijab, headscarf, veil, or religious head covering, never remove it or expose hair; keep it exactly as-is. Only the background behind the subject changes. Match perspective, light direction, and shadows so the subject feels naturally placed at the scene. Bright midday sunlight, clear blue sky, sharp natural shadows, vivid colors. High quality realistic photograph. No extra people, duplicate faces, anatomy artifacts, text, or watermark. Final output aspect ratio 16:10 (landscape widescreen).",
-        cover: "/assets/Foto Nusantara/wayag_siang.png"
-    },
-    "youtefa_siang": {
-        name: "Jembatan Youtefa (Siang)",
-        description: "Jembatan ikonik di Jayapura.",
-        prompt_template: "Professional photo background replacement. Replace ONLY the background with Jembatan Youtefa Jayapura at Siang. The subject — face, body, clothing, pose, and all — must remain 100% identical to the original photo. Do not regenerate, repaint, retouch, or alter the subject in any way. Wardrobe and background edit only; do not touch the face. Identity lock is the absolute highest priority: keep the same people, same person count, same perceived gender per person, same face identity, skin tone family, expression, pose, posture, head angle, gaze, hand position, body silhouette, framing, camera angle, and subject scale. Preserve the original face pixel area exactly as captured. Do not beautify, age-shift, swap faces, smooth skin into a different person, enhance features, or change eye, nose, mouth, cheek, jaw shape, or facial proportions in any way. Keep wardrobe, hairstyle, and all accessories completely unchanged — same color, same cut, same fit. If anyone wears a hijab, headscarf, veil, or religious head covering, never remove it or expose hair; keep it exactly as-is. Only the background behind the subject changes. Match perspective, light direction, and shadows so the subject feels naturally placed at the scene. Bright midday sunlight, clear blue sky, sharp natural shadows, vivid colors. High quality realistic photograph. No extra people, duplicate faces, anatomy artifacts, text, or watermark. Final output aspect ratio 16:10 (landscape widescreen).",
-        cover: "/assets/Foto Nusantara/youtefa_siang.png"
-    }
-};
-
 async function loadStyles() {
     try {
         const response = await fetch(API_URLS.styles);
-        if (response.ok) availableStyles = await response.json();
-    } catch (error) { console.warn("API Styles gagal dimuat, menggunakan data lokal."); } 
-    finally {
-        if (Object.keys(availableStyles).length === 0) {
-            console.log("[System] API Kosong. Memuat Data Hardcode Nusantara...");
-            availableStyles = localNusantaraData;
+        if (response.ok) {
+            availableStyles = await response.json();
         }
-
+    } catch (error) { 
+        console.warn("Gagal terhubung ke API Styles."); 
+    } finally {
         initHeroAnimation();
         renderStyleOptions();
     }
@@ -154,8 +58,8 @@ async function loadStyles() {
 function getImageUrl(path) {
     if (!path) return '/assets/placeholder.jpg';
     if (path.startsWith('http')) return path;
-    if (path.startsWith('/')) return path; // Jika sudah absolute path
-    if (path.startsWith('assets/')) return `/${path}`; // Paksa jadi absolute path
+    if (path.startsWith('/')) return path; 
+    if (path.startsWith('assets/')) return `/${path}`; 
     return `https://api.agenticaicenter.id/${path}`;
 }
 
@@ -203,7 +107,6 @@ function setupEventListeners() {
     document.getElementById('btn-proceed-ai')?.addEventListener('click', processAIGeneration);
 }
 
-// Fallback untuk tombol onclick di index.html
 window.submitToken = () => {
     const token = document.getElementById('token-input')?.value.trim();
     if (token) validateTicket(token);
@@ -254,22 +157,35 @@ function initHeroAnimation() {
     leftContainer.innerHTML = '';
     rightContainer.innerHTML = '';
     let styleKeys = Object.keys(availableStyles);
+    let isDummy = false;
     
-    // Batasi maksimum 10 gambar untuk performa browser
+    // Jika API benar-benar kosong, gunakan 4 gambar dummy HANYA untuk mempercantik animasi panggung depan
+    if (styleKeys.length === 0) {
+        isDummy = true;
+        const dummies = [
+            'https://images.unsplash.com/photo-1542038784456-1ea8e935640e?w=400&q=80',
+            'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=400&q=80',
+            'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&q=80',
+            'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400&q=80'
+        ];
+        styleKeys = [0, 1, 2, 3];
+        availableStyles = styleKeys.map((_, i) => ({ cover: dummies[i] }));
+    }
+
     if (styleKeys.length > 10) styleKeys = styleKeys.slice(0, 10);
-    
     const imagesToRender = [...styleKeys, ...styleKeys, ...styleKeys];
 
     imagesToRender.forEach((key, index) => {
         const style = availableStyles[key];
-        const imgSrc = getImageUrl(style.cover);
-        
-        // Penambahan atribut onerror untuk mengatasi broken image link
+        const imgSrc = isDummy ? style.cover : getImageUrl(style.cover);
         const imgHtml = `<img src="${imgSrc}" onerror="this.src='/assets/placeholder.jpg'" class="w-full h-[280px] object-cover rounded-2xl border border-white/10 shadow-xl mb-3">`;
 
         if (index % 2 === 0) leftContainer.innerHTML += imgHtml;
         else rightContainer.innerHTML += imgHtml;
     });
+
+    // Kembalikan ke state kosong jika menggunakan dummy
+    if (isDummy) availableStyles = {};
 }
 
 // ==========================================
@@ -280,12 +196,22 @@ function renderStyleOptions() {
     if (!container) return;
     container.innerHTML = "";
 
+    // Indikator jika database kosong
+    if (Object.keys(availableStyles).length === 0) {
+        container.innerHTML = `
+            <div class="p-6 text-center border-2 border-dashed border-white/10 rounded-xl bg-white/5">
+                <p class="text-sm font-medium text-booth-muted">Belum ada gaya yang tersedia.</p>
+                <p class="text-xs text-white/40 mt-1">Silakan tambahkan gaya dan gambar melalui Admin Panel.</p>
+            </div>
+        `;
+        return;
+    }
+
     for (const [id, style] of Object.entries(availableStyles)) {
         const imgSrc = getImageUrl(style.cover);
         const div = document.createElement('div');
         div.className = 'style-card cursor-pointer p-3 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 transition-all flex items-center gap-4';
         
-        // Tambahkan onerror juga di sini
         div.innerHTML = `
             <img src="${imgSrc}" onerror="this.src='/assets/placeholder.jpg'" class="w-16 h-16 object-cover rounded-lg shadow-md border border-white/10">
             <div>
@@ -306,7 +232,7 @@ function renderStyleOptions() {
 
             if (previewImg) previewImg.src = imgSrc;
             if (previewName) previewName.innerText = style.name;
-            if (previewDesc) previewDesc.innerText = "Kunci identitas aktif: Wajah dan postur Anda akan dipertahankan dengan sempurna sesuai dengan latar belakang yang dipilih.";
+            if (previewDesc) previewDesc.innerText = style.description || style.prompt_template;
             if (btnNext) btnNext.disabled = false;
         };
         container.appendChild(div);
