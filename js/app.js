@@ -13,98 +13,148 @@ let availableStyles = {};
 let selectedStyleId = null;
 let pbVideoStream = null;
 let pbCapturedBase64 = null;
+let html5QrcodeScanner = null;
 
 // ==========================================
-// INISIALISASI
+// INISIALISASI UTAMA
 // ==========================================
 document.addEventListener('DOMContentLoaded', async () => {
-    await loadSettings();
-    await loadStyles();
-
-    const isAdmin = window.location.href.toLowerCase().includes('admin') || document.querySelector('.admin-dashboard') !== null;
+    const isAdmin = window.location.href.toLowerCase().includes('admin') || document.querySelector('.admin-dashboard') !== null || !document.getElementById('screen-welcome');
 
     if (!isAdmin) {
-        initHeroAnimation();
-        
-        // Listener manual untuk tombol yang tidak pakai onclick di HTML
-        document.getElementById('btn-start')?.addEventListener('click', () => switchScreen('screen-pin'));
-        document.getElementById('btn-capture')?.addEventListener('click', takePhoto);
+        setupEventListeners(); // Ikat tombol terlebih dahulu agar tidak mati
+        await loadSettings();
+        await loadStyles();
     }
 });
 
+// ==========================================
+// PENGAMBILAN DATA DARI API
+// ==========================================
 async function loadSettings() {
     try {
-        const res = await fetch(API_URLS.settings);
-        if (res.ok) appSettings = { ...appSettings, ...(await res.json()) };
-    } catch (e) { console.error("Gagal load settings:", e); }
+        const response = await fetch(API_URLS.settings);
+        if (response.ok) {
+            const data = await response.json();
+            appSettings = { ...appSettings, ...data };
+        }
+    } catch (error) { console.error("Gagal load settings:", error); }
 }
 
 async function loadStyles() {
     try {
-        const res = await fetch(API_URLS.styles);
-        if (res.ok) {
-            availableStyles = await res.json();
+        const response = await fetch(API_URLS.styles);
+        if (response.ok) {
+            availableStyles = await response.json();
             initHeroAnimation();
             renderStyleOptions();
         }
-    } catch (e) { console.error("Gagal load styles:", e); }
+    } catch (error) { console.error("Gagal load styles:", error); }
 }
 
 // ==========================================
-// FUNGSI GLOBAL (DIHUBUNGKAN KE ONCLICK HTML)
+// KONTROL NAVIGASI LAYAR & EVENT LISTENER
 // ==========================================
-window.switchScreen = (screenId) => {
-    document.querySelectorAll('section[id^="screen-"]').forEach(s => s.classList.add('screen-hidden'));
+function switchScreen(screenId) {
+    document.querySelectorAll('section[id^="screen-"]').forEach(s => {
+        s.classList.add('screen-hidden');
+    });
     const target = document.getElementById(screenId);
     if (target) target.classList.remove('screen-hidden');
-};
+}
 
-window.submitToken = () => {
-    const token = document.getElementById('token-input')?.value.trim();
-    if (token) validateTicket(token);
-    else document.getElementById('token-error').innerText = "Ketik kode tiket terlebih dahulu!";
-};
+function setupEventListeners() {
+    // 1. Tombol Mulai Sesi -> Buka Layar Tiket & Nyalakan Scanner QR
+    document.getElementById('btn-start')?.addEventListener('click', () => {
+        switchScreen('screen-pin');
+        initQRScanner();
+    });
+    
+    // 2. Tombol Batal di Layar Tiket
+    document.getElementById('btn-cancel-token')?.addEventListener('click', () => {
+        switchScreen('screen-welcome');
+        if (html5QrcodeScanner) {
+            html5QrcodeScanner.clear().catch(e => console.error(e));
+            html5QrcodeScanner = null;
+        }
+    });
+    
+    // 3. Tombol Submit Tiket Manual
+    document.getElementById('btn-submit-token')?.addEventListener('click', () => {
+        const token = document.getElementById('token-input')?.value.trim();
+        if (token) validateTicket(token);
+        else document.getElementById('token-error').innerText = "Masukkan kode tiket terlebih dahulu!";
+    });
 
-window.cancelTokenScreen = () => switchScreen('screen-welcome');
-window.confirmIntegratedOptionsAndGo = () => {
-    switchScreen('screen-capture');
-    initCamera(); // Nyalakan kamera hanya saat masuk layar capture
-};
-window.retakePhoto = () => document.getElementById('capture-decision')?.classList.add('hidden');
-window.startAIProcessing = () => processAIGeneration();
+    // 4. Tombol Lanjut ke Kamera (Pilih Style)
+    document.getElementById('btn-next-integrated')?.addEventListener('click', () => {
+        switchScreen('screen-capture');
+        initWebcam();
+    });
+
+    // 5. Tombol Kontrol Kamera
+    document.getElementById('btn-capture')?.addEventListener('click', takePhoto);
+    document.getElementById('btn-retake')?.addEventListener('click', () => {
+        document.getElementById('capture-decision').classList.add('hidden');
+    });
+    document.getElementById('btn-proceed-ai')?.addEventListener('click', processAIGeneration);
+}
 
 // ==========================================
-// ANIMASI PANGGUNG (WELCOME SCREEN)
+// SCANNER QR TIKET
+// ==========================================
+function initQRScanner() {
+    if (html5QrcodeScanner) return; // Mencegah inisialisasi ganda
+    const qrNode = document.getElementById('qr-reader');
+    if (!qrNode) return;
+
+    html5QrcodeScanner = new Html5QrcodeScanner("qr-reader", { fps: 10, qrbox: { width: 250, height: 250 } }, false);
+    html5QrcodeScanner.render((decodedText) => {
+        document.getElementById('token-input').value = decodedText;
+        validateTicket(decodedText);
+        html5QrcodeScanner.clear();
+        html5QrcodeScanner = null;
+    }, (error) => {
+        // Abaikan error pembacaan frame berulang
+    });
+}
+
+// ==========================================
+// ANIMASI GALERI PANGGUNG (WELCOME SCREEN)
 // ==========================================
 function initHeroAnimation() {
     const leftContainer = document.getElementById('welcome-gallery-left');
     const rightContainer = document.getElementById('welcome-gallery-right');
+    
     if (!leftContainer || !rightContainer) return;
 
-    leftContainer.innerHTML = ''; rightContainer.innerHTML = '';
+    leftContainer.innerHTML = '';
+    rightContainer.innerHTML = '';
+
     let styleKeys = Object.keys(availableStyles);
     let isDummy = false;
 
+    // Jika database style API kosong, gunakan dummy
     if (styleKeys.length === 0) {
         isDummy = true;
-        styleKeys = [0, 1, 2, 3];
         const dummies = [
             'https://images.unsplash.com/photo-1542038784456-1ea8e935640e?w=400&q=80',
             'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=400&q=80',
             'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&q=80',
             'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400&q=80'
         ];
-        availableStyles = styleKeys.map((_, i) => ({ cover: dummies[i] }));
+        styleKeys = [0, 1, 2, 3];
+        availableStyles = styleKeys.map((_, i) => ({ cover: dummies[i], name: `Contoh ${i+1}` }));
     }
 
-    const imagesToRender = [...styleKeys, ...styleKeys, ...styleKeys];
+    const imagesToRender = [...styleKeys, ...styleKeys, ...styleKeys, ...styleKeys];
 
-    imagesToRender.forEach((key, i) => {
+    imagesToRender.forEach((key, index) => {
         const style = availableStyles[key];
         const imgSrc = isDummy ? style.cover : (style.cover ? `https://api.agenticaicenter.id/${style.cover}` : 'assets/placeholder.jpg');
-        const imgHtml = `<img src="${imgSrc}" class="w-full h-[280px] object-cover rounded-2xl border border-white/10 shadow-xl mb-3">`;
+        const imgHtml = `<img src="${imgSrc}" class="w-full h-[280px] object-cover rounded-2xl border border-white/10 shadow-xl">`;
 
-        if (i % 2 === 0) leftContainer.innerHTML += imgHtml;
+        if (index % 2 === 0) leftContainer.innerHTML += imgHtml;
         else rightContainer.innerHTML += imgHtml;
     });
 
@@ -127,20 +177,26 @@ function renderStyleOptions() {
             <img src="${imgSrc}" class="w-16 h-16 object-cover rounded-lg">
             <div>
                 <h3 class="font-bold text-white">${style.name}</h3>
-                <p class="text-xs text-booth-muted line-clamp-1">${style.description || 'Gaya interaktif'}</p>
+                <p class="text-xs text-booth-muted line-clamp-1">${style.description || 'Pilih gaya fotomu di sini'}</p>
             </div>
         `;
         
         div.onclick = () => {
             selectedStyleId = id;
+            
             document.querySelectorAll('.style-card').forEach(el => el.classList.remove('border-booth-accent', 'bg-booth-accent/10'));
             div.classList.add('border-booth-accent', 'bg-booth-accent/10');
 
-            if (document.getElementById('integrated-preview-img')) document.getElementById('integrated-preview-img').src = imgSrc;
-            if (document.getElementById('integrated-preview-name')) document.getElementById('integrated-preview-name').innerText = style.name;
-            if (document.getElementById('integrated-preview-desc')) document.getElementById('integrated-preview-desc').innerText = style.prompt_template;
+            const previewImg = document.getElementById('integrated-preview-img');
+            const previewName = document.getElementById('integrated-preview-name');
+            const previewDesc = document.getElementById('integrated-preview-desc');
+            const btnNext = document.getElementById('btn-next-integrated');
+
+            if (previewImg) previewImg.src = imgSrc;
+            if (previewName) previewName.innerText = style.name;
+            if (previewDesc) previewDesc.innerText = style.description || style.prompt_template;
             
-            if (document.getElementById('btn-next-integrated')) document.getElementById('btn-next-integrated').disabled = false;
+            if (btnNext) btnNext.disabled = false;
         };
         container.appendChild(div);
     }
@@ -150,7 +206,8 @@ function renderStyleOptions() {
 // VALIDASI, KAMERA & AI
 // ==========================================
 async function validateTicket(token) {
-    document.getElementById('token-error').innerText = "Memvalidasi tiket...";
+    const errEl = document.getElementById('token-error');
+    if (errEl) errEl.innerText = "Memvalidasi tiket...";
     try {
         const response = await fetch(`${API_URLS.tickets}?action=validate`, {
             method: 'POST',
@@ -159,19 +216,30 @@ async function validateTicket(token) {
         });
         const data = await response.json();
         if (data.success) {
-            document.getElementById('token-error').innerText = "";
+            if (errEl) errEl.innerText = "";
             switchScreen('screen-style');
-        } else document.getElementById('token-error').innerText = "Tiket tidak valid/terpakai.";
-    } catch (e) { document.getElementById('token-error').innerText = "Gagal terhubung ke API."; }
+            if (html5QrcodeScanner) {
+                html5QrcodeScanner.clear().catch(e => console.error(e));
+                html5QrcodeScanner = null;
+            }
+        } else {
+            if (errEl) errEl.innerText = "Tiket tidak valid atau sudah terpakai.";
+        }
+    } catch (error) {
+        if (errEl) errEl.innerText = "Gagal terhubung ke server API.";
+    }
 }
 
-async function initCamera() {
+async function initWebcam() {
     const videoEl = document.getElementById('webcam-video');
     if (!videoEl) return;
     try {
-        pbVideoStream = await navigator.mediaDevices.getUserMedia({ video: { width: 1920, height: 1080, facingMode: "user" }, audio: false });
+        pbVideoStream = await navigator.mediaDevices.getUserMedia({ 
+            video: { width: { ideal: 1920 }, height: { ideal: 1080 }, facingMode: "user" }, 
+            audio: false 
+        });
         videoEl.srcObject = pbVideoStream;
-    } catch (e) { console.error("Kamera error:", e); }
+    } catch (error) { console.error("Kamera error:", error); }
 }
 
 function takePhoto() {
@@ -180,27 +248,36 @@ function takePhoto() {
     if (!videoEl || !canvasEl) return;
 
     const context = canvasEl.getContext('2d');
-    canvasEl.width = videoEl.videoWidth || 1280; canvasEl.height = videoEl.videoHeight || 720;
+    canvasEl.width = videoEl.videoWidth || 1280;
+    canvasEl.height = videoEl.videoHeight || 720;
     
-    context.translate(canvasEl.width, 0); context.scale(-1, 1);
+    context.translate(canvasEl.width, 0);
+    context.scale(-1, 1);
     context.drawImage(videoEl, 0, 0, canvasEl.width, canvasEl.height);
     
     pbCapturedBase64 = canvasEl.toDataURL('image/jpeg', 0.9);
     
-    if (document.getElementById('capture-preview-img')) document.getElementById('capture-preview-img').src = pbCapturedBase64;
-    document.getElementById('capture-decision')?.classList.remove('hidden');
+    const decisionModal = document.getElementById('capture-decision');
+    const previewImg = document.getElementById('capture-preview-img');
+    if (previewImg) previewImg.src = pbCapturedBase64;
+    if (decisionModal) decisionModal.classList.remove('hidden');
 }
 
 async function processAIGeneration() {
     document.getElementById('capture-decision')?.classList.add('hidden');
     switchScreen('screen-review');
     
-    if (document.getElementById('review-blurred-img')) document.getElementById('review-blurred-img').src = pbCapturedBase64;
+    const statusText = document.getElementById('ai-status-text');
+    const progressText = document.getElementById('ai-progress-text');
+    const progressBar = document.getElementById('ai-progress-bar');
+    const blurImg = document.getElementById('review-blurred-img');
+
+    if (blurImg) blurImg.src = pbCapturedBase64;
     
     const updateProgress = (pct, txt) => {
-        if (document.getElementById('ai-progress-bar')) document.getElementById('ai-progress-bar').style.width = `${pct}%`;
-        if (document.getElementById('ai-progress-text')) document.getElementById('ai-progress-text').innerText = `${pct}%`;
-        if (document.getElementById('ai-status-text')) document.getElementById('ai-status-text').innerText = txt;
+        if (progressBar) progressBar.style.width = `${pct}%`;
+        if (progressText) progressText.innerText = `${pct}%`;
+        if (statusText) statusText.innerText = txt;
     };
 
     try {
@@ -219,13 +296,13 @@ async function processAIGeneration() {
         if (data.error) throw new Error(data.error.message);
 
         if (data.data && data.data[0] && data.data[0].b64_json) {
-            updateProgress(80, "Mengunggah ke server...");
+            updateProgress(80, "Selesai! Mengunggah ke server...");
             const finalImage = `data:image/jpeg;base64,${data.data[0].b64_json}`;
             await finalizePhotoAndUpload(finalImage, pbCapturedBase64);
-            updateProgress(100, "Selesai!");
-        } else throw new Error("Format respons AI salah.");
-    } catch (e) {
-        alert(`Gagal memproses AI: ${e.message}`);
+            updateProgress(100, "Siap ditampilkan!");
+        } else { throw new Error("Format respons AI tidak valid."); }
+    } catch (error) {
+        alert(`Gagal memproses AI: ${error.message}`);
         switchScreen('screen-capture'); 
     }
 }
@@ -242,6 +319,7 @@ async function finalizePhotoAndUpload(aiImageBase64, originalImageBase64) {
         if (dataAi.success && dataAi.url) {
             document.getElementById('result-original-img').src = originalImageBase64;
             document.getElementById('result-final-img').src = aiImageBase64;
+            
             document.getElementById('qrcode-original').innerHTML = "";
             document.getElementById('qrcode-ai').innerHTML = "";
             
@@ -249,6 +327,9 @@ async function finalizePhotoAndUpload(aiImageBase64, originalImageBase64) {
             new QRCode(document.getElementById('qrcode-ai'), { text: dataAi.url, width: 120, height: 120 });
             
             switchScreen('screen-result');
-        } else throw new Error("Gagal upload.");
-    } catch (e) { alert("Koneksi gagal saat upload gambar."); switchScreen('screen-capture'); }
+        } else { throw new Error("Upload ke hosting gagal."); }
+    } catch (error) { 
+        alert("Gagal mengunggah foto ke jaringan."); 
+        switchScreen('screen-capture'); 
+    }
 }
