@@ -81,7 +81,7 @@
                         </div>
                         <div class="relative z-10 flex flex-col gap-3 min-w-[200px]">
                             <div class="bg-slate-50 border border-slate-200 p-4 rounded-xl flex items-center justify-between shadow-sm">
-                                <span class="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Node.js Server</span>
+                                <span class="text-[11px] font-bold text-slate-500 uppercase tracking-widest">API Server</span>
                                 <div class="flex items-center gap-2" id="stat-server-status">
                                     <span class="relative flex h-2.5 w-2.5"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span><span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span></span>
                                     <span class="text-sm font-bold text-slate-700">Online</span>
@@ -297,19 +297,22 @@
     </div>
 
     <script>
+        // URL API HOSTING SERVERLESS
+        const ADMIN_API_URL = 'https://api.agenticaicenter.id';
+
         let cachedStyles = {}; 
         let optionsBuilderData = []; 
 
         async function loadDashboardStats() {
             try {
-                const resTickets = await fetch('http://localhost:3000/api/tickets');
+                const resTickets = await fetch(`${ADMIN_API_URL}/tickets.php`);
                 const tickets = await resTickets.json();
                 let active = 0, used = 0;
                 Object.values(tickets).forEach(t => { if (t.status === 'active') active++; if (t.status === 'used') used++; });
                 document.getElementById('stat-active-tickets').innerText = active;
                 document.getElementById('stat-used-tickets').innerText = used;
 
-                const resStyles = await fetch('http://localhost:3000/api/styles');
+                const resStyles = await fetch(`${ADMIN_API_URL}/styles.php`);
                 const styles = await resStyles.json();
                 document.getElementById('stat-total-styles').innerText = Object.keys(styles).length;
 
@@ -325,7 +328,7 @@
             const tbody = document.getElementById('ticket-table-body');
             tbody.innerHTML = '<tr><td colspan="4" class="py-8 text-center text-slate-500">Memuat tiket...</td></tr>';
             try {
-                const res = await fetch('http://localhost:3000/api/tickets');
+                const res = await fetch(`${ADMIN_API_URL}/tickets.php`);
                 const tickets = await res.json();
                 tbody.innerHTML = '';
                 const keys = Object.keys(tickets).reverse();
@@ -336,7 +339,6 @@
                         ? '<span class="bg-green-100 text-green-700 px-2 py-0.5 rounded border border-green-200 text-[10px] font-bold uppercase tracking-wider">Aktif</span>' 
                         : '<span class="bg-slate-100 text-slate-500 px-2 py-0.5 rounded border border-slate-200 text-[10px] font-bold uppercase tracking-wider">Terpakai</span>';
                     
-                    // TOMBOL HAPUS UNTUK TIKET TERPAKAI
                     const actions = t.status === 'active' 
                         ? `<button onclick="showPrintModal('${key}')" class="text-brand-600 hover:text-brand-800 text-sm font-semibold">Print Ulang</button>` 
                         : `<button onclick="deleteTicket('${key}')" class="text-red-500 hover:text-red-700 text-sm font-semibold">Hapus</button>`;
@@ -355,17 +357,16 @@
 
         async function generateTicket() {
             try {
-                const res = await fetch('http://localhost:3000/api/tickets/generate', { method: 'POST' });
+                const res = await fetch(`${ADMIN_API_URL}/tickets.php?action=generate`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({}) });
                 const result = await res.json();
                 if (result.success) { loadTicketTable(); loadDashboardStats(); showPrintModal(result.token); }
             } catch (error) { alert("Gagal generate tiket"); }
         }
         
-        // FUNGSI MENGHAPUS TIKET
         async function deleteTicket(key) {
             if(!confirm(`Yakin ingin menghapus tiket ${key}?`)) return;
             try {
-                const res = await fetch(`http://localhost:3000/api/tickets/${key}`, { method: 'DELETE' });
+                const res = await fetch(`${ADMIN_API_URL}/tickets.php?action=delete&id=${key}`, { method: 'DELETE' });
                 if(res.ok) { 
                     loadTicketTable(); 
                     loadDashboardStats(); 
@@ -387,12 +388,12 @@
             const tbody = document.getElementById('style-table-body');
             tbody.innerHTML = '<tr><td colspan="4" class="py-8 text-center text-slate-500">Memuat data...</td></tr>';
             try {
-                const res = await fetch('http://localhost:3000/api/styles');
+                const res = await fetch(`${ADMIN_API_URL}/styles.php`);
                 cachedStyles = await res.json();
                 tbody.innerHTML = '';
                 Object.keys(cachedStyles).forEach(key => {
                     const style = cachedStyles[key];
-                    const imgUrl = style.cover ? (style.cover.startsWith('http') ? style.cover : `http://localhost:3000/${style.cover}`) : '';
+                    const imgUrl = style.cover ? (style.cover.startsWith('http') ? style.cover : `${ADMIN_API_URL}/${style.cover}`) : '';
                     const coverHtml = imgUrl ? `<div class="relative w-16 h-12 rounded-lg overflow-hidden bg-slate-100 border border-slate-200"><div class="absolute inset-0 flex items-center justify-center text-slate-400 text-xs z-0">Kosong</div><img src="${imgUrl}" class="absolute inset-0 w-full h-full object-cover z-10 transition-opacity" onerror="this.style.opacity='0'"></div>` : `<div class="w-16 h-12 rounded-lg bg-slate-100 border flex items-center justify-center text-slate-400 text-[10px] font-bold uppercase tracking-wider">Kosong</div>`;
                     const hasOptions = style.options && style.options.length > 0;
                     const hasCustomData = Object.keys(style).filter(k => !['name', 'cover', 'description', 'prompt_template', 'options'].includes(k)).length > 0;
@@ -448,7 +449,7 @@
         async function deleteStyle(key) {
             if(!confirm(`Yakin ingin menghapus style ini secara permanen?`)) return;
             try {
-                const res = await fetch(`http://localhost:3000/api/styles/${key}`, { method: 'DELETE' });
+                const res = await fetch(`${ADMIN_API_URL}/styles.php?id=${key}`, { method: 'DELETE' });
                 if(res.ok) { loadStyleTable(); loadDashboardStats(); }
             } catch (err) {}
         }
@@ -460,7 +461,7 @@
             optionsBuilderData.forEach((optGroup, groupIdx) => {
                 let choicesHtml = '';
                 optGroup.choices.forEach((choice, choiceIdx) => {
-                    const imgPreview = choice.img ? `<img src="http://localhost:3000/${choice.img}" class="w-12 h-12 rounded-lg object-cover border border-slate-200 shadow-sm">` : `<div class="w-12 h-12 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-center text-[9px] font-bold text-slate-400 text-center uppercase">No Img</div>`;
+                    const imgPreview = choice.img ? `<img src="${ADMIN_API_URL}/${choice.img}" class="w-12 h-12 rounded-lg object-cover border border-slate-200 shadow-sm">` : `<div class="w-12 h-12 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-center text-[9px] font-bold text-slate-400 text-center uppercase">No Img</div>`;
                     choicesHtml += `
                         <div class="bg-white p-4 rounded-xl border border-slate-200 relative group flex flex-col gap-3 shadow-sm">
                             <div class="grid grid-cols-2 gap-3 flex-1">
@@ -513,11 +514,11 @@
             btn.disabled = true; btn.innerText = "Proses Upload...";
 
             try {
-                const res = await fetch('http://localhost:3000/api/styles', { method: 'POST', body: new FormData(form) });
+                const res = await fetch(`${ADMIN_API_URL}/styles.php`, { method: 'POST', body: new FormData(form) });
                 const result = await res.json();
                 if(res.ok && result.success) { showToast(true, "Data tersimpan!"); switchTab('style-list'); } 
                 else { alert("Gagal menyimpan: " + (result.message || 'Kesalahan server')); }
-            } catch (err) { alert("Koneksi terputus ke server Node.js."); } 
+            } catch (err) { alert("Koneksi terputus ke server API."); } 
             finally { btn.disabled = false; btn.innerText = "Simpan & Upload Style"; }
         }
 
@@ -570,11 +571,11 @@
         window.addEventListener('DOMContentLoaded', async () => { 
             switchTab('dashboard'); 
             try {
-                const res = await fetch('http://localhost:3000/api/settings');
+                const res = await fetch(`${ADMIN_API_URL}/settings.php`);
                 const data = await res.json();
                 document.getElementById('set-apiKey').value = data.apiKey || '';
                 document.getElementById('set-apiBaseUrl').value = data.apiBaseUrl || 'https://api.openai.com/v1';
-                document.getElementById('set-aiModel').value = data.aiModel || 'dall-e-2';
+                document.getElementById('set-aiModel').value = data.aiModel || 'gpt-image-2.5-sunburst';
             } catch(e){}
         });
 
@@ -589,7 +590,7 @@
             localStorage.setItem('openai_base_url', dataObj.apiBaseUrl);
             localStorage.setItem('openai_model', dataObj.aiModel);
             try {
-                const res = await fetch('http://localhost:3000/api/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(dataObj) });
+                const res = await fetch(`${ADMIN_API_URL}/settings.php`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(dataObj) });
                 if(res.ok) showToast(true, "Pengaturan Disimpan");
             } catch(err) { showToast(false, "Gagal sinkron"); }
         });

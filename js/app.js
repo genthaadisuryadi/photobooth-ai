@@ -25,7 +25,6 @@ let capturedBase64 = null;
 // DOM ELEMENTS
 // ==========================================
 const elements = {
-    // Stage Utama
     video: document.getElementById('camera-stream'),
     canvas: document.getElementById('photo-canvas'),
     resultImage: document.getElementById('result-image'),
@@ -35,7 +34,9 @@ const elements = {
     btnSubmitTicket: document.getElementById('btn-submit-ticket'),
     loadingScreen: document.getElementById('loading-screen'),
     styleContainer: document.getElementById('style-container'),
-    heroImageContainer: document.querySelector('.hero-images') || document.getElementById('floating-gallery') || document.querySelector('.right-panel'),
+    
+    // Pencarian wadah gambar panggung secara agresif
+    heroImageContainer: document.querySelector('.hero-images') || document.getElementById('floating-gallery') || document.querySelector('.right-panel') || document.querySelector('body > div > div:last-child'),
     
     // Admin Dashboard
     btnGenerateTicket: document.getElementById('btn-generate-ticket'),
@@ -54,7 +55,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     await loadSettings();
     await loadStyles();
     
-    // DETEKSI CERDAS: Apakah ini halaman Admin?
     const isAdmin = window.location.href.toLowerCase().includes('admin') || 
                     document.body.innerText.includes('NODE.JS SERVER') ||
                     document.querySelector('.admin-dashboard') !== null;
@@ -63,7 +63,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         loadAdminDashboard();
         setupAdminListeners();
     } else {
-        // Jika bukan admin, jalankan UI Panggung Utama
         initHeroAnimation();
         initCamera();
         setupEventListeners();
@@ -79,12 +78,10 @@ async function loadSettings() {
         if (response.ok) {
             const data = await response.json();
             appSettings = { ...appSettings, ...data };
-            if (elements.inputApiKey) {
-                elements.inputApiKey.value = appSettings.apiKey || '';
-            }
+            if (elements.inputApiKey) elements.inputApiKey.value = appSettings.apiKey || '';
         }
     } catch (error) {
-        console.error("[Error] Gagal memuat settings:", error);
+        console.error("Gagal memuat settings:", error);
     }
 }
 
@@ -96,13 +93,12 @@ async function loadStyles() {
             renderStyleOptions();
         }
     } catch (error) {
-        console.error("[Error] Gagal memuat styles:", error);
+        console.error("Gagal memuat styles:", error);
     }
 }
 
 async function loadAdminDashboard() {
     try {
-        // 1. Ganti Tulisan "NODE.JS SERVER Offline" dengan pencarian teks cerdas
         const allElements = document.querySelectorAll('span, p, div');
         for (let el of allElements) {
             if (el.innerText && el.innerText.includes('NODE.JS SERVER') && el.innerText.includes('Offline')) {
@@ -111,7 +107,6 @@ async function loadAdminDashboard() {
             }
         }
 
-        // 2. Ambil Data Tiket dari Hosting
         const resTickets = await fetch(API_URLS.tickets);
         let aktif = 0, terpakai = 0;
         if (resTickets.ok) {
@@ -122,48 +117,52 @@ async function loadAdminDashboard() {
             }
         }
 
-        // 3. Hitung Total Style
         const totalStyles = Object.keys(availableStyles).length;
 
-        // 4. Masukkan angka ke kotak dasbor (mencari elemen dengan font besar)
         if (elements.countTiketAktif) elements.countTiketAktif.innerText = aktif;
         if (elements.countTiketTerpakai) elements.countTiketTerpakai.innerText = terpakai;
         if (elements.countKatalogStyle) elements.countKatalogStyle.innerText = totalStyles;
         
-        // Fallback jika ID HTML tidak cocok: cari elemen angka di dalam card
         const numberElements = document.querySelectorAll('.bg-white h2, .bg-white .text-5xl, .card h2');
         if (numberElements.length >= 3) {
             numberElements[0].innerText = aktif;
             numberElements[1].innerText = terpakai;
             numberElements[2].innerText = totalStyles;
         }
-
     } catch (error) {
         console.error("Gagal memuat dashboard admin:", error);
     }
 }
 
 // ==========================================
-// UI & ANIMASI GAMBAR MELAYANG
+// UI & ANIMASI GAMBAR MELAYANG (FORCED CSS)
 // ==========================================
 function initHeroAnimation() {
     let container = elements.heroImageContainer;
-    
-    // Fallback pencarian kontainer panel kanan jika ID/Class tidak cocok
-    if (!container) {
-        const columns = document.querySelectorAll('.w-1\\/2, .grid > div');
-        if (columns.length >= 2) container = columns[1];
-    }
-    
     if (!container) return; 
+    
+    // Injeksi keyframe CSS untuk animasi naik
+    if (!document.getElementById('hero-keyframes')) {
+        const style = document.createElement('style');
+        style.id = 'hero-keyframes';
+        style.innerHTML = `@keyframes scrollUp { 0% { transform: translateY(0); } 100% { transform: translateY(-50%); } }`;
+        document.head.appendChild(style);
+    }
+
     container.innerHTML = ''; 
+    // Paksa kontainer menjadi Flexbox agar sejajar
+    container.style.display = 'flex';
+    container.style.gap = '1.5rem';
+    container.style.overflow = 'hidden';
+    container.style.height = '100vh';
+    container.style.justifyContent = 'center';
+    container.style.alignItems = 'center';
+    container.style.padding = '2rem';
     
     let styleKeys = Object.keys(availableStyles);
     let isDummy = false;
     
-    // JIKA DATABASE KOSONG, GUNAKAN GAMBAR PLACEHOLDER AGAR ANIMASI TETAP JALAN
     if (styleKeys.length === 0) {
-        console.log("[System] Katalog kosong, memuat gambar placeholder untuk animasi panggung.");
         isDummy = true;
         const dummies = [
             'https://images.unsplash.com/photo-1542038784456-1ea8e935640e?w=400&q=80',
@@ -177,27 +176,29 @@ function initHeroAnimation() {
 
     for (let i = 0; i < 2; i++) {
         const col = document.createElement('div');
-        col.className = `hero-column col-${i+1}`; 
+        col.style.display = 'flex';
+        col.style.flexDirection = 'column';
+        col.style.gap = '1.5rem';
+        col.style.width = '240px';
+        col.style.animation = `scrollUp ${15 + i * 5}s linear infinite`;
+        if (i % 2 !== 0) col.style.animationDirection = 'reverse';
         
-        const imagesToRender = [...styleKeys, ...styleKeys];
+        const imagesToRender = [...styleKeys, ...styleKeys, ...styleKeys];
         
         imagesToRender.forEach(key => {
             const style = availableStyles[key];
             const img = document.createElement('img');
-            
-            // Jika dummy gunakan link langsung, jika dari database gunakan link API hosting
-            if (isDummy) {
-                img.src = style.cover;
-            } else {
-                img.src = style.cover ? `https://api.agenticaicenter.id/${style.cover}` : 'assets/placeholder.jpg';
-            }
+            img.style.width = '100%';
+            img.style.borderRadius = '1rem';
+            img.style.objectFit = 'cover';
+            img.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.5)';
+            img.src = isDummy ? style.cover : (style.cover ? `https://api.agenticaicenter.id/${style.cover}` : 'assets/placeholder.jpg');
             col.appendChild(img);
         });
         
         container.appendChild(col);
     }
     
-    // Bersihkan dummy setelah render agar tidak mengganggu proses foto
     if (isDummy) availableStyles = {}; 
 }
 
@@ -319,7 +320,6 @@ async function processAIGeneration() {
         } else {
             throw new Error("Format respons OpenAI tidak sesuai dugaan.");
         }
-
     } catch (error) {
         console.error("AI Processing gagal:", error);
         alert(`Gagal memproses gambar AI: ${error.message}`);
