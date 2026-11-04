@@ -11,42 +11,11 @@ const API_URLS = {
 // ==========================================
 // STATE APLIKASI
 // ==========================================
-let appSettings = {
-    apiKey: '',
-    apiBaseUrl: 'https://api.openai.com/v1',
-    aiModel: 'gpt-image-2.5-sunburst'
-};
+let appSettings = { apiKey: '', apiBaseUrl: 'https://api.openai.com/v1', aiModel: 'gpt-image-2.5-sunburst' };
 let availableStyles = {};
 let selectedStyleId = null;
-let videoStream = null;
-let capturedBase64 = null;
-
-// ==========================================
-// DOM ELEMENTS
-// ==========================================
-const elements = {
-    video: document.getElementById('camera-stream'),
-    canvas: document.getElementById('photo-canvas'),
-    resultImage: document.getElementById('result-image'),
-    qrContainer: document.getElementById('qr-code-container'),
-    btnCapture: document.getElementById('btn-capture'),
-    ticketInput: document.getElementById('ticket-input'),
-    btnSubmitTicket: document.getElementById('btn-submit-ticket'),
-    loadingScreen: document.getElementById('loading-screen'),
-    styleContainer: document.getElementById('style-container'),
-    
-    // Pencarian wadah gambar panggung secara agresif
-    heroImageContainer: document.querySelector('.hero-images') || document.getElementById('floating-gallery') || document.querySelector('.right-panel') || document.querySelector('body > div > div:last-child'),
-    
-    // Admin Dashboard
-    btnGenerateTicket: document.getElementById('btn-generate-ticket'),
-    ticketDisplay: document.getElementById('ticket-display'),
-    btnSaveSettings: document.getElementById('btn-save-settings'),
-    inputApiKey: document.getElementById('input-api-key'),
-    countTiketAktif: document.getElementById('count-tiket-aktif'),
-    countTiketTerpakai: document.getElementById('count-tiket-terpakai'),
-    countKatalogStyle: document.getElementById('count-katalog-style')
-};
+let pbVideoStream = null;
+let pbCapturedBase64 = null;
 
 // ==========================================
 // INISIALISASI AWAL
@@ -56,7 +25,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     await loadStyles();
     
     const isAdmin = window.location.href.toLowerCase().includes('admin') || 
-                    document.body.innerText.includes('NODE.JS SERVER') ||
+                    document.body.innerText.includes('API Server') ||
                     document.querySelector('.admin-dashboard') !== null;
     
     if (isAdmin) {
@@ -65,12 +34,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     } else {
         initHeroAnimation();
         initCamera();
-        setupEventListeners();
+        setupUniversalEventListeners();
     }
 });
 
 // ==========================================
-// PENGAMBILAN DATA & DASHBOARD ADMIN
+// API REQUESTS
 // ==========================================
 async function loadSettings() {
     try {
@@ -78,11 +47,8 @@ async function loadSettings() {
         if (response.ok) {
             const data = await response.json();
             appSettings = { ...appSettings, ...data };
-            if (elements.inputApiKey) elements.inputApiKey.value = appSettings.apiKey || '';
         }
-    } catch (error) {
-        console.error("Gagal memuat settings:", error);
-    }
+    } catch (error) { console.error("Gagal load settings:", error); }
 }
 
 async function loadStyles() {
@@ -91,57 +57,56 @@ async function loadStyles() {
         if (response.ok) {
             availableStyles = await response.json();
             renderStyleOptions();
+            initHeroAnimation();
         }
-    } catch (error) {
-        console.error("Gagal memuat styles:", error);
-    }
+    } catch (error) { console.error("Gagal load styles:", error); }
 }
 
-async function loadAdminDashboard() {
+async function validateTicket(token) {
     try {
-        const allElements = document.querySelectorAll('span, p, div');
-        for (let el of allElements) {
-            if (el.innerText && el.innerText.includes('NODE.JS SERVER') && el.innerText.includes('Offline')) {
-                el.innerHTML = 'API HOSTING <span style="color: #10B981; font-weight: bold; margin-left: 5px;">Online</span>';
-                break;
-            }
-        }
-
-        const resTickets = await fetch(API_URLS.tickets);
-        let aktif = 0, terpakai = 0;
-        if (resTickets.ok) {
-            const tickets = await resTickets.json();
-            for (let key in tickets) {
-                if (tickets[key].status === 'active') aktif++;
-                if (tickets[key].status === 'used') terpakai++;
-            }
-        }
-
-        const totalStyles = Object.keys(availableStyles).length;
-
-        if (elements.countTiketAktif) elements.countTiketAktif.innerText = aktif;
-        if (elements.countTiketTerpakai) elements.countTiketTerpakai.innerText = terpakai;
-        if (elements.countKatalogStyle) elements.countKatalogStyle.innerText = totalStyles;
+        showLoading("Memvalidasi tiket...");
+        const response = await fetch(`${API_URLS.tickets}?action=validate`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token: token })
+        });
+        const data = await response.json();
+        hideLoading();
         
-        const numberElements = document.querySelectorAll('.bg-white h2, .bg-white .text-5xl, .card h2');
-        if (numberElements.length >= 3) {
-            numberElements[0].innerText = aktif;
-            numberElements[1].innerText = terpakai;
-            numberElements[2].innerText = totalStyles;
+        if (data.success) {
+            alert("Tiket Valid! Membuka kamera...");
+            // Cari elemen pembungkus stage/kamera untuk digeser tampilannya
+            const stageSection = document.getElementById('camera-section') || document.querySelector('.camera-view') || document.getElementById('stage-session');
+            if (stageSection) stageSection.scrollIntoView({ behavior: 'smooth' });
+            else {
+                // Fallback jika tidak ada section khusus, sembunyikan area tiket dan tampilkan kamera
+                const ticketBox = document.getElementById('ticket-container') || document.querySelector('.ticket-box');
+                if (ticketBox) ticketBox.style.display = 'none';
+            }
+            return true;
+        } else {
+            alert("Tiket tidak valid atau sudah terpakai.");
+            return false;
         }
     } catch (error) {
-        console.error("Gagal memuat dashboard admin:", error);
+        hideLoading();
+        alert("Gagal koneksi ke server tiket.");
+        return false;
     }
 }
 
 // ==========================================
-// UI & ANIMASI GAMBAR MELAYANG (FORCED CSS)
+// ANIMASI PANGGUNG (HERO SECTION)
 // ==========================================
 function initHeroAnimation() {
-    let container = elements.heroImageContainer;
-    if (!container) return; 
-    
-    // Injeksi keyframe CSS untuk animasi naik
+    let container = document.querySelector('.hero-images') || document.getElementById('floating-gallery') || document.querySelector('.right-panel');
+    if (!container) {
+        const mainWrapper = document.querySelector('main') || document.body.firstElementChild;
+        if (mainWrapper && mainWrapper.children.length > 1) {
+            container = mainWrapper.lastElementChild;
+        } else return;
+    }
+
     if (!document.getElementById('hero-keyframes')) {
         const style = document.createElement('style');
         style.id = 'hero-keyframes';
@@ -150,14 +115,9 @@ function initHeroAnimation() {
     }
 
     container.innerHTML = ''; 
-    // Paksa kontainer menjadi Flexbox agar sejajar
-    container.style.display = 'flex';
+    container.style.display = container.style.display || 'flex';
     container.style.gap = '1.5rem';
     container.style.overflow = 'hidden';
-    container.style.height = '100vh';
-    container.style.justifyContent = 'center';
-    container.style.alignItems = 'center';
-    container.style.padding = '2rem';
     
     let styleKeys = Object.keys(availableStyles);
     let isDummy = false;
@@ -176,160 +136,104 @@ function initHeroAnimation() {
 
     for (let i = 0; i < 2; i++) {
         const col = document.createElement('div');
-        col.style.display = 'flex';
-        col.style.flexDirection = 'column';
-        col.style.gap = '1.5rem';
-        col.style.width = '240px';
-        col.style.animation = `scrollUp ${15 + i * 5}s linear infinite`;
+        col.style.cssText = `display:flex; flex-direction:column; gap:1.5rem; width:220px; animation: scrollUp ${18 + i * 6}s linear infinite;`;
         if (i % 2 !== 0) col.style.animationDirection = 'reverse';
         
         const imagesToRender = [...styleKeys, ...styleKeys, ...styleKeys];
-        
         imagesToRender.forEach(key => {
             const style = availableStyles[key];
             const img = document.createElement('img');
-            img.style.width = '100%';
-            img.style.borderRadius = '1rem';
-            img.style.objectFit = 'cover';
-            img.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.5)';
+            img.style.cssText = 'width:100%; height:300px; border-radius:1rem; object-fit:cover; box-shadow:0 10px 15px -3px rgba(0,0,0,0.5);';
             img.src = isDummy ? style.cover : (style.cover ? `https://api.agenticaicenter.id/${style.cover}` : 'assets/placeholder.jpg');
             col.appendChild(img);
         });
-        
         container.appendChild(col);
     }
-    
     if (isDummy) availableStyles = {}; 
 }
 
 function renderStyleOptions() {
-    if (!elements.styleContainer) return;
-    elements.styleContainer.innerHTML = "";
+    const container = document.getElementById('style-container') || document.querySelector('.style-grid');
+    if (!container) return;
+    container.innerHTML = "";
     
     for (const [id, style] of Object.entries(availableStyles)) {
         const div = document.createElement('div');
-        div.className = 'style-card';
+        div.className = 'style-card cursor-pointer p-2 border rounded-xl hover:border-brand-500 transition-all';
         div.innerHTML = `
-            <img src="${style.cover ? `https://api.agenticaicenter.id/${style.cover}` : 'assets/placeholder.jpg'}" alt="${style.name}">
-            <h3>${style.name}</h3>
+            <img src="${style.cover ? `https://api.agenticaicenter.id/${style.cover}` : 'assets/placeholder.jpg'}" class="w-full h-40 object-cover rounded-lg mb-2">
+            <h3 class="font-bold text-sm">${style.name}</h3>
         `;
         div.onclick = () => {
             selectedStyleId = id;
-            document.querySelectorAll('.style-card').forEach(el => el.classList.remove('selected'));
-            div.classList.add('selected');
+            document.querySelectorAll('.style-card').forEach(el => el.classList.remove('border-brand-500', 'ring-2'));
+            div.classList.add('border-brand-500', 'ring-2');
         };
-        elements.styleContainer.appendChild(div);
+        container.appendChild(div);
     }
 }
 
 // ==========================================
-// KONTROL KAMERA & PROSES AI
+// KAMERA & AI
 // ==========================================
 async function initCamera() {
-    if (!elements.video) return;
+    const videoEl = document.getElementById('camera-stream') || document.querySelector('video');
+    if (!videoEl) return;
     try {
-        videoStream = await navigator.mediaDevices.getUserMedia({
-            video: { width: { ideal: 1920 }, height: { ideal: 1080 }, facingMode: "user" },
-            audio: false
-        });
-        elements.video.srcObject = videoStream;
-        elements.video.play();
-    } catch (error) {
-        console.error("Gagal mengakses kamera:", error);
-    }
+        pbVideoStream = await navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 1920 }, height: { ideal: 1080 } }, audio: false });
+        videoEl.srcObject = pbVideoStream;
+        videoEl.play();
+    } catch (error) { console.error("Kamera error:", error); }
 }
 
 function takePhoto() {
-    if (!elements.video || !elements.canvas) return;
+    const videoEl = document.getElementById('camera-stream') || document.querySelector('video');
+    const canvasEl = document.getElementById('photo-canvas') || document.createElement('canvas');
+    if (!videoEl) return alert("Kamera tidak aktif.");
+
+    const context = canvasEl.getContext('2d');
+    canvasEl.width = videoEl.videoWidth || 1280;
+    canvasEl.height = videoEl.videoHeight || 720;
     
-    const context = elements.canvas.getContext('2d');
-    elements.canvas.width = elements.video.videoWidth;
-    elements.canvas.height = elements.video.videoHeight;
-    
-    context.translate(elements.canvas.width, 0);
+    context.translate(canvasEl.width, 0);
     context.scale(-1, 1);
-    context.drawImage(elements.video, 0, 0, elements.canvas.width, elements.canvas.height);
+    context.drawImage(videoEl, 0, 0, canvasEl.width, canvasEl.height);
     
-    capturedBase64 = elements.canvas.toDataURL('image/jpeg', 0.9);
+    pbCapturedBase64 = canvasEl.toDataURL('image/jpeg', 0.9);
     processAIGeneration();
 }
 
-async function validateTicket(token) {
-    try {
-        showLoading("Memvalidasi tiket...");
-        const response = await fetch(`${API_URLS.tickets}?action=validate`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ token: token })
-        });
-        
-        const data = await response.json();
-        hideLoading();
-        
-        if (data.success) {
-            alert("Tiket Valid! Silakan pilih gaya dan mulai berfoto.");
-            return true;
-        } else {
-            alert("Tiket tidak valid atau sudah terpakai.");
-            return false;
-        }
-    } catch (error) {
-        hideLoading();
-        alert("Terjadi kesalahan jaringan saat memvalidasi tiket.");
-        return false;
-    }
-}
-
 async function processAIGeneration() {
-    if (!capturedBase64) return alert("Belum ada foto yang ditangkap.");
-    if (!selectedStyleId || !availableStyles[selectedStyleId]) return alert("Pilih gaya foto terlebih dahulu.");
-    if (!appSettings.apiKey) return alert("API Key OpenAI belum dikonfigurasi di Settings.");
+    if (!pbCapturedBase64) return alert("Belum ada foto.");
+    if (!selectedStyleId) return alert("Silakan pilih salah satu style terlebih dahulu!");
+    if (!appSettings.apiKey) return alert("API Key OpenAI belum diatur di menu Admin Settings.");
 
-    showLoading("AI sedang memproses mahakarya Anda...");
-
+    showLoading("AI sedang memproses foto Anda...");
     try {
-        const styleData = availableStyles[selectedStyleId];
-        const promptText = styleData.prompt_template || "Creative portrait, highly detailed.";
-        const base64Image = capturedBase64.replace(/^data:image\/\w+;base64,/, "");
-
-        const payload = {
-            model: appSettings.aiModel,
-            prompt: promptText,
-            image: base64Image, 
-            n: 1,
-            size: "1024x1024"
-        };
+        const styleData = availableStyles[selectedStyleId] || { prompt_template: "HD Portrait" };
+        const base64Image = pbCapturedBase64.replace(/^data:image\/\w+;base64,/, "");
 
         const response = await fetch(`${appSettings.apiBaseUrl}/images/edits`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${appSettings.apiKey}`
-            },
-            body: JSON.stringify(payload)
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${appSettings.apiKey}` },
+            body: JSON.stringify({ model: appSettings.aiModel, prompt: styleData.prompt_template, image: base64Image, n: 1, size: "1024x1024" })
         });
-
         const data = await response.json();
-        
         if (data.error) throw new Error(data.error.message);
 
         if (data.data && data.data[0] && data.data[0].b64_json) {
-            const finalImageBase64 = `data:image/jpeg;base64,${data.data[0].b64_json}`;
-            if (elements.resultImage) elements.resultImage.src = finalImageBase64;
-            await finalizePhotoAndUpload(finalImageBase64);
-        } else {
-            throw new Error("Format respons OpenAI tidak sesuai dugaan.");
-        }
+            const finalImage = `data:image/jpeg;base64,${data.data[0].b64_json}`;
+            const resultImg = document.getElementById('result-image');
+            if (resultImg) resultImg.src = finalImage;
+            await finalizePhotoAndUpload(finalImage);
+        } else { throw new Error("Format respons AI tidak valid."); }
     } catch (error) {
-        console.error("AI Processing gagal:", error);
-        alert(`Gagal memproses gambar AI: ${error.message}`);
-    } finally {
-        hideLoading();
-    }
+        alert(`Gagal memproses AI: ${error.message}`);
+    } finally { hideLoading(); }
 }
 
 async function finalizePhotoAndUpload(imageBase64) {
-    showLoading("Menyiapkan QR Code untuk di-upload...");
+    showLoading("Mengunggah hasil ke server...");
     try {
         const response = await fetch(API_URLS.upload, {
             method: 'POST',
@@ -339,92 +243,112 @@ async function finalizePhotoAndUpload(imageBase64) {
         const data = await response.json();
         if (data.success && data.url) {
             generateQR(data.url);
-        } else {
-            throw new Error(data.message || "Gagal upload gambar.");
-        }
-    } catch (error) {
-        console.error("Upload ke server gagal:", error);
-        alert("Gagal melakukan upload foto ke server. Silakan coba lagi.");
-    } finally {
-        hideLoading();
-    }
+        } else { throw new Error(data.message || "Gagal upload."); }
+    } catch (error) { alert("Gagal mengunggah foto."); }
+    finally { hideLoading(); }
 }
 
 function generateQR(url) {
-    if (!elements.qrContainer) return;
-    elements.qrContainer.innerHTML = ""; 
-    new QRCode(elements.qrContainer, {
-        text: url, width: 256, height: 256,
-        colorDark : "#000000", colorLight : "#ffffff",
-        correctLevel : QRCode.CorrectLevel.H
-    });
+    const qrDiv = document.getElementById('qr-code-container');
+    if (!qrDiv) return;
+    qrDiv.innerHTML = "";
+    new QRCode(qrDiv, { text: url, width: 256, height: 256, colorDark: "#000000", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.H });
 }
 
 // ==========================================
-// FUNGSI ADMIN & EVENT LISTENERS
+// UNIVERSAL EVENT LISTENERS (ANTI-GAGAL TOMBOL)
 // ==========================================
-async function generateTicket() {
-    try {
-        showLoading("Membuat tiket baru...");
-        const response = await fetch(`${API_URLS.tickets}?action=generate`, { method: 'POST', body: JSON.stringify({}) });
-        const data = await response.json();
-        hideLoading();
-        if (data.success) {
-            if (elements.ticketDisplay) elements.ticketDisplay.innerText = data.token;
-            alert(`Tiket berhasil dibuat: ${data.token}`);
-            loadAdminDashboard();
-        }
-    } catch (error) {
-        hideLoading();
-        alert("Kesalahan jaringan saat membuat tiket.");
-    }
-}
+function setupUniversalEventListeners() {
+    // Tombol Kirim Tiket / Mulai Sesi
+    const ticketBtn = document.getElementById('btn-submit-ticket') || document.querySelector('button[type="submit"]') || document.querySelector('button');
+    const ticketInput = document.getElementById('ticket-input') || document.querySelector('input[type="text"]');
 
-async function saveAdminSettings(newSettings) {
-    try {
-        showLoading("Menyimpan pengaturan...");
-        const response = await fetch(API_URLS.settings, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(newSettings)
-        });
-        const data = await response.json();
-        hideLoading();
-        if(data.success) {
-            alert("Pengaturan berhasil disimpan ke server!");
-            await loadSettings();
-        }
-    } catch(err) {
-        hideLoading();
-    }
-}
-
-function setupEventListeners() {
-    if (elements.btnSubmitTicket) {
-        elements.btnSubmitTicket.addEventListener('click', () => {
-            if (elements.ticketInput.value.trim()) validateTicket(elements.ticketInput.value.trim());
+    if (ticketBtn) {
+        ticketBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const token = ticketInput ? ticketInput.value.trim() : "";
+            if (token) validateTicket(token);
+            else alert("Masukkan kode tiket terlebih dahulu!");
         });
     }
-    if (elements.btnCapture) elements.btnCapture.addEventListener('click', takePhoto);
+
+    // Tombol Ambil Foto / Capture
+    const captureBtn = document.getElementById('btn-capture') || document.querySelector('.btn-capture') || document.querySelectorAll('button')[1];
+    if (captureBtn) {
+        captureBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            takePhoto();
+        });
+    }
 }
 
+// ==========================================
+// ADMIN LISTENERS
+// ==========================================
 function setupAdminListeners() {
-    if (elements.btnGenerateTicket) elements.btnGenerateTicket.addEventListener('click', generateTicket);
-    if (elements.btnSaveSettings) {
-        elements.btnSaveSettings.addEventListener('click', () => {
-            saveAdminSettings({ ...appSettings, apiKey: elements.inputApiKey ? elements.inputApiKey.value.trim() : appSettings.apiKey });
+    const btnGen = document.getElementById('btn-generate-ticket');
+    const btnSave = document.getElementById('btn-save-settings');
+    const inputKey = document.getElementById('set-apiKey') || document.getElementById('input-api-key');
+
+    if (btnGen) {
+        btnGen.addEventListener('click', async () => {
+            try {
+                const res = await fetch(`${API_URLS.tickets}?action=generate`, { method: 'POST' });
+                const data = await res.json();
+                if(data.success) {
+                    alert(`Tiket Berhasil Dibuat: ${data.token}`);
+                    loadAdminDashboard();
+                }
+            } catch(e) { alert("Gagal membuat tiket"); }
+        });
+    }
+
+    if (btnSave) {
+        btnSave.addEventListener('click', async () => {
+            const newSettings = {
+                apiKey: inputKey ? inputKey.value.trim() : appSettings.apiKey,
+                apiBaseUrl: appSettings.apiBaseUrl,
+                aiModel: appSettings.aiModel
+            };
+            try {
+                const res = await fetch(API_URLS.settings, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(newSettings)
+                });
+                if(res.ok) alert("Pengaturan berhasil disimpan!");
+            } catch(e) { alert("Gagal menyimpan pengaturan"); }
         });
     }
 }
 
-function showLoading(message = "Loading...") {
-    if (elements.loadingScreen) {
-        const span = elements.loadingScreen.querySelector('span');
-        if(span) span.innerText = message;
-        elements.loadingScreen.style.display = "flex";
+async function loadAdminDashboard() {
+    try {
+        const resTickets = await fetch(API_URLS.tickets);
+        const tickets = await resTickets.json();
+        let active = 0, used = 0;
+        Object.values(tickets).forEach(t => { if (t.status === 'active') active++; if (t.status === 'used') used++; });
+        
+        const elActive = document.getElementById('stat-active-tickets');
+        const elUsed = document.getElementById('stat-used-tickets');
+        const elTotal = document.getElementById('stat-total-styles');
+        
+        if (elActive) elActive.innerText = active;
+        if (elUsed) elUsed.innerText = used;
+        if (elTotal) elTotal.innerText = Object.keys(availableStyles).length;
+    } catch (err) { console.error("Gagal load admin dashboard:", err); }
+}
+
+function showLoading(msg = "Loading...") {
+    const screen = document.getElementById('loading-screen');
+    if (screen) {
+        const span = screen.querySelector('span');
+        if (span) span.innerText = msg;
+        screen.style.display = "flex";
     }
 }
 
 function hideLoading() {
-    if (elements.loadingScreen) elements.loadingScreen.style.display = "none";
+    const screen = document.getElementById('loading-screen');
+    if (screen) screen.style.display = "none";
 }

@@ -54,6 +54,7 @@
 
     <div id="app-container" class="relative w-full h-[100dvh] overflow-hidden bg-booth-bg">
 
+        <!-- SCREEN 1: WELCOME -->
         <section id="screen-welcome" class="absolute inset-0 z-10 w-full h-full lg:grid lg:grid-cols-[minmax(0,0.92fr)_minmax(520px,1.08fr)]">
             <div class="relative flex min-h-[58dvh] flex-col px-5 pb-8 pt-5 sm:px-8 sm:pb-10 sm:pt-7 lg:min-h-[100dvh] lg:px-[clamp(36px,5vw,84px)] lg:pb-12 lg:pt-9 z-10">
                 <header class="flex items-center justify-between border-b border-white/10 pb-5">
@@ -100,6 +101,7 @@
             </aside>
         </section>
 
+        <!-- SCREEN 2: PIN / TICKET -->
         <section id="screen-pin" class="screen-hidden absolute inset-0 z-20 w-full h-full bg-gradient-to-b from-[#111317] to-[#0d0f13] flex flex-col items-center justify-center fade-in">
             <div class="radial-glow absolute inset-0 pointer-events-none"></div>
             <div class="bg-grid absolute inset-0 pointer-events-none"></div>
@@ -123,19 +125,20 @@
                         <input type="text" id="token-input" placeholder="KODE TIKET..." autocomplete="off" 
                             class="w-full bg-[#1a2029] border-2 border-white/10 rounded-2xl py-5 px-6 text-center text-3xl font-black tracking-[0.3em] text-white uppercase outline-none focus:border-booth-accent focus:shadow-[0_0_20px_rgba(232,84,62,0.2)] transition-all">
                         
-                        <button onclick="submitToken()" id="btn-submit-token" class="mt-5 w-full py-4 bg-booth-accent hover:bg-booth-accentLight rounded-xl font-bold text-[17px] text-white transition-all shadow-[0_0_15px_rgba(232,84,62,0.3)]">
+                        <button id="btn-submit-token" class="mt-5 w-full py-4 bg-booth-accent hover:bg-booth-accentLight rounded-xl font-bold text-[17px] text-white transition-all shadow-[0_0_15px_rgba(232,84,62,0.3)]">
                             Mulai Sesi Photobooth &rarr;
                         </button>
                     </div>
                     <p id="token-error" class="mt-4 text-sm font-bold text-red-400 min-h-[20px]"></p>
                 </div>
                 
-                <button onclick="cancelTokenScreen()" class="mt-8 text-[13px] font-bold text-booth-muted hover:text-white transition-colors">
+                <button id="btn-cancel-token" class="mt-8 text-[13px] font-bold text-booth-muted hover:text-white transition-colors">
                     &larr; Batal & Kembali
                 </button>
             </div>
         </section>
 
+        <!-- SCREEN 3: STYLE SELECTION -->
         <section id="screen-style" class="screen-hidden absolute inset-0 z-20 w-full h-full flex flex-col bg-booth-bg fade-in">
             <header class="flex items-center justify-between h-[68px] px-5 sm:px-8 lg:px-10 border-b border-white/10 shrink-0">
                 <div class="flex items-center gap-3">
@@ -175,7 +178,7 @@
                     </div>
 
                     <div class="p-5 lg:px-10 border-t border-white/10 bg-booth-surface/95 backdrop-blur-md shrink-0 flex justify-end">
-                        <button id="btn-next-integrated" onclick="confirmIntegratedOptionsAndGo()" disabled class="inline-flex min-h-[54px] min-w-[200px] shrink-0 items-center justify-between rounded-xl bg-[#13151a] px-6 text-[15px] font-bold text-[#686871] border border-white/10 transition-all">
+                        <button id="btn-next-integrated" disabled class="inline-flex min-h-[54px] min-w-[200px] shrink-0 items-center justify-between rounded-xl bg-[#13151a] px-6 text-[15px] font-bold text-[#686871] border border-white/10 transition-all">
                             Lanjut ke Kamera <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                         </button>
                     </div>
@@ -183,6 +186,7 @@
             </main>
         </section>
 
+        <!-- SCREEN 4: CAPTURE -->
         <section id="screen-capture" class="screen-hidden absolute inset-0 z-30 w-full h-full bg-[#0b0c0f] flex flex-col fade-in">
             <header class="flex items-center justify-between h-[68px] px-5 sm:px-8 lg:px-10 border-b border-white/10 shrink-0 relative z-20 bg-black/50 backdrop-blur-md">
                 <div class="flex items-center gap-3">
@@ -231,14 +235,14 @@
                         <img id="capture-preview-img" src="" class="w-full h-full object-cover">
                     </div>
                     <div class="flex gap-3 mt-1">
-                        <button onclick="retakePhoto()" class="flex-1 h-[52px] rounded-xl border border-white/15 bg-white/5 text-white font-bold hover:bg-white/10 transition-all text-sm">Ambil Ulang</button>
-                        <button onclick="startAIProcessing()" class="flex-1 h-[52px] rounded-xl bg-booth-accent text-white font-bold hover:bg-booth-accentLight transition-all text-sm shadow-lg">Upload ke AI &rarr;</button>
+                        <button id="btn-retake" class="flex-1 h-[52px] rounded-xl border border-white/15 bg-white/5 text-white font-bold hover:bg-white/10 transition-all text-sm">Ambil Ulang</button>
+                        <button id="btn-proceed-ai" class="flex-1 h-[52px] rounded-xl bg-booth-accent text-white font-bold hover:bg-booth-accentLight transition-all text-sm shadow-lg">Upload ke AI &rarr;</button>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Latar Loading AI & Upload GDrive (Dulu cuma AI, sekarang digabung) -->
+        <!-- SCREEN 5: REVIEW / LOADING -->
         <section id="screen-review" class="screen-hidden absolute inset-0 z-40 w-full h-full bg-[#0b0c0f] flex flex-col fade-in">
             <header class="flex items-center justify-between h-[68px] px-5 sm:px-8 lg:px-10 border-b border-white/10 shrink-0">
                 <span class="font-extrabold tracking-wide text-sm sm:text-base">AI PHOTOBOOTH</span>
@@ -268,7 +272,7 @@
             </main>
         </section>
 
-        <!-- SCREEN 7: RESULT & DOWNLOAD (FOTO ASLI & AI BERSEBELAHAN) -->
+        <!-- SCREEN 6: RESULT & DOWNLOAD -->
         <section id="screen-result" class="screen-hidden absolute inset-0 z-50 w-full h-full bg-booth-bg flex flex-col fade-in overflow-y-auto">
             <header class="flex items-center justify-between h-[68px] px-8 lg:px-12 border-b border-white/10 shrink-0 sticky top-0 bg-booth-bg/90 backdrop-blur z-10">
                 <span class="font-extrabold tracking-widest text-sm text-white/50">AI PHOTOBOOTH</span>
