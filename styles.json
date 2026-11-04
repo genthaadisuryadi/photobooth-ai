@@ -1,0 +1,530 @@
+{
+    "scene_swap": {
+        "name": "Scene Swap",
+        "cover": "assets/style_covers/scene_swap.png",
+        "description": "Teleport ke lokasi ikonik dunia tanpa harus ke sana.",
+        "prompt_template": "Professional background replacement edit. Replace the background with {landmark_label}. Identity lock is the highest priority: keep the same people, same person count, same perceived gender per person, same face identity, skin tone family, expression, pose, posture, head angle, gaze, hand position, body silhouette, hairstyle, wardrobe, framing, camera angle, and subject scale. Do not beautify, age-shift, swap faces, or change eye, nose, mouth, or jaw shape. Do not remove or alter accessories. Match perspective, light direction, and shadows to the new background seamlessly. High quality realistic photograph with natural blending. No extra people, duplicate faces, anatomy artifacts, text, or watermark. Final output aspect ratio 16:10.",
+        "options": [
+            {
+                "id": "landmark",
+                "label": "Pilih Lokasi",
+                "choices": [
+                    {
+                        "value": "eiffel_tower",
+                        "label": "Menara Eiffel",
+                        "prompt": "Menara Eiffel, Paris.",
+                        "img": "assets/style_option_covers/scene_swap/landmark/eiffel_tower.png"
+                    },
+                    {
+                        "value": "leaning_tower_pisa",
+                        "label": "Menara Pisa",
+                        "prompt": "Menara Pisa, Italia.",
+                        "img": "assets/style_option_covers/scene_swap/landmark/leaning_tower_pisa.png"
+                    },
+                    {
+                        "value": "colosseum",
+                        "label": "Koloseum",
+                        "prompt": "Koloseum, Roma.",
+                        "img": "assets/style_option_covers/scene_swap/landmark/colosseum.png"
+                    },
+                    {
+                        "value": "louvre",
+                        "label": "Louvre",
+                        "prompt": "Museum Louvre, Paris.",
+                        "img": "assets/style_option_covers/scene_swap/landmark/louvre.png"
+                    },
+                    {
+                        "value": "hagia_sophia",
+                        "label": "Hagia Sophia",
+                        "prompt": "Hagia Sophia, Istanbul.",
+                        "img": "assets/style_option_covers/scene_swap/landmark/hagia_sophia.png"
+                    },
+                    {
+                        "value": "tower_bridge",
+                        "label": "Tower Bridge",
+                        "prompt": "Tower Bridge, London.",
+                        "img": "assets/style_option_covers/scene_swap/landmark/tower_bridge.png"
+                    },
+                    {
+                        "value": "brandenburg_gate",
+                        "label": "Gerbang Brandenburg",
+                        "prompt": "Gerbang Brandenburg, Berlin.",
+                        "img": "assets/style_option_covers/scene_swap/landmark/brandenburg_gate.png"
+                    },
+                    {
+                        "value": "kremlin_palace",
+                        "label": "Istana Kremlin",
+                        "prompt": "Istana Kremlin, Moskow.",
+                        "img": "assets/style_option_covers/scene_swap/landmark/kremlin_palace.png"
+                    }
+                ]
+            }
+        ]
+    },
+    "negara": {
+        "name": "Negara",
+        "cover": "assets/style_covers/negara.png",
+        "description": "Kenakan pakaian tradisional dan berfoto di landmark ikonik Korea, Jepang, atau Cina.",
+        "prompt_template": "Professional cultural heritage photo edit. Change wardrobe to authentic {outfit_label} and set background to {landmark_label}. Wardrobe and background edit only; do not regenerate or repaint the face. Identity lock is the highest priority. Preserve the original face area as much as possible. Do not beautify, age-shift, swap faces, smooth skin into a different person, or change eye, nose, mouth, cheek, jaw shape, or facial proportions. Hair may adapt only if needed for the outfit. Match perspective, light direction, shadows, and cinematic cultural atmosphere. High quality realistic photograph, premium fabric texture, polished detail. No extra people, duplicate faces, anatomy artifacts, text, or watermark. Final output aspect ratio 16:10.",
+        "negara_data": {
+            "korea": {
+                "label": "Korea",
+                "outfits": [
+                    {
+                        "value": "hanbok",
+                        "label": "Hanbok",
+                        "prompt": "Hanbok Korea.",
+                        "img": "assets/style_option_covers/negara/outfit/hanbok.png"
+                    },
+                    {
+                        "value": "gwanbok",
+                        "label": "Gwanbok",
+                        "prompt": "Gwanbok Korea.",
+                        "img": "assets/style_option_covers/negara/outfit/gwanbok.png"
+                    },
+                    {
+                        "value": "gonryongpos",
+                        "label": "Gonryongpos",
+                        "prompt": "Gonryongpos Korea.",
+                        "img": "assets/style_option_covers/negara/outfit/gonryongpos.png"
+                    }
+                ],
+                "landmarks": [
+                    {
+                        "value": "seoul_tower",
+                        "label": "Seoul Tower",
+                        "prompt": "Seoul Tower.",
+                        "img": "assets/style_option_covers/negara/landmark/seoul_tower.png"
+                    },
+                    {
+                        "value": "gyeongbokgung",
+                        "label": "Istana Gyeongbokgung",
+                        "prompt": "Istana Gyeongbokgung.",
+                        "img": "assets/style_option_covers/negara/landmark/gyeongbokgung.png"
+                    },
+                    {
+                        "value": "han_river",
+                        "label": "Han River",
+                        "prompt": "Han River Seoul.",
+                        "img": "assets/style_option_covers/negara/landmark/han_river.png"
+                    },
+                    {
+                        "value": "everland",
+                        "label": "Everland",
+                        "prompt": "Everland Theme Park Korea.",
+                        "img": "assets/style_option_covers/negara/landmark/everland.png"
+                    }
+                ]
+            },
+            "jepang": {
+                "label": "Jepang",
+                "outfits": [
+                    {
+                        "value": "jinbei",
+                        "label": "Jinbei",
+                        "prompt": "Jinbei Jepang.",
+                        "img": "assets/style_option_covers/negara/outfit/jinbei.png"
+                    },
+                    {
+                        "value": "kimono",
+                        "label": "Kimono",
+                        "prompt": "Kimono Jepang.",
+                        "img": "assets/style_option_covers/negara/outfit/kimono.png"
+                    },
+                    {
+                        "value": "japanese_school_uniform",
+                        "label": "Baju SMA Jepang",
+                        "prompt": "Seragam SMA Jepang.",
+                        "img": "assets/style_option_covers/negara/outfit/japanese_school_uniform.png"
+                    },
+                    {
+                        "value": "yakuza",
+                        "label": "Yakuza",
+                        "prompt": "Yakuza suit Jepang.",
+                        "img": "assets/style_option_covers/negara/outfit/yakuza.png"
+                    }
+                ],
+                "landmarks": [
+                    {
+                        "value": "tokyo_tower",
+                        "label": "Tokyo Tower",
+                        "prompt": "Tokyo Tower.",
+                        "img": "assets/style_option_covers/negara/landmark/tokyo_tower.png"
+                    },
+                    {
+                        "value": "shibuya_street",
+                        "label": "Shibuya Street",
+                        "prompt": "Shibuya Crossing Tokyo.",
+                        "img": "assets/style_option_covers/negara/landmark/shibuya_street.png"
+                    },
+                    {
+                        "value": "chureito_fuji",
+                        "label": "Pagoda + Fuji",
+                        "prompt": "Pagoda Chureito dengan latar Gunung Fuji.",
+                        "img": "assets/style_option_covers/negara/landmark/chureito_fuji.png"
+                    },
+                    {
+                        "value": "imperial_palace",
+                        "label": "Istana Kaisar",
+                        "prompt": "Istana Kaisar Tokyo.",
+                        "img": "assets/style_option_covers/negara/landmark/imperial_palace.png"
+                    }
+                ]
+            },
+            "cina": {
+                "label": "Cina",
+                "outfits": [
+                    {
+                        "value": "cheongsam",
+                        "label": "Cheongsam",
+                        "prompt": "Cheongsam Cina.",
+                        "img": "assets/style_option_covers/negara/outfit/cheongsam.png"
+                    },
+                    {
+                        "value": "hanfu",
+                        "label": "Hanfu",
+                        "prompt": "Hanfu Cina.",
+                        "img": "assets/style_option_covers/negara/outfit/hanfu.png"
+                    }
+                ],
+                "landmarks": [
+                    {
+                        "value": "great_wall",
+                        "label": "Tembok Cina",
+                        "prompt": "Tembok Besar Cina.",
+                        "img": "assets/style_option_covers/negara/landmark/great_wall.png"
+                    },
+                    {
+                        "value": "terracotta_army",
+                        "label": "Pasukan Terakota",
+                        "prompt": "Pasukan Terakota Xian.",
+                        "img": "assets/style_option_covers/negara/landmark/terracotta_army.png"
+                    },
+                    {
+                        "value": "temple_of_heaven",
+                        "label": "Kuil Surga",
+                        "prompt": "Kuil Surga Tian Tan Beijing.",
+                        "img": "assets/style_option_covers/negara/landmark/temple_of_heaven.png"
+                    },
+                    {
+                        "value": "forbidden_city",
+                        "label": "Gugong",
+                        "prompt": "Gugong Forbidden City Beijing.",
+                        "img": "assets/style_option_covers/negara/landmark/forbidden_city.png"
+                    }
+                ]
+            }
+        },
+        "options": [
+            {
+                "id": "negara",
+                "label": "Pilih Negara",
+                "choices": [
+                    {
+                        "value": "korea",
+                        "label": "Korea",
+                        "prompt": "Traditional Korean Hanbok wardrobe, ancient Seoul palace background, cinematic lighting",
+                        "img": "assets/style_option_covers/negara/negara/korea.png"
+                    },
+                    {
+                        "value": "jepang",
+                        "label": "Jepang",
+                        "prompt": "Traditional Japanese Kimono, ancient Kyoto shrine background, cherry blossoms",
+                        "img": "assets/style_option_covers/negara/negara/jepang.png"
+                    },
+                    {
+                        "value": "cina",
+                        "label": "Cina",
+                        "prompt": "Traditional Chinese Hanfu, ancient imperial courtyard background, lantern lighting",
+                        "img": "assets/style_option_covers/negara/negara/cina.png"
+                    }
+                ]
+            }
+        ]
+    },
+    "makeover": {
+        "name": "Makeover",
+        "cover": "assets/style_covers/makeover.png",
+        "description": "Ganti penampilan dengan outfit dan gaya rambut pilihan.",
+        "prompt_template": "Professional makeover photo edit. {outfit_instruction}{hairstyle_instruction} Do not regenerate or repaint the face. Identity lock is the highest priority. Preserve the original face area as much as possible. Match perspective, light direction, shadows, and overall atmosphere. High quality realistic photograph, premium fabric texture, polished detail. No extra people, duplicate faces, anatomy artifacts, text, or watermark. Final output aspect ratio 16:10.",
+        "options": [
+            {
+                "id": "outfit",
+                "label": "Pilih Outfit (Opsional)",
+                "optional": false,
+                "choices": [
+                    {
+                        "value": "outfit_1",
+                        "label": "Outfit 1",
+                        "prompt": "Outfit 1.",
+                        "img": "assets/style_option_covers/makeover/outfit/outfit_1.png"
+                    },
+                    {
+                        "value": "outfit_2",
+                        "label": "Outfit 2",
+                        "prompt": "Outfit 2.",
+                        "img": "assets/style_option_covers/makeover/outfit/outfit_2.png"
+                    },
+                    {
+                        "value": "outfit_3",
+                        "label": "Outfit 3",
+                        "prompt": "Outfit 3.",
+                        "img": "assets/style_option_covers/makeover/outfit/outfit_3.png"
+                    }
+                ]
+            },
+            {
+                "id": "hairstyle",
+                "label": "Pilih Gaya Rambut (Opsional)",
+                "optional": false,
+                "choices": [
+                    {
+                        "value": "hairstyle_1",
+                        "label": "Gaya Rambut 1",
+                        "prompt": "Gaya Rambut 1.",
+                        "img": "assets/style_option_covers/makeover/hairstyle/hairstyle_1.png"
+                    },
+                    {
+                        "value": "hairstyle_2",
+                        "label": "Gaya Rambut 2",
+                        "prompt": "Gaya Rambut 2.",
+                        "img": "assets/style_option_covers/makeover/hairstyle/hairstyle_2.png"
+                    },
+                    {
+                        "value": "hairstyle_3",
+                        "label": "Gaya Rambut 3",
+                        "prompt": "Gaya Rambut 3.",
+                        "img": "assets/style_option_covers/makeover/hairstyle/hairstyle_3.png"
+                    }
+                ]
+            }
+        ]
+    },
+    "street_art": {
+        "name": "Street Art",
+        "cover": "assets/style_covers/street_art.png",
+        "description": "Tambahkan elemen seni urban ke fotomu — doodle, grafiti, atau sticker.",
+        "prompt_template": "Creative street art photo edit. Add {art_style_label} elements naturally integrated into the scene. Identity lock is the highest priority. Do not beautify, age-shift, swap faces, or change eye, nose, mouth, or jaw shape. The art elements should feel organic and stylistically consistent. Maintain natural lighting and depth. High quality creative photograph. No extra people, duplicate faces, anatomy artifacts, or watermark. Final output aspect ratio 16:10.",
+        "options": [
+            {
+                "id": "art_style",
+                "label": "Pilih Elemen Seni",
+                "choices": [
+                    {
+                        "value": "doodle",
+                        "label": "Doodle",
+                        "prompt": "Doodle line art elements.",
+                        "img": "assets/style_option_covers/street_art/art_style/doodle.png"
+                    },
+                    {
+                        "value": "graffiti",
+                        "label": "Grafiti",
+                        "prompt": "Graffiti street art elements.",
+                        "img": "assets/style_option_covers/street_art/art_style/graffiti.png"
+                    },
+                    {
+                        "value": "sticker",
+                        "label": "Sticker",
+                        "prompt": "Colorful sticker elements.",
+                        "img": "assets/style_option_covers/street_art/art_style/sticker.png"
+                    }
+                ]
+            }
+        ]
+    },
+    "majapahit": {
+        "name": "Majapahit",
+        "cover": "assets/style_covers/majapahit.png",
+        "description": "Tampil sebagai prajurit atau bangsawan kerajaan Majapahit yang agung.",
+        "prompt_template": "Professional Majapahit photo edit. Transform wardrobe to the selected Majapahit role. Identity lock is the highest priority. Apply warm royal lighting, historical texture, premium cultural detail, and realistic heritage atmosphere. {caste_label} High quality realistic photograph. No extra people, duplicate faces, anatomy artifacts, text, or watermark. Final output aspect ratio 16:10.",
+        "options": [
+            {
+                "id": "caste",
+                "label": "Pilih Kasta",
+                "choices": [
+                    {
+                        "value": "prajurit",
+                        "label": "Prajurit",
+                        "prompt": "Majapahit caste: Prajurit (warrior).",
+                        "img": "assets/style_option_covers/majapahit/caste/prajurit.png"
+                    },
+                    {
+                        "value": "bangsawan",
+                        "label": "Bangsawan",
+                        "prompt": "Majapahit caste: Bangsawan (noble).",
+                        "img": "assets/style_option_covers/majapahit/caste/bangsawan.png"
+                    }
+                ]
+            }
+        ]
+    },
+    "nusantara": {
+        "name": "Nusantara",
+        "cover": "assets/style_covers/nusantara.png",
+        "description": "Tampil di depan landmark ikonik Indonesia dengan suasana waktu pilihan kamu.",
+        "prompt_template": "Professional photo background replacement. Replace ONLY the background with {landmark_label} at {waktu_label}. The subject — face, body, clothing, pose, and all — must remain 100% identical to the original photo. Do not regenerate, repaint, retouch, or alter the subject in any way. Identity lock is the absolute highest priority. Keep wardrobe, hairstyle, and all accessories completely unchanged. Match perspective, light direction, and shadows so the subject feels naturally placed at the scene. {waktu_atmosphere} High quality realistic photograph. No extra people, duplicate faces, anatomy artifacts, text, or watermark. Final output aspect ratio 16:10.",
+        "options": [
+            {
+                "id": "landmark",
+                "label": "Pilih Landmark Nusantara",
+                "choices": [
+                    {
+                        "value": "borobudur",
+                        "label": "Candi Borobudur",
+                        "prompt": "Candi Borobudur.",
+                        "img": "assets/style_option_covers/nusantara/landmark/borobudur.png"
+                    },
+                    {
+                        "value": "prambanan",
+                        "label": "Candi Prambanan",
+                        "prompt": "Candi Prambanan.",
+                        "img": "assets/style_option_covers/nusantara/landmark/prambanan.png"
+                    },
+                    {
+                        "value": "monas",
+                        "label": "Monas Jakarta",
+                        "prompt": "Monumen Nasional (Monas).",
+                        "img": "assets/style_option_covers/nusantara/landmark/monas.png"
+                    },
+                    {
+                        "value": "bromo",
+                        "label": "Kawah Bromo",
+                        "prompt": "Kawah Gunung Bromo.",
+                        "img": "assets/style_option_covers/nusantara/landmark/bromo.png"
+                    },
+                    {
+                        "value": "gedung_sate",
+                        "label": "Gedung Sate",
+                        "prompt": "Gedung Sate Bandung.",
+                        "img": "assets/style_option_covers/nusantara/landmark/gedung_sate.png"
+                    },
+                    {
+                        "value": "gwk",
+                        "label": "GWK Bali",
+                        "prompt": "Patung Garuda Wisnu Kencana (GWK).",
+                        "img": "assets/style_option_covers/nusantara/landmark/gwk.png"
+                    },
+                    {
+                        "value": "jam_gadang",
+                        "label": "Jam Gadang",
+                        "prompt": "Jam Gadang Bukittinggi.",
+                        "img": "assets/style_option_covers/nusantara/landmark/jam_gadang.png"
+                    },
+                    {
+                        "value": "ampera",
+                        "label": "Jembatan Ampera",
+                        "prompt": "Jembatan Ampera Palembang.",
+                        "img": "assets/style_option_covers/nusantara/landmark/ampera.png"
+                    },
+                    {
+                        "value": "masjid_99_kubah",
+                        "label": "Masjid 99 Kubah",
+                        "prompt": "Masjid 99 Kubah Makassar.",
+                        "img": "assets/style_option_covers/nusantara/landmark/masjid_99_kubah.png"
+                    },
+                    {
+                        "value": "tugu_khatulistiwa",
+                        "label": "Tugu Khatulistiwa",
+                        "prompt": "Tugu Khatulistiwa Pontianak.",
+                        "img": "assets/style_option_covers/nusantara/landmark/tugu_khatulistiwa.png"
+                    },
+                    {
+                        "value": "wayag",
+                        "label": "Wayag Raja Ampat",
+                        "prompt": "Wayag Raja Ampat.",
+                        "img": "assets/style_option_covers/nusantara/landmark/wayag.png"
+                    },
+                    {
+                        "value": "youtefa",
+                        "label": "Jembatan Youtefa",
+                        "prompt": "Jembatan Youtefa Jayapura.",
+                        "img": "assets/style_option_covers/nusantara/landmark/youtefa.png"
+                    }
+                ]
+            },
+            {
+                "id": "waktu",
+                "label": "Pilih Waktu",
+                "choices": [
+                    {
+                        "value": "siang",
+                        "label": "Siang",
+                        "prompt": "Siang hari.",
+                        "img": "assets/style_option_covers/nusantara/waktu/siang.png"
+                    },
+                    {
+                        "value": "sore",
+                        "label": "Sore",
+                        "prompt": "Sore hari, golden hour.",
+                        "img": "assets/style_option_covers/nusantara/waktu/sore.png"
+                    },
+                    {
+                        "value": "malam",
+                        "label": "Malam",
+                        "prompt": "Malam hari.",
+                        "img": "assets/style_option_covers/nusantara/waktu/malam.png"
+                    }
+                ]
+            }
+        ]
+    },
+    "manga": {
+        "name": "Manga",
+        "cover": "assets/style_covers/manga.png",
+        "description": "Ubah foto jadi ilustrasi manga premium dengan gaya khas pilihan kamu.",
+        "prompt_template": "Convert this exact photo to premium Manga style. Identity lock: keep the same people, same person count, same face identity, skin tone family, expression, pose, posture, head angle, gaze, hand position, body silhouette, framing, camera angle, and subject scale. Do not beautify, age-shift, swap faces, or change eye, nose, mouth, or jaw shape. Keep wardrobe and hairstyle unchanged. Use clean ink lines, controlled screentone texture, premium manga shading, accurate facial structure, and cinematic contrast. {variant_label} No extra people, duplicate faces, anatomy artifacts, text, or watermark. Final output aspect ratio 16:10.",
+        "options": [
+            {
+                "id": "variant",
+                "label": "Pilih Substyle",
+                "choices": [
+                    {
+                        "value": "chibi",
+                        "label": "Chibi",
+                        "prompt": "Manga substyle: Chibi.",
+                        "img": "assets/style_option_covers/manga/variant/chibi.png"
+                    },
+                    {
+                        "value": "shounen",
+                        "label": "Shounen",
+                        "prompt": "Manga substyle: Shounen.",
+                        "img": "assets/style_option_covers/manga/variant/shounen.png"
+                    },
+                    {
+                        "value": "seinen",
+                        "label": "Seinen",
+                        "prompt": "Manga substyle: Seinen.",
+                        "img": "assets/style_option_covers/manga/variant/seinen.png"
+                    },
+                    {
+                        "value": "moe",
+                        "label": "Moe",
+                        "prompt": "Manga substyle: Moe.",
+                        "img": "assets/style_option_covers/manga/variant/moe.png"
+                    }
+                ]
+            }
+        ]
+    },
+    "cyber_test": {
+        "name": "Cyberpunk Masa Depan",
+        "cover": "assets/style_covers/1793366921661-705.jpeg",
+        "description": "Pilih untuk mencoba hal baru",
+        "prompt_template": "A photorealistic cyberpunk portrait, neon lights, futuristic city background",
+        "options": [
+            {
+                "id": "style",
+                "label": "Pilih Gaya",
+                "optional": false,
+                "choices": [
+                    {
+                        "value": "borg",
+                        "label": "X-Borg",
+                        "prompt": "sa",
+                        "img": "assets/style_covers/1793366921957-3358.jpeg"
+                    }
+                ]
+            }
+        ]
+    }
+}

@@ -1,0 +1,5 @@
+{
+    "apiKey": "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",
+    "apiBaseUrl": "https://api.openai.com/v1",
+    "aiModel": "gpt-image-2.5-sunburst"
+}
