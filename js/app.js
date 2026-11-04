@@ -42,7 +42,6 @@ const elements = {
     ticketDisplay: document.getElementById('ticket-display'),
     btnSaveSettings: document.getElementById('btn-save-settings'),
     inputApiKey: document.getElementById('input-api-key'),
-    serverStatusBadge: document.getElementById('server-status') || document.querySelector('.badge-server'),
     countTiketAktif: document.getElementById('count-tiket-aktif'),
     countTiketTerpakai: document.getElementById('count-tiket-terpakai'),
     countKatalogStyle: document.getElementById('count-katalog-style')
@@ -55,18 +54,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     await loadSettings();
     await loadStyles();
     
-    // Jalankan fungsi khusus Stage Utama jika elemen kamera ada
-    if (elements.video) {
+    // DETEKSI CERDAS: Apakah ini halaman Admin?
+    const isAdmin = window.location.href.toLowerCase().includes('admin') || 
+                    document.body.innerText.includes('NODE.JS SERVER') ||
+                    document.querySelector('.admin-dashboard') !== null;
+    
+    if (isAdmin) {
+        loadAdminDashboard();
+        setupAdminListeners();
+    } else {
+        // Jika bukan admin, jalankan UI Panggung Utama
         initHeroAnimation();
         initCamera();
+        setupEventListeners();
     }
-    
-    // Jalankan fungsi khusus Admin jika berada di halaman Admin
-    if (document.querySelector('.admin-dashboard') || document.title.toLowerCase().includes('admin')) {
-        loadAdminDashboard();
-    }
-    
-    setupEventListeners();
 });
 
 // ==========================================
@@ -101,42 +102,40 @@ async function loadStyles() {
 
 async function loadAdminDashboard() {
     try {
-        // Ubah Status Server menjadi Online (PHP)
-        if (elements.serverStatusBadge) {
-            elements.serverStatusBadge.innerHTML = 'PHP API <span style="color: #10B981; font-weight: bold; margin-left: 5px;">Online</span>';
+        // 1. Ganti Tulisan "NODE.JS SERVER Offline" dengan pencarian teks cerdas
+        const allElements = document.querySelectorAll('span, p, div');
+        for (let el of allElements) {
+            if (el.innerText && el.innerText.includes('NODE.JS SERVER') && el.innerText.includes('Offline')) {
+                el.innerHTML = 'API HOSTING <span style="color: #10B981; font-weight: bold; margin-left: 5px;">Online</span>';
+                break;
+            }
         }
 
-        // Ambil Data Tiket untuk Statistik
+        // 2. Ambil Data Tiket dari Hosting
         const resTickets = await fetch(API_URLS.tickets);
+        let aktif = 0, terpakai = 0;
         if (resTickets.ok) {
             const tickets = await resTickets.json();
-            let aktif = 0, terpakai = 0;
             for (let key in tickets) {
                 if (tickets[key].status === 'active') aktif++;
                 if (tickets[key].status === 'used') terpakai++;
             }
-            
-            // Render angka ke dashboard admin
-            if (elements.countTiketAktif) elements.countTiketAktif.innerText = aktif;
-            if (elements.countTiketTerpakai) elements.countTiketTerpakai.innerText = terpakai;
-            
-            // Gunakan fallback selector jika ID tidak ditemukan (mencari tag H2 di dalam card)
-            if (!elements.countTiketAktif) {
-                const cards = document.querySelectorAll('.bg-white h2, .card h2');
-                if (cards.length >= 3) {
-                    cards[0].innerText = aktif;
-                    cards[1].innerText = terpakai;
-                }
-            }
         }
 
-        // Render angka katalog style
+        // 3. Hitung Total Style
         const totalStyles = Object.keys(availableStyles).length;
-        if (elements.countKatalogStyle) {
-            elements.countKatalogStyle.innerText = totalStyles;
-        } else {
-            const cards = document.querySelectorAll('.bg-white h2, .card h2');
-            if (cards.length >= 3) cards[2].innerText = totalStyles;
+
+        // 4. Masukkan angka ke kotak dasbor (mencari elemen dengan font besar)
+        if (elements.countTiketAktif) elements.countTiketAktif.innerText = aktif;
+        if (elements.countTiketTerpakai) elements.countTiketTerpakai.innerText = terpakai;
+        if (elements.countKatalogStyle) elements.countKatalogStyle.innerText = totalStyles;
+        
+        // Fallback jika ID HTML tidak cocok: cari elemen angka di dalam card
+        const numberElements = document.querySelectorAll('.bg-white h2, .bg-white .text-5xl, .card h2');
+        if (numberElements.length >= 3) {
+            numberElements[0].innerText = aktif;
+            numberElements[1].innerText = terpakai;
+            numberElements[2].innerText = totalStyles;
         }
 
     } catch (error) {
@@ -144,96 +143,37 @@ async function loadAdminDashboard() {
     }
 }
 
-async function validateTicket(token) {
-    try {
-        showLoading("Memvalidasi tiket...");
-        const response = await fetch(`${API_URLS.tickets}?action=validate`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ token: token })
-        });
-        
-        const data = await response.json();
-        hideLoading();
-        
-        if (data.success) {
-            alert("Tiket Valid! Silakan pilih gaya dan mulai berfoto.");
-            return true;
-        } else {
-            alert("Tiket tidak valid atau sudah terpakai.");
-            return false;
-        }
-    } catch (error) {
-        hideLoading();
-        alert("Terjadi kesalahan jaringan saat memvalidasi tiket.");
-        return false;
-    }
-}
-
-// ==========================================
-// FUNGSI ADMIN: TIKET & SETTINGS
-// ==========================================
-async function generateTicket() {
-    try {
-        showLoading("Membuat tiket baru...");
-        const response = await fetch(`${API_URLS.tickets}?action=generate`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({}) 
-        });
-        
-        const data = await response.json();
-        hideLoading();
-        
-        if (data.success) {
-            if (elements.ticketDisplay) {
-                elements.ticketDisplay.innerText = data.token;
-                elements.ticketDisplay.value = data.token; 
-            }
-            alert(`Tiket berhasil dibuat: ${data.token}`);
-            loadAdminDashboard(); // Refresh data statistik
-        } else {
-            alert("Gagal membuat tiket dari server.");
-        }
-    } catch (error) {
-        hideLoading();
-        alert("Kesalahan jaringan saat membuat tiket.");
-    }
-}
-
-async function saveAdminSettings(newSettings) {
-    try {
-        showLoading("Menyimpan pengaturan...");
-        const response = await fetch(API_URLS.settings, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(newSettings)
-        });
-        const data = await response.json();
-        hideLoading();
-        
-        if(data.success) {
-            alert("Pengaturan berhasil disimpan ke server!");
-            await loadSettings();
-        } else {
-            alert("Gagal menyimpan pengaturan.");
-        }
-    } catch(err) {
-        hideLoading();
-        alert("Gagal simpan settings");
-    }
-}
-
 // ==========================================
 // UI & ANIMASI GAMBAR MELAYANG
 // ==========================================
 function initHeroAnimation() {
-    if (!elements.heroImageContainer) return; 
+    let container = elements.heroImageContainer;
     
-    elements.heroImageContainer.innerHTML = ''; 
-    const styleKeys = Object.keys(availableStyles);
+    // Fallback pencarian kontainer panel kanan jika ID/Class tidak cocok
+    if (!container) {
+        const columns = document.querySelectorAll('.w-1\\/2, .grid > div');
+        if (columns.length >= 2) container = columns[1];
+    }
     
-    if (styleKeys.length === 0) return;
+    if (!container) return; 
+    container.innerHTML = ''; 
+    
+    let styleKeys = Object.keys(availableStyles);
+    let isDummy = false;
+    
+    // JIKA DATABASE KOSONG, GUNAKAN GAMBAR PLACEHOLDER AGAR ANIMASI TETAP JALAN
+    if (styleKeys.length === 0) {
+        console.log("[System] Katalog kosong, memuat gambar placeholder untuk animasi panggung.");
+        isDummy = true;
+        const dummies = [
+            'https://images.unsplash.com/photo-1542038784456-1ea8e935640e?w=400&q=80',
+            'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=400&q=80',
+            'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&q=80',
+            'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400&q=80'
+        ];
+        styleKeys = [0, 1, 2, 3];
+        availableStyles = styleKeys.map((_, i) => ({ cover: dummies[i], name: `Contoh ${i+1}` }));
+    }
 
     for (let i = 0; i < 2; i++) {
         const col = document.createElement('div');
@@ -244,12 +184,21 @@ function initHeroAnimation() {
         imagesToRender.forEach(key => {
             const style = availableStyles[key];
             const img = document.createElement('img');
-            img.src = style.cover ? `https://api.agenticaicenter.id/${style.cover}` : 'assets/placeholder.jpg';
+            
+            // Jika dummy gunakan link langsung, jika dari database gunakan link API hosting
+            if (isDummy) {
+                img.src = style.cover;
+            } else {
+                img.src = style.cover ? `https://api.agenticaicenter.id/${style.cover}` : 'assets/placeholder.jpg';
+            }
             col.appendChild(img);
         });
         
-        elements.heroImageContainer.appendChild(col);
+        container.appendChild(col);
     }
+    
+    // Bersihkan dummy setelah render agar tidak mengganggu proses foto
+    if (isDummy) availableStyles = {}; 
 }
 
 function renderStyleOptions() {
@@ -273,7 +222,7 @@ function renderStyleOptions() {
 }
 
 // ==========================================
-// KONTROL KAMERA
+// KONTROL KAMERA & PROSES AI
 // ==========================================
 async function initCamera() {
     if (!elements.video) return;
@@ -304,9 +253,32 @@ function takePhoto() {
     processAIGeneration();
 }
 
-// ==========================================
-// PROSES AI & UPLOAD SERVERLESS
-// ==========================================
+async function validateTicket(token) {
+    try {
+        showLoading("Memvalidasi tiket...");
+        const response = await fetch(`${API_URLS.tickets}?action=validate`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token: token })
+        });
+        
+        const data = await response.json();
+        hideLoading();
+        
+        if (data.success) {
+            alert("Tiket Valid! Silakan pilih gaya dan mulai berfoto.");
+            return true;
+        } else {
+            alert("Tiket tidak valid atau sudah terpakai.");
+            return false;
+        }
+    } catch (error) {
+        hideLoading();
+        alert("Terjadi kesalahan jaringan saat memvalidasi tiket.");
+        return false;
+    }
+}
+
 async function processAIGeneration() {
     if (!capturedBase64) return alert("Belum ada foto yang ditangkap.");
     if (!selectedStyleId || !availableStyles[selectedStyleId]) return alert("Pilih gaya foto terlebih dahulu.");
@@ -343,7 +315,6 @@ async function processAIGeneration() {
         if (data.data && data.data[0] && data.data[0].b64_json) {
             const finalImageBase64 = `data:image/jpeg;base64,${data.data[0].b64_json}`;
             if (elements.resultImage) elements.resultImage.src = finalImageBase64;
-            
             await finalizePhotoAndUpload(finalImageBase64);
         } else {
             throw new Error("Format respons OpenAI tidak sesuai dugaan.");
@@ -365,9 +336,7 @@ async function finalizePhotoAndUpload(imageBase64) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ image: imageBase64 })
         });
-        
         const data = await response.json();
-        
         if (data.success && data.url) {
             generateQR(data.url);
         } else {
@@ -384,60 +353,78 @@ async function finalizePhotoAndUpload(imageBase64) {
 function generateQR(url) {
     if (!elements.qrContainer) return;
     elements.qrContainer.innerHTML = ""; 
-    
     new QRCode(elements.qrContainer, {
-        text: url,
-        width: 256,
-        height: 256,
-        colorDark : "#000000",
-        colorLight : "#ffffff",
+        text: url, width: 256, height: 256,
+        colorDark : "#000000", colorLight : "#ffffff",
         correctLevel : QRCode.CorrectLevel.H
     });
 }
 
 // ==========================================
-// EVENT LISTENERS UMUM
+// FUNGSI ADMIN & EVENT LISTENERS
 // ==========================================
+async function generateTicket() {
+    try {
+        showLoading("Membuat tiket baru...");
+        const response = await fetch(`${API_URLS.tickets}?action=generate`, { method: 'POST', body: JSON.stringify({}) });
+        const data = await response.json();
+        hideLoading();
+        if (data.success) {
+            if (elements.ticketDisplay) elements.ticketDisplay.innerText = data.token;
+            alert(`Tiket berhasil dibuat: ${data.token}`);
+            loadAdminDashboard();
+        }
+    } catch (error) {
+        hideLoading();
+        alert("Kesalahan jaringan saat membuat tiket.");
+    }
+}
+
+async function saveAdminSettings(newSettings) {
+    try {
+        showLoading("Menyimpan pengaturan...");
+        const response = await fetch(API_URLS.settings, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(newSettings)
+        });
+        const data = await response.json();
+        hideLoading();
+        if(data.success) {
+            alert("Pengaturan berhasil disimpan ke server!");
+            await loadSettings();
+        }
+    } catch(err) {
+        hideLoading();
+    }
+}
+
 function setupEventListeners() {
-    // Tombol Stage Utama
     if (elements.btnSubmitTicket) {
         elements.btnSubmitTicket.addEventListener('click', () => {
-            const token = elements.ticketInput.value.trim();
-            if (token) validateTicket(token);
+            if (elements.ticketInput.value.trim()) validateTicket(elements.ticketInput.value.trim());
         });
     }
+    if (elements.btnCapture) elements.btnCapture.addEventListener('click', takePhoto);
+}
 
-    if (elements.btnCapture) {
-        elements.btnCapture.addEventListener('click', () => {
-            takePhoto();
-        });
-    }
-
-    // Tombol Admin Dashboard
-    if (elements.btnGenerateTicket) {
-        elements.btnGenerateTicket.addEventListener('click', generateTicket);
-    }
-    
+function setupAdminListeners() {
+    if (elements.btnGenerateTicket) elements.btnGenerateTicket.addEventListener('click', generateTicket);
     if (elements.btnSaveSettings) {
         elements.btnSaveSettings.addEventListener('click', () => {
-            const newSettings = {
-                ...appSettings,
-                apiKey: elements.inputApiKey ? elements.inputApiKey.value.trim() : appSettings.apiKey
-            };
-            saveAdminSettings(newSettings);
+            saveAdminSettings({ ...appSettings, apiKey: elements.inputApiKey ? elements.inputApiKey.value.trim() : appSettings.apiKey });
         });
     }
 }
 
 function showLoading(message = "Loading...") {
     if (elements.loadingScreen) {
-        elements.loadingScreen.querySelector('span').innerText = message;
+        const span = elements.loadingScreen.querySelector('span');
+        if(span) span.innerText = message;
         elements.loadingScreen.style.display = "flex";
     }
 }
 
 function hideLoading() {
-    if (elements.loadingScreen) {
-        elements.loadingScreen.style.display = "none";
-    }
+    if (elements.loadingScreen) elements.loadingScreen.style.display = "none";
 }
