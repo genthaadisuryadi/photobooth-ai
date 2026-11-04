@@ -76,7 +76,7 @@
                         Pilih tampilan, ambil foto, lalu biarkan AI mengubahnya di Stage kami.
                     </p>
                     <div class="mt-9">
-                        <button id="btn-start" class="inline-flex min-h-[56px] items-center justify-between gap-8 rounded-xl bg-booth-accent px-6 text-[15px] font-bold text-white hover:bg-booth-accentLight active:scale-[0.98] sm:min-w-[230px] transition-all">
+                        <button onclick="switchScreen('screen-pin'); initQRScanner();" id="btn-start" class="inline-flex min-h-[56px] items-center justify-between gap-8 rounded-xl bg-booth-accent px-6 text-[15px] font-bold text-white hover:bg-booth-accentLight active:scale-[0.98] sm:min-w-[230px] transition-all">
                             Mulai sesi
                             <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                         </button>
@@ -125,14 +125,14 @@
                         <input type="text" id="token-input" placeholder="KODE TIKET..." autocomplete="off" 
                             class="w-full bg-[#1a2029] border-2 border-white/10 rounded-2xl py-5 px-6 text-center text-3xl font-black tracking-[0.3em] text-white uppercase outline-none focus:border-booth-accent focus:shadow-[0_0_20px_rgba(232,84,62,0.2)] transition-all">
                         
-                        <button id="btn-submit-token" class="mt-5 w-full py-4 bg-booth-accent hover:bg-booth-accentLight rounded-xl font-bold text-[17px] text-white transition-all shadow-[0_0_15px_rgba(232,84,62,0.3)]">
+                        <button onclick="submitToken()" id="btn-submit-token" class="mt-5 w-full py-4 bg-booth-accent hover:bg-booth-accentLight rounded-xl font-bold text-[17px] text-white transition-all shadow-[0_0_15px_rgba(232,84,62,0.3)]">
                             Mulai Sesi Photobooth &rarr;
                         </button>
                     </div>
                     <p id="token-error" class="mt-4 text-sm font-bold text-red-400 min-h-[20px]"></p>
                 </div>
                 
-                <button id="btn-cancel-token" class="mt-8 text-[13px] font-bold text-booth-muted hover:text-white transition-colors">
+                <button onclick="cancelTokenScreen()" id="btn-cancel-token" class="mt-8 text-[13px] font-bold text-booth-muted hover:text-white transition-colors">
                     &larr; Batal & Kembali
                 </button>
             </div>
@@ -172,13 +172,11 @@
                             <p id="integrated-preview-status" class="text-[10px] font-bold uppercase tracking-[0.14em] text-booth-accent">Gaya Terpilih</p>
                             <h2 id="integrated-preview-name" class="mt-2 text-[32px] font-extrabold leading-none drop-shadow-md">Nama Gaya</h2>
                             <p id="integrated-preview-desc" class="mt-2 max-w-[52ch] text-[14px] font-medium text-white/65">Deskripsi gaya</p>
-                            
-                            <form id="integrated-options-form" class="mt-8 flex flex-col gap-8 pb-10"></form>
                         </div>
                     </div>
 
                     <div class="p-5 lg:px-10 border-t border-white/10 bg-booth-surface/95 backdrop-blur-md shrink-0 flex justify-end">
-                        <button id="btn-next-integrated" disabled class="inline-flex min-h-[54px] min-w-[200px] shrink-0 items-center justify-between rounded-xl bg-[#13151a] px-6 text-[15px] font-bold text-[#686871] border border-white/10 transition-all">
+                        <button onclick="confirmIntegratedOptionsAndGo()" id="btn-next-integrated" disabled class="inline-flex min-h-[54px] min-w-[200px] shrink-0 items-center justify-between rounded-xl bg-booth-accent hover:bg-booth-accentLight disabled:bg-[#13151a] disabled:text-[#686871] px-6 text-[15px] font-bold text-white border border-white/10 transition-all">
                             Lanjut ke Kamera <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                         </button>
                     </div>
@@ -203,14 +201,10 @@
                     <span class="absolute w-12 h-12 border-2 border-booth-accent/70 top-[5%] right-[4%] border-l-0 border-b-0 z-10"></span>
                     <span class="absolute w-12 h-12 border-2 border-booth-accent/70 bottom-[5%] left-[4%] border-r-0 border-t-0 z-10"></span>
                     <span class="absolute w-12 h-12 border-2 border-booth-accent/70 bottom-[5%] right-[4%] border-l-0 border-t-0 z-10"></span>
-                    
-                    <div id="countdown-display" class="hidden absolute inset-0 bg-black/55 grid place-items-center z-20">
-                        <span id="countdownNumber" class="text-[120px] sm:text-[160px] font-black text-white leading-none drop-shadow-[0_8px_30px_rgba(0,0,0,0.5)]"></span>
-                    </div>
                 </div>
 
                 <div class="mt-8 flex flex-col items-center gap-2">
-                    <button id="btn-capture" class="w-[82px] h-[82px] bg-booth-accent rounded-full border-4 border-white/20 grid place-items-center transition-transform hover:scale-105 active:scale-95 z-30 shadow-[0_0_15px_rgba(232,84,62,0.5)]">
+                    <button onclick="takePhoto()" id="btn-capture" class="w-[82px] h-[82px] bg-booth-accent rounded-full border-4 border-white/20 grid place-items-center transition-transform hover:scale-105 active:scale-95 z-30 shadow-[0_0_15px_rgba(232,84,62,0.5)]">
                         <svg class="w-10 h-10 text-white" viewBox="0 0 24 24" fill="none"><path d="M4.8 6.7h2.4l1.1-2c.2-.4.6-.7 1.1-.7h4.9c.5 0 .9.3 1.1.7l1.1 2h2.4c1.6 0 2.9 1.3 2.9 2.9v6.8c0 1.6-1.3 2.9-2.9 2.9H4.8c-1.6 0-2.9-1.3-2.9-2.9V9.6c0-1.6 1.3-2.9 2.9-2.9Z" stroke="currentColor" stroke-width="1.5"/><circle cx="12" cy="13" r="3.2" stroke="currentColor" stroke-width="1.5"/></svg>
                     </button>
                     <span class="text-[11px] font-bold uppercase tracking-wider text-booth-muted">Ambil Foto</span>
@@ -235,8 +229,8 @@
                         <img id="capture-preview-img" src="" class="w-full h-full object-cover">
                     </div>
                     <div class="flex gap-3 mt-1">
-                        <button id="btn-retake" class="flex-1 h-[52px] rounded-xl border border-white/15 bg-white/5 text-white font-bold hover:bg-white/10 transition-all text-sm">Ambil Ulang</button>
-                        <button id="btn-proceed-ai" class="flex-1 h-[52px] rounded-xl bg-booth-accent text-white font-bold hover:bg-booth-accentLight transition-all text-sm shadow-lg">Upload ke AI &rarr;</button>
+                        <button onclick="retakePhoto()" id="btn-retake" class="flex-1 h-[52px] rounded-xl border border-white/15 bg-white/5 text-white font-bold hover:bg-white/10 transition-all text-sm">Ambil Ulang</button>
+                        <button onclick="startAIProcessing()" id="btn-proceed-ai" class="flex-1 h-[52px] rounded-xl bg-booth-accent text-white font-bold hover:bg-booth-accentLight transition-all text-sm shadow-lg">Upload ke AI &rarr;</button>
                     </div>
                 </div>
             </div>
@@ -335,9 +329,7 @@
 
     </div>
 
-    <!-- Modal Admin -->
-    <div id="admin-modal" class="screen-hidden fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center fade-in"></div>
-
-    <script src="js/app.js?v=2"></script>
+    <!-- PANGGILAN SCRIPT DENGAN ANTI CACHE -->
+    <script src="js/app.js?v=anti_cache_1"></script>
 </body>
 </html>
