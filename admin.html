@@ -297,7 +297,6 @@
     </div>
 
     <script>
-        // URL API HOSTING SERVERLESS
         const ADMIN_API_URL = 'https://api.agenticaicenter.id';
 
         let cachedStyles = {}; 
@@ -457,17 +456,25 @@
         function renderOptionsBuilder() {
             const container = document.getElementById('options-container');
             container.innerHTML = '';
-            if (optionsBuilderData.length === 0) { container.innerHTML = '<div class="text-center p-8 border-2 border-dashed border-slate-200 rounded-xl text-slate-400 text-sm">Gaya ini statis (tanpa opsi).</div>'; return; }
+            if (optionsBuilderData.length === 0) { 
+                container.innerHTML = '<div class="text-center p-8 border-2 border-dashed border-slate-200 rounded-xl text-slate-400 text-sm">Gaya ini statis (tanpa opsi). Klik Tambah Kategori Opsi untuk mulai.</div>'; 
+                return; 
+            }
+            
             optionsBuilderData.forEach((optGroup, groupIdx) => {
                 let choicesHtml = '';
                 optGroup.choices.forEach((choice, choiceIdx) => {
                     const imgPreview = choice.img ? `<img src="${ADMIN_API_URL}/${choice.img}" class="w-12 h-12 rounded-lg object-cover border border-slate-200 shadow-sm">` : `<div class="w-12 h-12 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-center text-[9px] font-bold text-slate-400 text-center uppercase">No Img</div>`;
+                    
                     choicesHtml += `
                         <div class="bg-white p-4 rounded-xl border border-slate-200 relative group flex flex-col gap-3 shadow-sm">
                             <div class="grid grid-cols-2 gap-3 flex-1">
                                 <div><span class="text-[10px] text-slate-400 font-bold block mb-1">ID (Value) *</span><input type="text" value="${choice.value || ''}" onchange="updateChoice(${groupIdx}, ${choiceIdx}, 'value', this.value)" class="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-brand-500" required></div>
                                 <div><span class="text-[10px] text-slate-400 font-bold block mb-1">Label UI *</span><input type="text" value="${choice.label || ''}" onchange="updateChoice(${groupIdx}, ${choiceIdx}, 'label', this.value)" class="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-brand-500" required></div>
-                                <div class="col-span-2"><span class="text-[10px] text-slate-400 font-bold block mb-1">Instruksi Prompt</span><input type="text" value="${choice.prompt || ''}" onchange="updateChoice(${groupIdx}, ${choiceIdx}, 'prompt', this.value)" class="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-brand-500"></div>
+                                
+                                <div><span class="text-[10px] text-amber-500 font-bold block mb-1">Muncul Jika Induk Bernilai (Opsional)</span><input type="text" value="${choice.parent_value || ''}" onchange="updateChoice(${groupIdx}, ${choiceIdx}, 'parent_value', this.value)" placeholder="Contoh: jepang" class="w-full text-xs p-2.5 bg-amber-50 border border-amber-200 rounded-lg outline-none focus:border-amber-500"></div>
+                                <div><span class="text-[10px] text-slate-400 font-bold block mb-1">Instruksi Prompt</span><input type="text" value="${choice.prompt || ''}" onchange="updateChoice(${groupIdx}, ${choiceIdx}, 'prompt', this.value)" class="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-brand-500"></div>
+                                
                                 <div class="col-span-2 border-t border-slate-100 pt-3 mt-1">
                                     <span class="text-[10px] text-slate-400 font-bold block mb-2">Gambar Opsi</span>
                                     <div class="flex items-center gap-3">${imgPreview}<div class="flex-1"><input type="file" name="optImg_${groupIdx}_${choiceIdx}" accept="image/png, image/jpeg, image/jpg" class="w-full text-xs p-1.5 bg-slate-50 border border-slate-200 rounded-lg text-slate-500 cursor-pointer"></div></div>
@@ -477,13 +484,16 @@
                         </div>
                     `;
                 });
+                
                 const isOptionalChecked = optGroup.optional ? "checked" : "";
+                
                 container.innerHTML += `
                     <div class="bg-slate-50 border border-slate-200 rounded-xl p-6 relative">
                         <button type="button" onclick="removeOptionGroup(${groupIdx})" class="absolute top-5 right-5 text-red-500 text-xs font-bold hover:underline">Hapus Kategori</button>
-                        <div class="grid grid-cols-2 gap-4 w-3/4 mb-3">
+                        <div class="grid grid-cols-3 gap-4 w-11/12 mb-3">
                             <div><span class="text-[10px] text-slate-400 font-bold block mb-1 uppercase tracking-wider">ID Kategori *</span><input type="text" value="${optGroup.id || ''}" onchange="updateOptionGroup(${groupIdx}, 'id', this.value)" class="text-sm font-bold p-2.5 border border-slate-200 rounded-lg w-full outline-none focus:border-brand-500" required></div>
                             <div><span class="text-[10px] text-slate-400 font-bold block mb-1 uppercase tracking-wider">Judul UI *</span><input type="text" value="${optGroup.label || ''}" onchange="updateOptionGroup(${groupIdx}, 'label', this.value)" class="text-sm font-bold p-2.5 border border-slate-200 rounded-lg w-full outline-none focus:border-brand-500" required></div>
+                            <div><span class="text-[10px] text-amber-500 font-bold block mb-1 uppercase tracking-wider">Bergantung Pada ID (Opsional)</span><input type="text" value="${optGroup.depends_on || ''}" onchange="updateOptionGroup(${groupIdx}, 'depends_on', this.value)" placeholder="Contoh: negara" class="text-sm font-bold p-2.5 bg-amber-50 border border-amber-200 rounded-lg w-full outline-none focus:border-amber-500"></div>
                         </div>
                         <div class="mb-5"><label class="flex items-center gap-2 text-xs font-bold text-slate-600 cursor-pointer w-fit"><input type="checkbox" onchange="updateOptionGroup(${groupIdx}, 'optional', this.checked)" ${isOptionalChecked} class="rounded border-slate-300 text-brand-500 focus:ring-brand-500"> Boleh Dikosongkan (Opsional)</label></div>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 p-5 bg-white/50 border border-dashed border-slate-200 rounded-xl">${choicesHtml}</div>
@@ -493,10 +503,17 @@
             });
         }
 
-        function addOptionGroup() { optionsBuilderData.push({ id: '', label: '', optional: false, choices: [] }); renderOptionsBuilder(); }
+        function addOptionGroup() { 
+            optionsBuilderData.push({ id: '', label: '', optional: false, depends_on: '', choices: [] }); 
+            renderOptionsBuilder(); 
+        }
         function removeOptionGroup(idx) { optionsBuilderData.splice(idx, 1); renderOptionsBuilder(); }
         function updateOptionGroup(idx, key, val) { optionsBuilderData[idx][key] = val; }
-        function addChoice(groupIdx) { optionsBuilderData[groupIdx].choices.push({ value: '', label: '', prompt: '', img: '' }); renderOptionsBuilder(); }
+        
+        function addChoice(groupIdx) { 
+            optionsBuilderData[groupIdx].choices.push({ value: '', label: '', parent_value: '', prompt: '', img: '' }); 
+            renderOptionsBuilder(); 
+        }
         function removeChoice(groupIdx, choiceIdx) { optionsBuilderData[groupIdx].choices.splice(choiceIdx, 1); renderOptionsBuilder(); }
         function updateChoice(groupIdx, choiceIdx, key, val) { optionsBuilderData[groupIdx].choices[choiceIdx][key] = val; }
 
