@@ -182,6 +182,7 @@
                         </button>
                     </div>
 
+                    <!-- FORM UTAMA -->
                     <form id="style-form" class="bg-panel rounded-2xl border border-slate-100 overflow-hidden shadow-sm">
                         <input type="hidden" name="optionsData" id="optionsDataJSON">
                         <input type="hidden" name="customData" id="customDataJSON">
@@ -274,7 +275,7 @@
         </main>
     </div>
 
-    <!-- Modal Print Tiket -->
+    <!-- Modals -->
     <div id="print-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/40 backdrop-blur-sm">
         <div class="bg-white p-8 rounded-2xl shadow-2xl max-w-sm w-full text-center">
             <h2 class="text-xl font-bold text-slate-800 mb-6">Tiket Berhasil Dibuat!</h2>
@@ -291,7 +292,6 @@
             </div>
         </div>
     </div>
-
     <div id="toast-notification" class="fixed top-6 right-6 z-50 transform transition-all duration-300 translate-y-[-150%] opacity-0 flex w-full max-w-sm rounded-xl bg-white shadow-lg border border-slate-100 p-4">
         <div id="toast-title" class="text-sm font-bold text-slate-800 w-full text-center"></div>
     </div>
@@ -314,12 +314,9 @@
                 const resStyles = await fetch(`${ADMIN_API_URL}/styles.php`);
                 const styles = await resStyles.json();
                 document.getElementById('stat-total-styles').innerText = Object.keys(styles).length;
-
-                const statServer = document.getElementById('stat-server-status');
-                statServer.innerHTML = `<span class="relative flex h-2.5 w-2.5"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span><span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span></span><span class="text-sm font-bold text-slate-700">Online</span>`;
+                document.getElementById('stat-server-status').innerHTML = `<span class="relative flex h-2.5 w-2.5"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span><span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span></span><span class="text-sm font-bold text-slate-700">Online</span>`;
             } catch (err) {
-                const statServer = document.getElementById('stat-server-status');
-                statServer.innerHTML = `<span class="relative flex h-2.5 w-2.5"><span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span></span><span class="text-sm font-bold text-red-600">Offline</span>`;
+                document.getElementById('stat-server-status').innerHTML = `<span class="relative flex h-2.5 w-2.5"><span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span></span><span class="text-sm font-bold text-red-600">Offline</span>`;
             }
         }
 
@@ -356,7 +353,7 @@
 
         async function generateTicket() {
             try {
-                const res = await fetch(`${ADMIN_API_URL}/tickets.php?action=generate`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({}) });
+                const res = await fetch(`${ADMIN_API_URL}/tickets.php?action=generate`, { method: 'POST' });
                 const result = await res.json();
                 if (result.success) { loadTicketTable(); loadDashboardStats(); showPrintModal(result.token); }
             } catch (error) { alert("Gagal generate tiket"); }
@@ -366,11 +363,7 @@
             if(!confirm(`Yakin ingin menghapus tiket ${key}?`)) return;
             try {
                 const res = await fetch(`${ADMIN_API_URL}/tickets.php?action=delete&id=${key}`, { method: 'DELETE' });
-                if(res.ok) { 
-                    loadTicketTable(); 
-                    loadDashboardStats(); 
-                    showToast(true, "Tiket berhasil dihapus!");
-                }
+                if(res.ok) { loadTicketTable(); loadDashboardStats(); showToast(true, "Tiket berhasil dihapus!"); }
             } catch (err) { alert("Gagal menghapus tiket."); }
         }
 
@@ -393,11 +386,9 @@
                 Object.keys(cachedStyles).forEach(key => {
                     const style = cachedStyles[key];
                     const imgUrl = style.cover ? (style.cover.startsWith('http') ? style.cover : `${ADMIN_API_URL}/${style.cover}`) : '';
-                    const coverHtml = imgUrl ? `<div class="relative w-16 h-12 rounded-lg overflow-hidden bg-slate-100 border border-slate-200"><div class="absolute inset-0 flex items-center justify-center text-slate-400 text-xs z-0">Kosong</div><img src="${imgUrl}" class="absolute inset-0 w-full h-full object-cover z-10 transition-opacity" onerror="this.style.opacity='0'"></div>` : `<div class="w-16 h-12 rounded-lg bg-slate-100 border flex items-center justify-center text-slate-400 text-[10px] font-bold uppercase tracking-wider">Kosong</div>`;
+                    const coverHtml = imgUrl ? `<div class="relative w-16 h-12 rounded-lg overflow-hidden bg-slate-100 border border-slate-200"><img src="${imgUrl}" class="absolute inset-0 w-full h-full object-cover z-10 transition-opacity"></div>` : `<div class="w-16 h-12 rounded-lg bg-slate-100 border flex items-center justify-center text-slate-400 text-[10px] font-bold uppercase tracking-wider">Kosong</div>`;
                     const hasOptions = style.options && style.options.length > 0;
-                    const hasCustomData = Object.keys(style).filter(k => !['name', 'cover', 'description', 'prompt_template', 'options'].includes(k)).length > 0;
                     let optBadge = hasOptions ? `<span class="bg-blue-50 border border-blue-200 text-blue-700 text-[10px] font-bold px-2 py-0.5 rounded ml-2 uppercase tracking-wider">${style.options.length} Opsi</span>` : '';
-                    if (hasCustomData) optBadge += `<span class="bg-amber-50 border border-amber-200 text-amber-700 text-[10px] font-bold px-2 py-0.5 rounded ml-1 uppercase tracking-wider">Bertingkat</span>`;
 
                     tbody.innerHTML += `
                         <tr class="hover:bg-slate-50 border-b border-slate-50 transition-colors">
@@ -418,11 +409,9 @@
             document.getElementById('style-form').reset(); 
             document.getElementById('input-styleId').readOnly = false; 
             document.getElementById('form-style-title').innerText = "Tambah Style Baru";
-            optionsBuilderData = []; 
-            renderOptionsBuilder(); 
+            optionsBuilderData = []; renderOptionsBuilder(); 
             document.getElementById('input-customDataUI').value = "";
-            switchTab('styles', true); 
-            goToStep(1);
+            switchTab('styles', true); goToStep(1);
         }
 
         function editStyle(key) {
@@ -438,6 +427,7 @@
             
             optionsBuilderData = style.options ? JSON.parse(JSON.stringify(style.options)) : [];
             renderOptionsBuilder();
+            
             const standardKeys = ['name', 'cover', 'description', 'prompt_template', 'options'];
             const customDataObj = {};
             Object.keys(style).forEach(k => { if(!standardKeys.includes(k)) customDataObj[k] = style[k]; });
@@ -464,7 +454,8 @@
             optionsBuilderData.forEach((optGroup, groupIdx) => {
                 let choicesHtml = '';
                 optGroup.choices.forEach((choice, choiceIdx) => {
-                    const imgPreview = choice.img ? `<img src="${ADMIN_API_URL}/${choice.img}" class="w-12 h-12 rounded-lg object-cover border border-slate-200 shadow-sm">` : `<div class="w-12 h-12 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-center text-[9px] font-bold text-slate-400 text-center uppercase">No Img</div>`;
+                    const imgPreviewUrl = choice.img ? (choice.img.startsWith('http') ? choice.img : `${ADMIN_API_URL}/${choice.img}`) : '';
+                    const imgPreview = imgPreviewUrl ? `<img src="${imgPreviewUrl}" class="w-12 h-12 rounded-lg object-cover border border-slate-200 shadow-sm">` : `<div class="w-12 h-12 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-center text-[9px] font-bold text-slate-400 text-center uppercase">No Img</div>`;
                     
                     choicesHtml += `
                         <div class="bg-white p-4 rounded-xl border border-slate-200 relative group flex flex-col gap-3 shadow-sm">
@@ -503,24 +494,19 @@
             });
         }
 
-        function addOptionGroup() { 
-            optionsBuilderData.push({ id: '', label: '', optional: false, depends_on: '', choices: [] }); 
-            renderOptionsBuilder(); 
-        }
+        function addOptionGroup() { optionsBuilderData.push({ id: '', label: '', optional: false, depends_on: '', choices: [] }); renderOptionsBuilder(); }
         function removeOptionGroup(idx) { optionsBuilderData.splice(idx, 1); renderOptionsBuilder(); }
         function updateOptionGroup(idx, key, val) { optionsBuilderData[idx][key] = val; }
-        
-        function addChoice(groupIdx) { 
-            optionsBuilderData[groupIdx].choices.push({ value: '', label: '', parent_value: '', prompt: '', img: '' }); 
-            renderOptionsBuilder(); 
-        }
+        function addChoice(groupIdx) { optionsBuilderData[groupIdx].choices.push({ value: '', label: '', parent_value: '', prompt: '', img: '' }); renderOptionsBuilder(); }
         function removeChoice(groupIdx, choiceIdx) { optionsBuilderData[groupIdx].choices.splice(choiceIdx, 1); renderOptionsBuilder(); }
         function updateChoice(groupIdx, choiceIdx, key, val) { optionsBuilderData[groupIdx].choices[choiceIdx][key] = val; }
 
         async function submitFormWithData() {
             const form = document.getElementById('style-form');
             if(!form.checkValidity()) { goToStep(1); form.reportValidity(); return; }
+            
             document.getElementById('optionsDataJSON').value = JSON.stringify(optionsBuilderData);
+            
             const customRaw = document.getElementById('input-customDataUI').value.trim();
             if(customRaw) {
                 try { JSON.parse(customRaw); document.getElementById('customDataJSON').value = customRaw; } 
@@ -530,8 +516,20 @@
             const btn = document.getElementById('btn-submit-style');
             btn.disabled = true; btn.innerText = "Proses Upload...";
 
+            // Menangkap file gambar dari opsi kustom secara dinamis
+            const formData = new FormData(form);
+            optionsBuilderData.forEach((optGroup, groupIdx) => {
+                optGroup.choices.forEach((choice, choiceIdx) => {
+                    const fileInputName = `optImg_${groupIdx}_${choiceIdx}`;
+                    const fileInput = document.querySelector(`input[name="${fileInputName}"]`);
+                    if (fileInput && fileInput.files.length > 0) {
+                        formData.append(fileInputName, fileInput.files[0]);
+                    }
+                });
+            });
+
             try {
-                const res = await fetch(`${ADMIN_API_URL}/styles.php`, { method: 'POST', body: new FormData(form) });
+                const res = await fetch(`${ADMIN_API_URL}/styles.php`, { method: 'POST', body: formData });
                 const result = await res.json();
                 if(res.ok && result.success) { showToast(true, "Data tersimpan!"); switchTab('style-list'); } 
                 else { alert("Gagal menyimpan: " + (result.message || 'Kesalahan server')); }
@@ -542,16 +540,10 @@
         function switchTab(tabId, preserveForm = false) { 
             document.querySelectorAll('.admin-tab').forEach(t=>t.classList.add('hidden')); 
             document.getElementById(`tab-${tabId}`).classList.remove('hidden'); 
-            document.querySelectorAll('.nav-link').forEach(l=>{
-                l.classList.remove('bg-brand-50','text-brand-600','active');
-                l.classList.add('text-slate-600')
-            }); 
+            document.querySelectorAll('.nav-link').forEach(l=>{ l.classList.remove('bg-brand-50','text-brand-600','active'); l.classList.add('text-slate-600') }); 
             const activeNavId = tabId === 'styles' ? 'style-list' : tabId;
             const active = document.getElementById(`nav-${activeNavId}`); 
-            if(active){
-                active.classList.add('bg-brand-50','text-brand-600','active');
-                active.classList.remove('text-slate-600');
-            } 
+            if(active){ active.classList.add('bg-brand-50','text-brand-600','active'); active.classList.remove('text-slate-600'); } 
             const titles = { 'dashboard': 'Dashboard', 'tickets': 'Manajemen Tiket', 'style-list': 'Daftar Style', 'styles': 'Tambah/Edit Style', 'settings': 'API Settings' };
             document.getElementById('header-title').innerText = titles[tabId] || 'Admin';
 
@@ -559,8 +551,7 @@
             if(tabId === 'style-list') loadStyleTable(); 
             if(tabId === 'tickets') loadTicketTable();
             if(tabId === 'styles' && !preserveForm) { 
-                document.getElementById('style-form').reset(); 
-                document.getElementById('input-styleId').readOnly = false; 
+                document.getElementById('style-form').reset(); document.getElementById('input-styleId').readOnly = false; 
                 optionsBuilderData = []; renderOptionsBuilder(); goToStep(1); 
             } 
         }
@@ -574,7 +565,7 @@
             }); 
             document.getElementById(`form-step-${step}`).classList.remove('hidden'); 
             document.getElementById(`step-${step}-btn`).classList.replace('text-slate-400','text-brand-600'); 
-            document.getElementById(`step-${step}-circle`).replace('bg-transparent','bg-brand-100'); 
+            document.getElementById(`step-${step}-circle`).classList.replace('bg-transparent','bg-brand-100'); 
             document.getElementById(`step-${step}-circle`).classList.remove('border'); 
         }
 
@@ -603,9 +594,6 @@
                 apiBaseUrl: document.getElementById('set-apiBaseUrl').value,
                 aiModel: document.getElementById('set-aiModel').value
             };
-            localStorage.setItem('openai_api_key', dataObj.apiKey);
-            localStorage.setItem('openai_base_url', dataObj.apiBaseUrl);
-            localStorage.setItem('openai_model', dataObj.aiModel);
             try {
                 const res = await fetch(`${ADMIN_API_URL}/settings.php`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(dataObj) });
                 if(res.ok) showToast(true, "Pengaturan Disimpan");

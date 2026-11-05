@@ -8,8 +8,12 @@ const API_URLS = {
     upload: 'https://api.agenticaicenter.id/upload.php'
 };
 
-// Gambar cadangan aman (tidak akan pernah 404 karena berupa kode SVG langsung)
-const FALLBACK_IMG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect width='400' height='400' fill='%231c1f28'/%3E%3Ctext x='50%25' y='50%25' font-family='sans-serif' font-size='14' fill='%23666' text-anchor='middle' alignment-baseline='middle'%3ENo Image%3C/text%3E%3C/svg%3E";
+const FALLBACK_B64 = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MDAiIGhlaWdodD0iNDAwIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgZmlsbD0iIzFjMWYyOCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzY2NiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgYWxpZ25tZW50LWJhc2VsaW5lPSJtaWRkbGUiPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg==";
+
+window.imgError = function(img) {
+    img.onerror = null; 
+    img.src = FALLBACK_B64;
+};
 
 let appSettings = { apiKey: '', apiBaseUrl: 'https://api.openai.com/v1', aiModel: 'gpt-image-2.5-sunburst' };
 let availableStyles = {};
@@ -19,26 +23,15 @@ let pbVideoStream = null;
 let pbCapturedBase64 = null;
 let html5QrcodeScanner = null;
 
-// ==========================================
-// INISIALISASI UTAMA
-// ==========================================
 document.addEventListener('DOMContentLoaded', async () => {
     const isAdmin = window.location.href.toLowerCase().includes('admin') || document.querySelector('.admin-dashboard') !== null || !document.getElementById('screen-welcome');
-
-    if (!isAdmin) {
-        setupEventListeners();
-        await loadSettings();
-        await loadStyles();
-    }
+    if (!isAdmin) { setupEventListeners(); await loadSettings(); await loadStyles(); }
 });
 
 async function loadSettings() {
     try {
         const response = await fetch(API_URLS.settings);
-        if (response.ok) {
-            const data = await response.json();
-            appSettings = { ...appSettings, ...data };
-        }
+        if (response.ok) { const data = await response.json(); appSettings = { ...appSettings, ...data }; }
     } catch (error) { console.error("Gagal load settings:", error); }
 }
 
@@ -47,23 +40,18 @@ async function loadStyles() {
         const response = await fetch(API_URLS.styles);
         if (response.ok) availableStyles = await response.json();
     } catch (error) { console.warn("Gagal terhubung ke API Styles."); } 
-    finally {
-        initHeroAnimation();
-        renderStyleOptions();
-    }
+    finally { initHeroAnimation(); renderStyleOptions(); }
 }
 
 function getImageUrl(path) {
-    if (!path) return FALLBACK_IMG;
+    if (!path) return FALLBACK_B64;
     if (path.startsWith('http')) return path;
     if (path.startsWith('/')) return path; 
     if (path.startsWith('assets/')) return `/${path}`; 
+    // Mengarahkan langsung ke URL API Hostinger untuk file covers/...
     return `https://api.agenticaicenter.id/${path}`;
 }
 
-// ==========================================
-// FUNGSI GLOBAL & EVENT LISTENER
-// ==========================================
 window.switchScreen = (screenId) => {
     document.querySelectorAll('section[id^="screen-"]').forEach(s => s.classList.add('screen-hidden'));
     const target = document.getElementById(screenId);
@@ -73,8 +61,7 @@ window.switchScreen = (screenId) => {
 function setupEventListeners() {
     document.getElementById('btn-start')?.addEventListener('click', () => { switchScreen('screen-pin'); initQRScanner(); });
     document.getElementById('btn-cancel-token')?.addEventListener('click', () => { 
-        switchScreen('screen-welcome'); 
-        if (html5QrcodeScanner) { html5QrcodeScanner.clear(); html5QrcodeScanner = null; }
+        switchScreen('screen-welcome'); if (html5QrcodeScanner) { html5QrcodeScanner.clear(); html5QrcodeScanner = null; }
     });
     document.getElementById('btn-submit-token')?.addEventListener('click', window.submitToken);
     document.getElementById('btn-next-integrated')?.addEventListener('click', window.confirmIntegratedOptionsAndGo);
@@ -86,10 +73,7 @@ function setupEventListeners() {
 window.submitToken = () => {
     const token = document.getElementById('token-input')?.value.trim();
     if (token) validateTicket(token);
-    else {
-        const err = document.getElementById('token-error');
-        if (err) err.innerText = "Masukkan kode tiket terlebih dahulu!";
-    }
+    else { const err = document.getElementById('token-error'); if (err) err.innerText = "Masukkan kode tiket terlebih dahulu!"; }
 };
 
 function checkReadyStatus(styleData) {
@@ -107,20 +91,17 @@ function checkReadyStatus(styleData) {
         });
     }
     const btnNext = document.getElementById('btn-next-integrated');
-    if (btnNext) btnNext.disabled = !isComplete;
+    if (btnNext) {
+        btnNext.disabled = !isComplete;
+        if(isComplete) btnNext.classList.remove('opacity-50');
+        else btnNext.classList.add('opacity-50');
+    }
 }
 
-window.confirmIntegratedOptionsAndGo = () => {
-    switchScreen('screen-capture');
-    initWebcam();
-};
-
+window.confirmIntegratedOptionsAndGo = () => { switchScreen('screen-capture'); initWebcam(); };
 window.retakePhoto = () => document.getElementById('capture-decision')?.classList.add('hidden');
 window.startAIProcessing = () => processAIGeneration();
 
-// ==========================================
-// ANIMASI PANGGUNG
-// ==========================================
 function initHeroAnimation() {
     const leftContainer = document.getElementById('welcome-gallery-left');
     const rightContainer = document.getElementById('welcome-gallery-right');
@@ -136,28 +117,20 @@ function initHeroAnimation() {
     imagesToRender.forEach((key, index) => {
         const style = availableStyles[key];
         const imgSrc = getImageUrl(style.cover);
-        // INFO: this.onerror=null mencegah infinite loop 404
-        const imgHtml = `<img src="${imgSrc}" onerror="this.onerror=null; this.src=FALLBACK_IMG;" class="w-full h-[280px] object-cover rounded-2xl border border-white/10 shadow-xl mb-3">`;
+        const imgHtml = `<img src="${imgSrc}" onerror="window.imgError(this)" class="w-full h-[280px] object-cover rounded-2xl border border-white/10 shadow-xl mb-3">`;
 
         if (index % 2 === 0) leftContainer.innerHTML += imgHtml;
         else rightContainer.innerHTML += imgHtml;
     });
 }
 
-// ==========================================
-// RENDER PILIHAN STYLE
-// ==========================================
 function renderStyleOptions() {
     const container = document.getElementById('style-list-container');
     if (!container) return;
     container.innerHTML = "";
 
     if (Object.keys(availableStyles).length === 0) {
-        container.innerHTML = `
-            <div class="p-6 text-center border-2 border-dashed border-white/10 rounded-xl bg-white/5">
-                <p class="text-sm font-medium text-booth-muted">Belum ada gaya yang tersedia.</p>
-            </div>
-        `;
+        container.innerHTML = `<div class="p-6 text-center"><p class="text-sm text-booth-muted">Belum ada gaya yang tersedia.</p></div>`;
         return;
     }
 
@@ -169,7 +142,7 @@ function renderStyleOptions() {
         div.className = 'style-card cursor-pointer p-3 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 transition-all flex items-center gap-4';
         
         div.innerHTML = `
-            <img src="${imgSrc}" onerror="this.onerror=null; this.src=FALLBACK_IMG;" class="w-16 h-16 object-cover rounded-lg shadow-md border border-white/10">
+            <img src="${imgSrc}" onerror="window.imgError(this)" class="w-16 h-16 object-cover rounded-lg shadow-md border border-white/10">
             <div>
                 <h3 class="font-bold text-white">${style.name}</h3>
                 <p class="text-xs text-booth-muted line-clamp-1">${style.description || 'Gaya Interaktif'}</p>
@@ -187,10 +160,7 @@ function renderStyleOptions() {
             const previewName = document.getElementById('integrated-preview-name');
             const previewDesc = document.getElementById('integrated-preview-desc');
 
-            if (previewImg) {
-                previewImg.onerror = function() { this.onerror=null; this.src=FALLBACK_IMG; };
-                previewImg.src = imgSrc;
-            }
+            if (previewImg) { previewImg.onerror = function(){ window.imgError(this) }; previewImg.src = imgSrc; }
             if (previewName) previewName.innerText = style.name;
             if (previewDesc) previewDesc.innerText = style.description || style.prompt_template;
 
@@ -225,20 +195,19 @@ function renderSubStyleForm(styleData) {
     styleData.options.forEach(optGroup => {
         const groupDiv = document.createElement('div');
         groupDiv.className = `opt-group-${optGroup.id} flex flex-col gap-3`;
-        
         if (optGroup.depends_on) groupDiv.style.display = 'none';
 
         let choicesHtml = '';
         optGroup.choices.forEach(choice => {
             const dependsAttr = choice.parent_value ? `data-parent-val="${choice.parent_value}"` : '';
             const hideClass = choice.parent_value ? 'hidden' : '';
-            const optImg = choice.img ? getImageUrl(choice.img) : FALLBACK_IMG;
+            const optImg = choice.img ? getImageUrl(choice.img) : FALLBACK_B64;
 
             choicesHtml += `
                 <div class="choice-card ${hideClass} cursor-pointer p-3 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 flex items-center gap-3 transition-all"
                      ${dependsAttr}
                      onclick="selectSubOption('${optGroup.id}', '${choice.value}', this, '${optGroup.depends_on || ''}')">
-                    <img src="${optImg}" onerror="this.onerror=null; this.src=FALLBACK_IMG;" class="w-12 h-12 object-cover rounded-md shadow-sm border border-white/10">
+                    <img src="${optImg}" onerror="window.imgError(this)" class="w-12 h-12 object-cover rounded-md shadow-sm border border-white/10">
                     <div><h4 class="font-bold text-sm text-white">${choice.label}</h4></div>
                 </div>
             `;
@@ -257,7 +226,6 @@ function renderSubStyleForm(styleData) {
 
 window.selectSubOption = (groupId, choiceValue, element, dependsOn) => {
     selectedOptions[groupId] = choiceValue;
-
     const container = document.getElementById(`choices-container-${groupId}`);
     if (container) {
         container.querySelectorAll('.choice-card').forEach(el => el.classList.remove('border-booth-accent', 'bg-booth-accent/10', 'ring-1', 'ring-booth-accent'));
@@ -271,19 +239,14 @@ window.selectSubOption = (groupId, choiceValue, element, dependsOn) => {
                 const childGroupDiv = document.querySelector(`.opt-group-${optGroup.id}`);
                 if (childGroupDiv) {
                     childGroupDiv.style.display = 'flex';
-                    const choices = childGroupDiv.querySelectorAll('.choice-card');
-                    choices.forEach(card => {
-                        if (card.getAttribute('data-parent-val') === choiceValue) {
-                            card.classList.remove('hidden');
-                        } else {
-                            card.classList.add('hidden');
-                        }
+                    childGroupDiv.querySelectorAll('.choice-card').forEach(card => {
+                        if (card.getAttribute('data-parent-val') === choiceValue) card.classList.remove('hidden');
+                        else card.classList.add('hidden');
                     });
                 }
             }
         });
     }
-    
     checkReadyStatus(styleData);
 };
 
@@ -305,19 +268,13 @@ async function validateTicket(token) {
     const errEl = document.getElementById('token-error');
     if (errEl) errEl.innerText = "Memvalidasi tiket...";
     try {
-        const response = await fetch(`${API_URLS.tickets}?action=validate`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ token: token })
-        });
+        const response = await fetch(`${API_URLS.tickets}?action=validate`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token: token }) });
         const data = await response.json();
         if (data.success) {
             if (errEl) errEl.innerText = "";
             switchScreen('screen-style');
             if (html5QrcodeScanner) { html5QrcodeScanner.clear(); html5QrcodeScanner = null; }
-        } else {
-            if (errEl) errEl.innerText = "Tiket tidak valid atau sudah terpakai.";
-        }
+        } else { if (errEl) errEl.innerText = "Tiket tidak valid atau sudah terpakai."; }
     } catch (error) { if (errEl) errEl.innerText = "Gagal terhubung ke server API."; }
 }
 
@@ -353,9 +310,7 @@ function dataURItoBlob(dataURI) {
     const mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
     const ab = new ArrayBuffer(byteString.length);
     const ia = new Uint8Array(ab);
-    for (let i = 0; i < byteString.length; i++) {
-        ia[i] = byteString.charCodeAt(i);
-    }
+    for (let i = 0; i < byteString.length; i++) { ia[i] = byteString.charCodeAt(i); }
     return new Blob([ab], {type: mimeString});
 }
 
@@ -391,14 +346,9 @@ async function processAIGeneration() {
 
         if (profileTextArr.length > 0) {
             const addedPrompt = profileTextArr.join(' ');
-            if (finalPrompt.includes('{profile_text}')) {
-                finalPrompt = finalPrompt.replace('{profile_text}', addedPrompt);
-            } else {
-                finalPrompt += ' ' + addedPrompt;
-            }
-        } else {
-            finalPrompt = finalPrompt.replace('{profile_text}', '');
-        }
+            if (finalPrompt.includes('{profile_text}')) { finalPrompt = finalPrompt.replace('{profile_text}', addedPrompt); } 
+            else { finalPrompt += ' ' + addedPrompt; }
+        } else { finalPrompt = finalPrompt.replace('{profile_text}', ''); }
 
         updateProgress(50, "Menerapkan gaya fotomu via AI...");
         const formData = new FormData();
@@ -432,11 +382,7 @@ async function processAIGeneration() {
 
 async function finalizePhotoAndUpload(aiImageBase64, originalImageBase64) {
     try {
-        const responseAi = await fetch(API_URLS.upload, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ image: aiImageBase64 })
-        });
+        const responseAi = await fetch(API_URLS.upload, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ image: aiImageBase64 }) });
         const dataAi = await responseAi.json();
 
         if (dataAi.success && dataAi.url) {
@@ -446,7 +392,6 @@ async function finalizePhotoAndUpload(aiImageBase64, originalImageBase64) {
             document.getElementById('qrcode-ai').innerHTML = "";
             new QRCode(document.getElementById('qrcode-original'), { text: dataAi.url, width: 120, height: 120 });
             new QRCode(document.getElementById('qrcode-ai'), { text: dataAi.url, width: 120, height: 120 });
-            
             switchScreen('screen-result');
         } else { throw new Error("Upload gagal."); }
     } catch (error) { 
