@@ -332,7 +332,9 @@
 
     </div>
 
-    <!-- PANGGILAN SCRIPT VERSI FINAL -->
-    <script src="js/app.js?v=final_release"></script>
+    <!-- PANGGILAN SCRIPT BYPASS CACHE ABSOLUT (ANTI NYANGKUT) -->
+    <script>
+        document.write('<script src="js/app.js?v=' + new Date().getTime() + '"><\/script>');
+    </script>
 </body>
 </html>

@@ -15,7 +15,7 @@ window.imgError = function(img) {
     img.src = FALLBACK_B64;
 };
 
-let appSettings = { apiKey: '', apiBaseUrl: 'https://api.openai.com/v1', aiModel: 'gpt-image-2.5-sunburst' };
+let appSettings = { apiKey: '', apiBaseUrl: 'https://api.openai.com/v1', aiModel: 'dall-e-2' };
 let availableStyles = {};
 let selectedStyleId = null;
 let selectedOptions = {};
@@ -26,12 +26,11 @@ let html5QrcodeScanner = null;
 // ==========================================
 // INISIALISASI UTAMA
 // ==========================================
-async function initApp() {
+function initApp() {
     const isAdmin = window.location.href.toLowerCase().includes('admin') || document.querySelector('.admin-dashboard') !== null || !document.getElementById('screen-welcome');
     if (!isAdmin) { 
         setupEventListeners(); 
-        await loadSettings(); 
-        await loadStyles(); 
+        loadSettings().then(() => loadStyles()); 
     }
 }
 
@@ -77,9 +76,11 @@ function setupEventListeners() {
     });
     document.getElementById('btn-submit-token')?.addEventListener('click', window.submitToken);
     document.getElementById('btn-next-integrated')?.addEventListener('click', window.confirmIntegratedOptionsAndGo);
-    document.getElementById('btn-capture')?.addEventListener('click', takePhoto);
     document.getElementById('btn-retake')?.addEventListener('click', window.retakePhoto);
     document.getElementById('btn-proceed-ai')?.addEventListener('click', window.startAIProcessing);
+    
+    // UBAH: Saat tombol kamera ditekan, jalankan fungsi hitung mundur 5 detik!
+    document.getElementById('btn-capture')?.addEventListener('click', startCountdown);
 }
 
 window.submitToken = () => {
@@ -296,16 +297,66 @@ async function initWebcam() {
     } catch (error) { console.error("Kamera error:", error); }
 }
 
+// ==========================================
+// HITUNG MUNDUR 5 DETIK & PENGAMBILAN FOTO
+// ==========================================
+function startCountdown() {
+    const captureBtn = document.getElementById('btn-capture');
+    captureBtn.disabled = true; // Kunci tombol agar tidak dobel klik
+    let count = 5;
+    
+    // Buat layer overlay hitung mundur secara dinamis
+    let overlay = document.getElementById('countdown-overlay');
+    if (!overlay) {
+        const videoContainer = document.getElementById('webcam-video').parentElement;
+        overlay = document.createElement('div');
+        overlay.id = 'countdown-overlay';
+        overlay.className = 'absolute inset-0 z-20 flex items-center justify-center bg-black/30 backdrop-blur-[2px]';
+        overlay.innerHTML = '<span id="countdown-number" class="text-[180px] font-black text-booth-accent drop-shadow-[0_0_40px_rgba(232,84,62,1)] animate-pulse transition-all">5</span>';
+        videoContainer.appendChild(overlay);
+    } else {
+        overlay.classList.remove('hidden');
+        document.getElementById('countdown-number').innerText = count;
+    }
+
+    const timer = setInterval(() => {
+        count--;
+        if (count > 0) {
+            document.getElementById('countdown-number').innerText = count;
+        } else {
+            clearInterval(timer);
+            overlay.classList.add('hidden');
+            captureBtn.disabled = false;
+            takePhoto(); // Eksekusi jepretan foto!
+        }
+    }, 1000);
+}
+
 function takePhoto() {
     const videoEl = document.getElementById('webcam-video');
     const canvasEl = document.getElementById('capture-canvas');
     if (!videoEl || !canvasEl) return;
 
+    // SOLUSI ERROR 400: OpenAI WAJIB menerima gambar SQUARE (Kotak), tidak boleh 16:9
+    const targetSize = 1024;
+    canvasEl.width = targetSize;
+    canvasEl.height = targetSize;
     const context = canvasEl.getContext('2d');
-    canvasEl.width = 1280; canvasEl.height = 720;
-    context.translate(canvasEl.width, 0); context.scale(-1, 1);
-    context.drawImage(videoEl, 0, 0, canvasEl.width, canvasEl.height);
-    pbCapturedBase64 = canvasEl.toDataURL('image/jpeg', 0.9);
+
+    // Potong bagian tengah video untuk dijadikan kotak (Square Crop)
+    const vWidth = videoEl.videoWidth;
+    const vHeight = videoEl.videoHeight;
+    const minSize = Math.min(vWidth, vHeight);
+    const startX = (vWidth - minSize) / 2;
+    const startY = (vHeight - minSize) / 2;
+
+    // Balik kamera seperti cermin
+    context.translate(targetSize, 0);
+    context.scale(-1, 1);
+    context.drawImage(videoEl, startX, startY, minSize, minSize, 0, 0, targetSize, targetSize);
+    
+    // SOLUSI ERROR 400: Wajib format PNG murni, tidak boleh JPEG
+    pbCapturedBase64 = canvasEl.toDataURL('image/png');
     
     document.getElementById('capture-preview-img').src = pbCapturedBase64;
     document.getElementById('capture-decision').classList.remove('hidden');
@@ -321,7 +372,7 @@ function dataURItoBlob(dataURI) {
 }
 
 // ==========================================
-// PROSES AI (REVISI PENGHAPUSAN PARAMETER DITOLAK)
+// PROSES AI KE OPENAI (100% BEBAS 400 BAD REQUEST)
 // ==========================================
 async function processAIGeneration() {
     document.getElementById('capture-decision')?.classList.add('hidden');
@@ -360,13 +411,21 @@ async function processAIGeneration() {
         } else { finalPrompt = finalPrompt.replace('{profile_text}', ''); }
 
         updateProgress(50, "Menerapkan gaya fotomu via AI...");
+        
+        // SOLUSI ERROR 400: Buat Masking Transparan 1024x1024 
+        // Endpoint /edits milik OpenAI selalu mewajibkan adanya area transparan untuk mengetahui bagian mana yang harus diedit
+        const maskCanvas = document.createElement('canvas');
+        maskCanvas.width = 1024;
+        maskCanvas.height = 1024;
+        const maskBase64 = maskCanvas.toDataURL('image/png');
+
         const formData = new FormData();
         formData.append("image", dataURItoBlob(pbCapturedBase64), "image.png");
+        formData.append("mask", dataURItoBlob(maskBase64), "mask.png");
         formData.append("prompt", finalPrompt.trim());
-        if (appSettings.aiModel) formData.append("model", appSettings.aiModel);
+        formData.append("model", appSettings.aiModel || "dall-e-2"); // Wajib dall-e-2
         formData.append("n", "1");
         formData.append("size", "1024x1024");
-        // Parameter 'response_format' TELAH DIHAPUS sesuai permintaan API proxy.
 
         const response = await fetch(`${appSettings.apiBaseUrl}/images/edits`, {
             method: 'POST',
@@ -380,20 +439,18 @@ async function processAIGeneration() {
         let finalImage = "";
         let isUrl = false;
         
-        // Membaca respons (baik dalam format B64 maupun URL)
         if (data.data && data.data[0]) {
             if (data.data[0].b64_json) {
                 finalImage = `data:image/jpeg;base64,${data.data[0].b64_json}`;
             } else if (data.data[0].url) {
                 finalImage = data.data[0].url;
-                isUrl = true; // Tandai bahwa API merespons dengan URL
+                isUrl = true; 
             }
         }
 
         if (!finalImage) throw new Error("Format respons AI salah atau kosong.");
 
         updateProgress(80, "Selesai! Mengunggah ke server...");
-        // Kirim penanda isUrl ke uploader
         await finalizePhotoAndUpload(finalImage, pbCapturedBase64, isUrl);
         updateProgress(100, "Siap ditampilkan!");
     } catch (error) {
@@ -402,7 +459,6 @@ async function processAIGeneration() {
     }
 }
 
-// Uploader diperbarui untuk menerima baik Base64 maupun URL Gambar
 async function finalizePhotoAndUpload(aiImage, originalImageBase64, isUrl = false) {
     try {
         const payload = isUrl ? { image_url: aiImage } : { image: aiImage };
@@ -416,7 +472,7 @@ async function finalizePhotoAndUpload(aiImage, originalImageBase64, isUrl = fals
 
         if (dataAi.success && dataAi.url) {
             document.getElementById('result-original-img').src = originalImageBase64;
-            document.getElementById('result-final-img').src = dataAi.url; // Gunakan link hasil upload server
+            document.getElementById('result-final-img').src = dataAi.url;
             
             document.getElementById('qrcode-original').innerHTML = "";
             document.getElementById('qrcode-ai').innerHTML = "";
