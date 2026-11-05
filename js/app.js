@@ -8,10 +8,13 @@ const API_URLS = {
     upload: 'https://api.agenticaicenter.id/upload.php'
 };
 
+// Gambar cadangan aman (tidak akan pernah 404 karena berupa kode SVG langsung)
+const FALLBACK_IMG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect width='400' height='400' fill='%231c1f28'/%3E%3Ctext x='50%25' y='50%25' font-family='sans-serif' font-size='14' fill='%23666' text-anchor='middle' alignment-baseline='middle'%3ENo Image%3C/text%3E%3C/svg%3E";
+
 let appSettings = { apiKey: '', apiBaseUrl: 'https://api.openai.com/v1', aiModel: 'gpt-image-2.5-sunburst' };
 let availableStyles = {};
 let selectedStyleId = null;
-let selectedOptions = {}; // Menyimpan opsi (baju, landmark, dll) yang dipilih user
+let selectedOptions = {};
 let pbVideoStream = null;
 let pbCapturedBase64 = null;
 let html5QrcodeScanner = null;
@@ -51,7 +54,7 @@ async function loadStyles() {
 }
 
 function getImageUrl(path) {
-    if (!path) return '/assets/placeholder.jpg';
+    if (!path) return FALLBACK_IMG;
     if (path.startsWith('http')) return path;
     if (path.startsWith('/')) return path; 
     if (path.startsWith('assets/')) return `/${path}`; 
@@ -74,10 +77,7 @@ function setupEventListeners() {
         if (html5QrcodeScanner) { html5QrcodeScanner.clear(); html5QrcodeScanner = null; }
     });
     document.getElementById('btn-submit-token')?.addEventListener('click', window.submitToken);
-    
-    // Perbaikan: Tombol lanjut ke kamera hanya aktif jika opsi sudah lengkap
     document.getElementById('btn-next-integrated')?.addEventListener('click', window.confirmIntegratedOptionsAndGo);
-
     document.getElementById('btn-capture')?.addEventListener('click', takePhoto);
     document.getElementById('btn-retake')?.addEventListener('click', window.retakePhoto);
     document.getElementById('btn-proceed-ai')?.addEventListener('click', window.startAIProcessing);
@@ -92,32 +92,25 @@ window.submitToken = () => {
     }
 };
 
-window.confirmIntegratedOptionsAndGo = () => {
-    // Validasi apakah semua opsi wajib sudah dipilih
-    const styleData = availableStyles[selectedStyleId];
+function checkReadyStatus(styleData) {
+    let isComplete = true;
     if (styleData && styleData.options && styleData.options.length > 0) {
-        let isComplete = true;
         styleData.options.forEach(optGroup => {
             if (!optGroup.optional) {
-                // Cek apakah kategori ini harusnya muncul (berdasarkan dependency)
                 let shouldShow = true;
                 if (optGroup.depends_on) {
                     const parentVal = selectedOptions[optGroup.depends_on];
                     if (!parentVal) shouldShow = false;
                 }
-                
-                if (shouldShow && !selectedOptions[optGroup.id]) {
-                    isComplete = false;
-                }
+                if (shouldShow && !selectedOptions[optGroup.id]) isComplete = false;
             }
         });
-        
-        if (!isComplete) {
-            alert("Harap lengkapi semua pilihan gaya di panel kanan terlebih dahulu.");
-            return;
-        }
     }
+    const btnNext = document.getElementById('btn-next-integrated');
+    if (btnNext) btnNext.disabled = !isComplete;
+}
 
+window.confirmIntegratedOptionsAndGo = () => {
     switchScreen('screen-capture');
     initWebcam();
 };
@@ -135,36 +128,24 @@ function initHeroAnimation() {
 
     leftContainer.innerHTML = ''; rightContainer.innerHTML = '';
     let styleKeys = Object.keys(availableStyles);
-    let isDummy = false;
     
-    if (styleKeys.length === 0) {
-        isDummy = true;
-        styleKeys = [0, 1, 2, 3];
-        const dummies = [
-            'https://images.unsplash.com/photo-1542038784456-1ea8e935640e?w=400&q=80',
-            'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=400&q=80',
-            'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&q=80',
-            'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400&q=80'
-        ];
-        availableStyles = styleKeys.map((_, i) => ({ cover: dummies[i] }));
-    }
-
+    if (styleKeys.length === 0) return;
     if (styleKeys.length > 10) styleKeys = styleKeys.slice(0, 10);
     const imagesToRender = [...styleKeys, ...styleKeys, ...styleKeys];
 
     imagesToRender.forEach((key, index) => {
         const style = availableStyles[key];
-        const imgSrc = isDummy ? style.cover : getImageUrl(style.cover);
-        const imgHtml = `<img src="${imgSrc}" onerror="this.src='/assets/placeholder.jpg'" class="w-full h-[280px] object-cover rounded-2xl border border-white/10 shadow-xl mb-3">`;
+        const imgSrc = getImageUrl(style.cover);
+        // INFO: this.onerror=null mencegah infinite loop 404
+        const imgHtml = `<img src="${imgSrc}" onerror="this.onerror=null; this.src=FALLBACK_IMG;" class="w-full h-[280px] object-cover rounded-2xl border border-white/10 shadow-xl mb-3">`;
 
         if (index % 2 === 0) leftContainer.innerHTML += imgHtml;
         else rightContainer.innerHTML += imgHtml;
     });
-    if (isDummy) availableStyles = {};
 }
 
 // ==========================================
-// RENDER PILIHAN STYLE (KIRI) DAN OPSI KUSTOM (KANAN)
+// RENDER PILIHAN STYLE
 // ==========================================
 function renderStyleOptions() {
     const container = document.getElementById('style-list-container');
@@ -175,11 +156,12 @@ function renderStyleOptions() {
         container.innerHTML = `
             <div class="p-6 text-center border-2 border-dashed border-white/10 rounded-xl bg-white/5">
                 <p class="text-sm font-medium text-booth-muted">Belum ada gaya yang tersedia.</p>
-                <p class="text-xs text-white/40 mt-1">Silakan tambahkan gaya dan gambar melalui Admin Panel.</p>
             </div>
         `;
         return;
     }
+
+    let isFirst = true;
 
     for (const [id, style] of Object.entries(availableStyles)) {
         const imgSrc = getImageUrl(style.cover);
@@ -187,7 +169,7 @@ function renderStyleOptions() {
         div.className = 'style-card cursor-pointer p-3 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 transition-all flex items-center gap-4';
         
         div.innerHTML = `
-            <img src="${imgSrc}" onerror="this.src='/assets/placeholder.jpg'" class="w-16 h-16 object-cover rounded-lg shadow-md border border-white/10">
+            <img src="${imgSrc}" onerror="this.onerror=null; this.src=FALLBACK_IMG;" class="w-16 h-16 object-cover rounded-lg shadow-md border border-white/10">
             <div>
                 <h3 class="font-bold text-white">${style.name}</h3>
                 <p class="text-xs text-booth-muted line-clamp-1">${style.description || 'Gaya Interaktif'}</p>
@@ -196,33 +178,37 @@ function renderStyleOptions() {
         
         div.onclick = () => {
             selectedStyleId = id;
-            selectedOptions = {}; // Reset pilihan opsi sebelumnya
+            selectedOptions = {};
             
             document.querySelectorAll('.style-card').forEach(el => el.classList.remove('border-booth-accent', 'bg-booth-accent/10'));
             div.classList.add('border-booth-accent', 'bg-booth-accent/10');
 
-            // Update Panel Kanan
             const previewImg = document.getElementById('integrated-preview-img');
             const previewName = document.getElementById('integrated-preview-name');
             const previewDesc = document.getElementById('integrated-preview-desc');
-            const btnNext = document.getElementById('btn-next-integrated');
 
-            if (previewImg) previewImg.src = imgSrc;
+            if (previewImg) {
+                previewImg.onerror = function() { this.onerror=null; this.src=FALLBACK_IMG; };
+                previewImg.src = imgSrc;
+            }
             if (previewName) previewName.innerText = style.name;
             if (previewDesc) previewDesc.innerText = style.description || style.prompt_template;
-            if (btnNext) btnNext.disabled = false;
 
-            // RENDER FORM OPSI DI PANEL KANAN BAWAH (Sub-Style seperti Chibi, Eiffel, dll)
             renderSubStyleForm(style);
+            checkReadyStatus(style);
         };
+        
         container.appendChild(div);
+
+        if (isFirst) {
+            setTimeout(() => div.click(), 150);
+            isFirst = false;
+        }
     }
 }
 
 function renderSubStyleForm(styleData) {
     let formContainer = document.getElementById('integrated-options-form');
-    
-    // Jika container form tidak ada di HTML, buat otomatis di bawah previewDesc
     if (!formContainer) {
         const descEl = document.getElementById('integrated-preview-desc');
         if (descEl) {
@@ -233,36 +219,27 @@ function renderSubStyleForm(styleData) {
         } else return;
     }
 
-    formContainer.innerHTML = ''; // Bersihkan form sebelumnya
-
+    formContainer.innerHTML = ''; 
     if (!styleData.options || styleData.options.length === 0) return;
 
     styleData.options.forEach(optGroup => {
         const groupDiv = document.createElement('div');
         groupDiv.className = `opt-group-${optGroup.id} flex flex-col gap-3`;
         
-        // Logika Menyembunyikan Kategori Berdasarkan Dependency (Misal: Outfit hanya muncul jika Negara dipilih)
-        if (optGroup.depends_on) {
-            groupDiv.style.display = 'none';
-        }
+        if (optGroup.depends_on) groupDiv.style.display = 'none';
 
         let choicesHtml = '';
         optGroup.choices.forEach(choice => {
-            // Logika "Muncul Jika Induk Bernilai"
             const dependsAttr = choice.parent_value ? `data-parent-val="${choice.parent_value}"` : '';
             const hideClass = choice.parent_value ? 'hidden' : '';
-            
-            // Gambar Opsi (Placeholder jika kosong)
-            const optImg = choice.img ? getImageUrl(choice.img) : '/assets/placeholder.jpg';
+            const optImg = choice.img ? getImageUrl(choice.img) : FALLBACK_IMG;
 
             choicesHtml += `
                 <div class="choice-card ${hideClass} cursor-pointer p-3 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 flex items-center gap-3 transition-all"
                      ${dependsAttr}
                      onclick="selectSubOption('${optGroup.id}', '${choice.value}', this, '${optGroup.depends_on || ''}')">
-                    <img src="${optImg}" onerror="this.src='/assets/placeholder.jpg'" class="w-12 h-12 object-cover rounded-md shadow-sm border border-white/10">
-                    <div>
-                        <h4 class="font-bold text-sm text-white">${choice.label}</h4>
-                    </div>
+                    <img src="${optImg}" onerror="this.onerror=null; this.src=FALLBACK_IMG;" class="w-12 h-12 object-cover rounded-md shadow-sm border border-white/10">
+                    <div><h4 class="font-bold text-sm text-white">${choice.label}</h4></div>
                 </div>
             `;
         });
@@ -272,39 +249,28 @@ function renderSubStyleForm(styleData) {
                 <span class="w-6 h-6 rounded-full bg-booth-accent/20 text-booth-accent flex items-center justify-center text-xs font-bold font-mono border border-booth-accent/30">!</span>
                 <h3 class="font-bold text-white uppercase tracking-wider text-xs">${optGroup.label} ${optGroup.optional ? '(Opsional)' : ''}</h3>
             </div>
-            <div class="grid grid-cols-2 gap-3" id="choices-container-${optGroup.id}">
-                ${choicesHtml}
-            </div>
+            <div class="grid grid-cols-2 gap-3" id="choices-container-${optGroup.id}">${choicesHtml}</div>
         `;
-        
         formContainer.appendChild(groupDiv);
     });
 }
 
-// Fungsi Global untuk memilih opsi di UI Kanan
 window.selectSubOption = (groupId, choiceValue, element, dependsOn) => {
-    // 1. Simpan pilihan
     selectedOptions[groupId] = choiceValue;
 
-    // 2. Beri highlight warna pada opsi yang dipilih
     const container = document.getElementById(`choices-container-${groupId}`);
     if (container) {
-        container.querySelectorAll('.choice-card').forEach(el => {
-            el.classList.remove('border-booth-accent', 'bg-booth-accent/10', 'ring-1', 'ring-booth-accent');
-        });
+        container.querySelectorAll('.choice-card').forEach(el => el.classList.remove('border-booth-accent', 'bg-booth-accent/10', 'ring-1', 'ring-booth-accent'));
     }
     element.classList.add('border-booth-accent', 'bg-booth-accent/10', 'ring-1', 'ring-booth-accent');
 
-    // 3. Tampilkan opsi anak yang bergantung pada pilihan ini (Contoh: Negara -> Outfit)
     const styleData = availableStyles[selectedStyleId];
     if (styleData && styleData.options) {
         styleData.options.forEach(optGroup => {
             if (optGroup.depends_on === groupId) {
                 const childGroupDiv = document.querySelector(`.opt-group-${optGroup.id}`);
                 if (childGroupDiv) {
-                    childGroupDiv.style.display = 'flex'; // Tampilkan grupnya
-                    
-                    // Saring pilihan di dalamnya sesuai nilai parent_value
+                    childGroupDiv.style.display = 'flex';
                     const choices = childGroupDiv.querySelectorAll('.choice-card');
                     choices.forEach(card => {
                         if (card.getAttribute('data-parent-val') === choiceValue) {
@@ -317,6 +283,8 @@ window.selectSubOption = (groupId, choiceValue, element, dependsOn) => {
             }
         });
     }
+    
+    checkReadyStatus(styleData);
 };
 
 // ==========================================
@@ -378,8 +346,19 @@ function takePhoto() {
 }
 
 // ==========================================
-// PROSES AI DENGAN INJEKSI PROMPT DINAMIS
+// PROSES AI
 // ==========================================
+function dataURItoBlob(dataURI) {
+    const byteString = atob(dataURI.split(',')[1]);
+    const mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
+    const ab = new ArrayBuffer(byteString.length);
+    const ia = new Uint8Array(ab);
+    for (let i = 0; i < byteString.length; i++) {
+        ia[i] = byteString.charCodeAt(i);
+    }
+    return new Blob([ab], {type: mimeString});
+}
+
 async function processAIGeneration() {
     document.getElementById('capture-decision')?.classList.add('hidden');
     switchScreen('screen-review');
@@ -392,25 +371,24 @@ async function processAIGeneration() {
     };
 
     try {
+        updateProgress(10, "Verifikasi API Key...");
+        if (!appSettings.apiKey) throw new Error("API Key belum diatur di Admin Panel!");
+
         updateProgress(20, "Menganalisis opsi yang dipilih...");
         const styleData = availableStyles[selectedStyleId];
         let finalPrompt = styleData.prompt_template || "HD Portrait";
         
-        // GABUNGKAN PROMPT DARI OPSI YANG DIPILIH
         let profileTextArr = [];
         if (styleData.options) {
             styleData.options.forEach(optGroup => {
                 const chosenVal = selectedOptions[optGroup.id];
                 if (chosenVal) {
                     const choiceObj = optGroup.choices.find(c => c.value === chosenVal);
-                    if (choiceObj && choiceObj.prompt) {
-                        profileTextArr.push(choiceObj.prompt);
-                    }
+                    if (choiceObj && choiceObj.prompt) profileTextArr.push(choiceObj.prompt);
                 }
             });
         }
 
-        // Ganti variabel {profile_text} di dalam prompt template utama dengan gabungan prompt opsi (jika ada)
         if (profileTextArr.length > 0) {
             const addedPrompt = profileTextArr.join(' ');
             if (finalPrompt.includes('{profile_text}')) {
@@ -422,14 +400,21 @@ async function processAIGeneration() {
             finalPrompt = finalPrompt.replace('{profile_text}', '');
         }
 
-        const base64Image = pbCapturedBase64.replace(/^data:image\/\w+;base64,/, "");
+        updateProgress(50, "Menerapkan gaya fotomu via AI...");
+        const formData = new FormData();
+        formData.append("image", dataURItoBlob(pbCapturedBase64), "image.png");
+        formData.append("prompt", finalPrompt.trim());
+        formData.append("model", appSettings.aiModel || "dall-e-2");
+        formData.append("n", "1");
+        formData.append("size", "1024x1024");
+        formData.append("response_format", "b64_json");
 
-        updateProgress(50, "Menerapkan gaya fotomu...");
         const response = await fetch(`${appSettings.apiBaseUrl}/images/edits`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${appSettings.apiKey}` },
-            body: JSON.stringify({ model: appSettings.aiModel, prompt: finalPrompt.trim(), image: base64Image, n: 1, size: "1024x1024" })
+            headers: { 'Authorization': `Bearer ${appSettings.apiKey}` },
+            body: formData
         });
+        
         const data = await response.json();
         if (data.error) throw new Error(data.error.message);
 
@@ -438,7 +423,7 @@ async function processAIGeneration() {
             const finalImage = `data:image/jpeg;base64,${data.data[0].b64_json}`;
             await finalizePhotoAndUpload(finalImage, pbCapturedBase64);
             updateProgress(100, "Siap ditampilkan!");
-        } else { throw new Error("Format respons AI salah."); }
+        } else { throw new Error("Format respons AI salah atau kosong."); }
     } catch (error) {
         alert(`Gagal memproses AI: ${error.message}`);
         switchScreen('screen-capture'); 
