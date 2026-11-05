@@ -24,7 +24,7 @@ let pbCapturedBase64 = null;
 let html5QrcodeScanner = null;
 
 // ==========================================
-// INISIALISASI UTAMA (ANTI-GAGAL)
+// INISIALISASI UTAMA
 // ==========================================
 async function initApp() {
     const isAdmin = window.location.href.toLowerCase().includes('admin') || document.querySelector('.admin-dashboard') !== null || !document.getElementById('screen-welcome');
@@ -35,7 +35,6 @@ async function initApp() {
     }
 }
 
-// Menjamin skrip tereksekusi tanpa mempedulikan urutan load browser
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initApp);
 } else {
@@ -321,6 +320,9 @@ function dataURItoBlob(dataURI) {
     return new Blob([ab], {type: mimeString});
 }
 
+// ==========================================
+// PROSES AI (REVISI PENGHAPUSAN PARAMETER DITOLAK)
+// ==========================================
 async function processAIGeneration() {
     document.getElementById('capture-decision')?.classList.add('hidden');
     switchScreen('screen-review');
@@ -361,10 +363,10 @@ async function processAIGeneration() {
         const formData = new FormData();
         formData.append("image", dataURItoBlob(pbCapturedBase64), "image.png");
         formData.append("prompt", finalPrompt.trim());
-        formData.append("model", appSettings.aiModel || "dall-e-2");
+        if (appSettings.aiModel) formData.append("model", appSettings.aiModel);
         formData.append("n", "1");
         formData.append("size", "1024x1024");
-        formData.append("response_format", "b64_json");
+        // Parameter 'response_format' TELAH DIHAPUS sesuai permintaan API proxy.
 
         const response = await fetch(`${appSettings.apiBaseUrl}/images/edits`, {
             method: 'POST',
@@ -375,32 +377,55 @@ async function processAIGeneration() {
         const data = await response.json();
         if (data.error) throw new Error(data.error.message);
 
-        if (data.data && data.data[0] && data.data[0].b64_json) {
-            updateProgress(80, "Selesai! Mengunggah ke server...");
-            const finalImage = `data:image/jpeg;base64,${data.data[0].b64_json}`;
-            await finalizePhotoAndUpload(finalImage, pbCapturedBase64);
-            updateProgress(100, "Siap ditampilkan!");
-        } else { throw new Error("Format respons AI salah atau kosong."); }
+        let finalImage = "";
+        let isUrl = false;
+        
+        // Membaca respons (baik dalam format B64 maupun URL)
+        if (data.data && data.data[0]) {
+            if (data.data[0].b64_json) {
+                finalImage = `data:image/jpeg;base64,${data.data[0].b64_json}`;
+            } else if (data.data[0].url) {
+                finalImage = data.data[0].url;
+                isUrl = true; // Tandai bahwa API merespons dengan URL
+            }
+        }
+
+        if (!finalImage) throw new Error("Format respons AI salah atau kosong.");
+
+        updateProgress(80, "Selesai! Mengunggah ke server...");
+        // Kirim penanda isUrl ke uploader
+        await finalizePhotoAndUpload(finalImage, pbCapturedBase64, isUrl);
+        updateProgress(100, "Siap ditampilkan!");
     } catch (error) {
         alert(`Gagal memproses AI: ${error.message}`);
         switchScreen('screen-capture'); 
     }
 }
 
-async function finalizePhotoAndUpload(aiImageBase64, originalImageBase64) {
+// Uploader diperbarui untuk menerima baik Base64 maupun URL Gambar
+async function finalizePhotoAndUpload(aiImage, originalImageBase64, isUrl = false) {
     try {
-        const responseAi = await fetch(API_URLS.upload, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ image: aiImageBase64 }) });
+        const payload = isUrl ? { image_url: aiImage } : { image: aiImage };
+        
+        const responseAi = await fetch(API_URLS.upload, { 
+            method: 'POST', 
+            headers: { 'Content-Type': 'application/json' }, 
+            body: JSON.stringify(payload) 
+        });
         const dataAi = await responseAi.json();
 
         if (dataAi.success && dataAi.url) {
             document.getElementById('result-original-img').src = originalImageBase64;
-            document.getElementById('result-final-img').src = aiImageBase64;
+            document.getElementById('result-final-img').src = dataAi.url; // Gunakan link hasil upload server
+            
             document.getElementById('qrcode-original').innerHTML = "";
             document.getElementById('qrcode-ai').innerHTML = "";
+            
             new QRCode(document.getElementById('qrcode-original'), { text: dataAi.url, width: 120, height: 120 });
             new QRCode(document.getElementById('qrcode-ai'), { text: dataAi.url, width: 120, height: 120 });
+            
             switchScreen('screen-result');
-        } else { throw new Error("Upload gagal."); }
+        } else { throw new Error("Upload ke hosting gagal."); }
     } catch (error) { 
         alert("Gagal mengunggah foto ke jaringan."); 
         switchScreen('screen-capture'); 
