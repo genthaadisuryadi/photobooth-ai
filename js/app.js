@@ -23,10 +23,24 @@ let pbVideoStream = null;
 let pbCapturedBase64 = null;
 let html5QrcodeScanner = null;
 
-document.addEventListener('DOMContentLoaded', async () => {
+// ==========================================
+// INISIALISASI UTAMA (ANTI-GAGAL)
+// ==========================================
+async function initApp() {
     const isAdmin = window.location.href.toLowerCase().includes('admin') || document.querySelector('.admin-dashboard') !== null || !document.getElementById('screen-welcome');
-    if (!isAdmin) { setupEventListeners(); await loadSettings(); await loadStyles(); }
-});
+    if (!isAdmin) { 
+        setupEventListeners(); 
+        await loadSettings(); 
+        await loadStyles(); 
+    }
+}
+
+// Menjamin skrip tereksekusi tanpa mempedulikan urutan load browser
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initApp);
+} else {
+    initApp();
+}
 
 async function loadSettings() {
     try {
@@ -48,7 +62,6 @@ function getImageUrl(path) {
     if (path.startsWith('http')) return path;
     if (path.startsWith('/')) return path; 
     if (path.startsWith('assets/')) return `/${path}`; 
-    // Mengarahkan langsung ke URL API Hostinger untuk file covers/...
     return `https://api.agenticaicenter.id/${path}`;
 }
 
@@ -250,9 +263,6 @@ window.selectSubOption = (groupId, choiceValue, element, dependsOn) => {
     checkReadyStatus(styleData);
 };
 
-// ==========================================
-// VALIDASI TIKET & KAMERA
-// ==========================================
 function initQRScanner() {
     if (html5QrcodeScanner) return; 
     const qrNode = document.getElementById('qr-reader');
@@ -302,9 +312,6 @@ function takePhoto() {
     document.getElementById('capture-decision').classList.remove('hidden');
 }
 
-// ==========================================
-// PROSES AI
-// ==========================================
 function dataURItoBlob(dataURI) {
     const byteString = atob(dataURI.split(',')[1]);
     const mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
