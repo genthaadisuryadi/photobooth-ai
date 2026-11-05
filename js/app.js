@@ -15,7 +15,7 @@ window.imgError = function(img) {
     img.src = FALLBACK_B64;
 };
 
-let appSettings = { apiKey: '', apiBaseUrl: 'https://api.openai.com/v1', aiModel: 'dall-e-2' };
+let appSettings = { apiKey: '', apiBaseUrl: 'https://api.openai.com/v1', aiModel: 'gpt-image-2.5-sunburst' };
 let availableStyles = {};
 let selectedStyleId = null;
 let selectedOptions = {};
@@ -76,11 +76,12 @@ function setupEventListeners() {
     });
     document.getElementById('btn-submit-token')?.addEventListener('click', window.submitToken);
     document.getElementById('btn-next-integrated')?.addEventListener('click', window.confirmIntegratedOptionsAndGo);
+    
+    // Memicu Hitung Mundur 5 Detik saat tombol jepret ditekan
+    document.getElementById('btn-capture')?.addEventListener('click', startCountdown);
+    
     document.getElementById('btn-retake')?.addEventListener('click', window.retakePhoto);
     document.getElementById('btn-proceed-ai')?.addEventListener('click', window.startAIProcessing);
-    
-    // UBAH: Saat tombol kamera ditekan, jalankan fungsi hitung mundur 5 detik!
-    document.getElementById('btn-capture')?.addEventListener('click', startCountdown);
 }
 
 window.submitToken = () => {
@@ -302,17 +303,16 @@ async function initWebcam() {
 // ==========================================
 function startCountdown() {
     const captureBtn = document.getElementById('btn-capture');
-    captureBtn.disabled = true; // Kunci tombol agar tidak dobel klik
+    captureBtn.disabled = true; 
     let count = 5;
     
-    // Buat layer overlay hitung mundur secara dinamis
     let overlay = document.getElementById('countdown-overlay');
     if (!overlay) {
         const videoContainer = document.getElementById('webcam-video').parentElement;
         overlay = document.createElement('div');
         overlay.id = 'countdown-overlay';
-        overlay.className = 'absolute inset-0 z-20 flex items-center justify-center bg-black/30 backdrop-blur-[2px]';
-        overlay.innerHTML = '<span id="countdown-number" class="text-[180px] font-black text-booth-accent drop-shadow-[0_0_40px_rgba(232,84,62,1)] animate-pulse transition-all">5</span>';
+        overlay.className = 'absolute inset-0 z-20 flex items-center justify-center bg-black/40 backdrop-blur-[2px] transition-all';
+        overlay.innerHTML = '<span id="countdown-number" class="text-[160px] font-black text-white drop-shadow-[0_0_30px_rgba(232,84,62,0.8)] animate-pulse">5</span>';
         videoContainer.appendChild(overlay);
     } else {
         overlay.classList.remove('hidden');
@@ -327,7 +327,7 @@ function startCountdown() {
             clearInterval(timer);
             overlay.classList.add('hidden');
             captureBtn.disabled = false;
-            takePhoto(); // Eksekusi jepretan foto!
+            takePhoto(); 
         }
     }, 1000);
 }
@@ -337,25 +337,22 @@ function takePhoto() {
     const canvasEl = document.getElementById('capture-canvas');
     if (!videoEl || !canvasEl) return;
 
-    // SOLUSI ERROR 400: OpenAI WAJIB menerima gambar SQUARE (Kotak), tidak boleh 16:9
     const targetSize = 1024;
     canvasEl.width = targetSize;
     canvasEl.height = targetSize;
     const context = canvasEl.getContext('2d');
 
-    // Potong bagian tengah video untuk dijadikan kotak (Square Crop)
     const vWidth = videoEl.videoWidth;
     const vHeight = videoEl.videoHeight;
     const minSize = Math.min(vWidth, vHeight);
     const startX = (vWidth - minSize) / 2;
     const startY = (vHeight - minSize) / 2;
 
-    // Balik kamera seperti cermin
     context.translate(targetSize, 0);
     context.scale(-1, 1);
     context.drawImage(videoEl, startX, startY, minSize, minSize, 0, 0, targetSize, targetSize);
     
-    // SOLUSI ERROR 400: Wajib format PNG murni, tidak boleh JPEG
+    // Pakai PNG untuk berjaga-jaga standar API
     pbCapturedBase64 = canvasEl.toDataURL('image/png');
     
     document.getElementById('capture-preview-img').src = pbCapturedBase64;
@@ -372,7 +369,7 @@ function dataURItoBlob(dataURI) {
 }
 
 // ==========================================
-// PROSES AI KE OPENAI (100% BEBAS 400 BAD REQUEST)
+// PROSES AI (DIKEMBALIKAN KE FORMAT PENGUNCI WAJAH)
 // ==========================================
 async function processAIGeneration() {
     document.getElementById('capture-decision')?.classList.add('hidden');
@@ -412,18 +409,12 @@ async function processAIGeneration() {
 
         updateProgress(50, "Menerapkan gaya fotomu via AI...");
         
-        // SOLUSI ERROR 400: Buat Masking Transparan 1024x1024 
-        // Endpoint /edits milik OpenAI selalu mewajibkan adanya area transparan untuk mengetahui bagian mana yang harus diedit
-        const maskCanvas = document.createElement('canvas');
-        maskCanvas.width = 1024;
-        maskCanvas.height = 1024;
-        const maskBase64 = maskCanvas.toDataURL('image/png');
-
+        // PENTING: Pengiriman data kembali disederhanakan tanpa 'mask' transparan
+        // Mesin AI proxy yang Anda gunakan sebelumnya dirancang mengenali wajah langsung dari 'image' utama
         const formData = new FormData();
         formData.append("image", dataURItoBlob(pbCapturedBase64), "image.png");
-        formData.append("mask", dataURItoBlob(maskBase64), "mask.png");
         formData.append("prompt", finalPrompt.trim());
-        formData.append("model", appSettings.aiModel || "dall-e-2"); // Wajib dall-e-2
+        formData.append("model", appSettings.aiModel || "gpt-image-2.5-sunburst");
         formData.append("n", "1");
         formData.append("size", "1024x1024");
 
