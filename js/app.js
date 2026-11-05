@@ -29,7 +29,6 @@ let html5QrcodeScanner = null;
 function initApp() {
     const isAdmin = window.location.href.toLowerCase().includes('admin') || document.querySelector('.admin-dashboard') !== null || !document.getElementById('screen-welcome');
     if (!isAdmin) { 
-        setupEventListeners(); 
         loadSettings().then(() => loadStyles()); 
     }
 }
@@ -63,26 +62,30 @@ function getImageUrl(path) {
     return `https://api.agenticaicenter.id/${path}`;
 }
 
+// ==========================================
+// FUNGSI GLOBAL (DI-BIND LANGSUNG KE HTML)
+// ==========================================
 window.switchScreen = (screenId) => {
     document.querySelectorAll('section[id^="screen-"]').forEach(s => s.classList.add('screen-hidden'));
     const target = document.getElementById(screenId);
     if (target) target.classList.remove('screen-hidden');
 };
 
-function setupEventListeners() {
-    document.getElementById('btn-start')?.addEventListener('click', () => { switchScreen('screen-pin'); initQRScanner(); });
-    document.getElementById('btn-cancel-token')?.addEventListener('click', () => { 
-        switchScreen('screen-welcome'); if (html5QrcodeScanner) { html5QrcodeScanner.clear(); html5QrcodeScanner = null; }
-    });
-    document.getElementById('btn-submit-token')?.addEventListener('click', window.submitToken);
-    document.getElementById('btn-next-integrated')?.addEventListener('click', window.confirmIntegratedOptionsAndGo);
-    
-    // Memicu Hitung Mundur 5 Detik saat tombol jepret ditekan
-    document.getElementById('btn-capture')?.addEventListener('click', startCountdown);
-    
-    document.getElementById('btn-retake')?.addEventListener('click', window.retakePhoto);
-    document.getElementById('btn-proceed-ai')?.addEventListener('click', window.startAIProcessing);
-}
+window.initQRScanner = () => {
+    if (html5QrcodeScanner) return; 
+    const qrNode = document.getElementById('qr-reader');
+    if (!qrNode) return;
+    html5QrcodeScanner = new Html5QrcodeScanner("qr-reader", { fps: 10, qrbox: { width: 250, height: 250 } }, false);
+    html5QrcodeScanner.render((decodedText) => {
+        document.getElementById('token-input').value = decodedText;
+        window.submitToken();
+    }, (error) => {});
+};
+
+window.cancelTokenScreen = () => {
+    window.switchScreen('screen-welcome'); 
+    if (html5QrcodeScanner) { html5QrcodeScanner.clear(); html5QrcodeScanner = null; }
+};
 
 window.submitToken = () => {
     const token = document.getElementById('token-input')?.value.trim();
@@ -90,6 +93,53 @@ window.submitToken = () => {
     else { const err = document.getElementById('token-error'); if (err) err.innerText = "Masukkan kode tiket terlebih dahulu!"; }
 };
 
+window.confirmIntegratedOptionsAndGo = () => { 
+    window.switchScreen('screen-capture'); 
+    initWebcam(); 
+};
+
+window.retakePhoto = () => { 
+    document.getElementById('capture-decision')?.classList.add('hidden'); 
+};
+
+window.startAIProcessing = () => { 
+    processAIGeneration(); 
+};
+
+// MENCEGAT FUNGSI HTML: Memaksa Hitung Mundur Sebelum Jepret!
+window.takePhoto = () => { 
+    startCountdown(); 
+};
+
+window.selectSubOption = (groupId, choiceValue, element, dependsOn) => {
+    selectedOptions[groupId] = choiceValue;
+    const container = document.getElementById(`choices-container-${groupId}`);
+    if (container) {
+        container.querySelectorAll('.choice-card').forEach(el => el.classList.remove('border-booth-accent', 'bg-booth-accent/10', 'ring-1', 'ring-booth-accent'));
+    }
+    element.classList.add('border-booth-accent', 'bg-booth-accent/10', 'ring-1', 'ring-booth-accent');
+
+    const styleData = availableStyles[selectedStyleId];
+    if (styleData && styleData.options) {
+        styleData.options.forEach(optGroup => {
+            if (optGroup.depends_on === groupId) {
+                const childGroupDiv = document.querySelector(`.opt-group-${optGroup.id}`);
+                if (childGroupDiv) {
+                    childGroupDiv.style.display = 'flex';
+                    childGroupDiv.querySelectorAll('.choice-card').forEach(card => {
+                        if (card.getAttribute('data-parent-val') === choiceValue) card.classList.remove('hidden');
+                        else card.classList.add('hidden');
+                    });
+                }
+            }
+        });
+    }
+    checkReadyStatus(styleData);
+};
+
+// ==========================================
+// RENDER UI GAYA & VALIDASI TIKET
+// ==========================================
 function checkReadyStatus(styleData) {
     let isComplete = true;
     if (styleData && styleData.options && styleData.options.length > 0) {
@@ -111,10 +161,6 @@ function checkReadyStatus(styleData) {
         else btnNext.classList.add('opacity-50');
     }
 }
-
-window.confirmIntegratedOptionsAndGo = () => { switchScreen('screen-capture'); initWebcam(); };
-window.retakePhoto = () => document.getElementById('capture-decision')?.classList.add('hidden');
-window.startAIProcessing = () => processAIGeneration();
 
 function initHeroAnimation() {
     const leftContainer = document.getElementById('welcome-gallery-left');
@@ -220,7 +266,7 @@ function renderSubStyleForm(styleData) {
             choicesHtml += `
                 <div class="choice-card ${hideClass} cursor-pointer p-3 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 flex items-center gap-3 transition-all"
                      ${dependsAttr}
-                     onclick="selectSubOption('${optGroup.id}', '${choice.value}', this, '${optGroup.depends_on || ''}')">
+                     onclick="window.selectSubOption('${optGroup.id}', '${choice.value}', this, '${optGroup.depends_on || ''}')">
                     <img src="${optImg}" onerror="window.imgError(this)" class="w-12 h-12 object-cover rounded-md shadow-sm border border-white/10">
                     <div><h4 class="font-bold text-sm text-white">${choice.label}</h4></div>
                 </div>
@@ -238,43 +284,6 @@ function renderSubStyleForm(styleData) {
     });
 }
 
-window.selectSubOption = (groupId, choiceValue, element, dependsOn) => {
-    selectedOptions[groupId] = choiceValue;
-    const container = document.getElementById(`choices-container-${groupId}`);
-    if (container) {
-        container.querySelectorAll('.choice-card').forEach(el => el.classList.remove('border-booth-accent', 'bg-booth-accent/10', 'ring-1', 'ring-booth-accent'));
-    }
-    element.classList.add('border-booth-accent', 'bg-booth-accent/10', 'ring-1', 'ring-booth-accent');
-
-    const styleData = availableStyles[selectedStyleId];
-    if (styleData && styleData.options) {
-        styleData.options.forEach(optGroup => {
-            if (optGroup.depends_on === groupId) {
-                const childGroupDiv = document.querySelector(`.opt-group-${optGroup.id}`);
-                if (childGroupDiv) {
-                    childGroupDiv.style.display = 'flex';
-                    childGroupDiv.querySelectorAll('.choice-card').forEach(card => {
-                        if (card.getAttribute('data-parent-val') === choiceValue) card.classList.remove('hidden');
-                        else card.classList.add('hidden');
-                    });
-                }
-            }
-        });
-    }
-    checkReadyStatus(styleData);
-};
-
-function initQRScanner() {
-    if (html5QrcodeScanner) return; 
-    const qrNode = document.getElementById('qr-reader');
-    if (!qrNode) return;
-    html5QrcodeScanner = new Html5QrcodeScanner("qr-reader", { fps: 10, qrbox: { width: 250, height: 250 } }, false);
-    html5QrcodeScanner.render((decodedText) => {
-        document.getElementById('token-input').value = decodedText;
-        window.submitToken();
-    }, (error) => {});
-}
-
 async function validateTicket(token) {
     const errEl = document.getElementById('token-error');
     if (errEl) errEl.innerText = "Memvalidasi tiket...";
@@ -283,7 +292,7 @@ async function validateTicket(token) {
         const data = await response.json();
         if (data.success) {
             if (errEl) errEl.innerText = "";
-            switchScreen('screen-style');
+            window.switchScreen('screen-style');
             if (html5QrcodeScanner) { html5QrcodeScanner.clear(); html5QrcodeScanner = null; }
         } else { if (errEl) errEl.innerText = "Tiket tidak valid atau sudah terpakai."; }
     } catch (error) { if (errEl) errEl.innerText = "Gagal terhubung ke server API."; }
@@ -299,10 +308,11 @@ async function initWebcam() {
 }
 
 // ==========================================
-// HITUNG MUNDUR 5 DETIK & PENGAMBILAN FOTO
+// HITUNG MUNDUR 5 DETIK (TAMPIL DI TENGAH LAYAR)
 // ==========================================
 function startCountdown() {
     const captureBtn = document.getElementById('btn-capture');
+    if (captureBtn.disabled) return; 
     captureBtn.disabled = true; 
     let count = 5;
     
@@ -327,12 +337,13 @@ function startCountdown() {
             clearInterval(timer);
             overlay.classList.add('hidden');
             captureBtn.disabled = false;
-            takePhoto(); 
+            executeCapture(); // Eksekusi foto SETELAH 5 detik berlalu
         }
     }, 1000);
 }
 
-function takePhoto() {
+// Pengambilan foto yang sebenarnya
+function executeCapture() {
     const videoEl = document.getElementById('webcam-video');
     const canvasEl = document.getElementById('capture-canvas');
     if (!videoEl || !canvasEl) return;
@@ -352,7 +363,6 @@ function takePhoto() {
     context.scale(-1, 1);
     context.drawImage(videoEl, startX, startY, minSize, minSize, 0, 0, targetSize, targetSize);
     
-    // Pakai PNG untuk berjaga-jaga standar API
     pbCapturedBase64 = canvasEl.toDataURL('image/png');
     
     document.getElementById('capture-preview-img').src = pbCapturedBase64;
@@ -369,11 +379,11 @@ function dataURItoBlob(dataURI) {
 }
 
 // ==========================================
-// PROSES AI (DIKEMBALIKAN KE FORMAT PENGUNCI WAJAH)
+// PROSES AI (MENGGUNAKAN MODEL PENGUNCI WAJAH)
 // ==========================================
 async function processAIGeneration() {
     document.getElementById('capture-decision')?.classList.add('hidden');
-    switchScreen('screen-review');
+    window.switchScreen('screen-review');
     document.getElementById('review-blurred-img').src = pbCapturedBase64;
     
     const updateProgress = (pct, txt) => {
@@ -408,12 +418,11 @@ async function processAIGeneration() {
         } else { finalPrompt = finalPrompt.replace('{profile_text}', ''); }
 
         updateProgress(50, "Menerapkan gaya fotomu via AI...");
-        
-        // PENTING: Pengiriman data kembali disederhanakan tanpa 'mask' transparan
-        // Mesin AI proxy yang Anda gunakan sebelumnya dirancang mengenali wajah langsung dari 'image' utama
         const formData = new FormData();
         formData.append("image", dataURItoBlob(pbCapturedBase64), "image.png");
         formData.append("prompt", finalPrompt.trim());
+        
+        // Memastikan menggunakan model pengunci wajah
         formData.append("model", appSettings.aiModel || "gpt-image-2.5-sunburst");
         formData.append("n", "1");
         formData.append("size", "1024x1024");
@@ -446,7 +455,7 @@ async function processAIGeneration() {
         updateProgress(100, "Siap ditampilkan!");
     } catch (error) {
         alert(`Gagal memproses AI: ${error.message}`);
-        switchScreen('screen-capture'); 
+        window.switchScreen('screen-capture'); 
     }
 }
 
@@ -471,10 +480,10 @@ async function finalizePhotoAndUpload(aiImage, originalImageBase64, isUrl = fals
             new QRCode(document.getElementById('qrcode-original'), { text: dataAi.url, width: 120, height: 120 });
             new QRCode(document.getElementById('qrcode-ai'), { text: dataAi.url, width: 120, height: 120 });
             
-            switchScreen('screen-result');
+            window.switchScreen('screen-result');
         } else { throw new Error("Upload ke hosting gagal."); }
     } catch (error) { 
         alert("Gagal mengunggah foto ke jaringan."); 
-        switchScreen('screen-capture'); 
+        window.switchScreen('screen-capture'); 
     }
 }
