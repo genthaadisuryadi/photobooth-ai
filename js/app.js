@@ -342,27 +342,25 @@ function startCountdown() {
     }, 1000);
 }
 
-// Pengambilan foto yang sebenarnya
+// PENGAMBILAN FOTO: DIKEMBALIKAN KE MODE LANDSCAPE (TIDAK KOTAK 1:1)
 function executeCapture() {
     const videoEl = document.getElementById('webcam-video');
     const canvasEl = document.getElementById('capture-canvas');
     if (!videoEl || !canvasEl) return;
 
-    const targetSize = 1024;
-    canvasEl.width = targetSize;
-    canvasEl.height = targetSize;
+    // Gunakan rasio aspek asli video (Landscape 16:9 / resolusi HD)
+    canvasEl.width = 1280;
+    canvasEl.height = 720;
     const context = canvasEl.getContext('2d');
 
-    const vWidth = videoEl.videoWidth;
-    const vHeight = videoEl.videoHeight;
-    const minSize = Math.min(vWidth, vHeight);
-    const startX = (vWidth - minSize) / 2;
-    const startY = (vHeight - minSize) / 2;
-
-    context.translate(targetSize, 0);
+    // Balik kamera seperti cermin
+    context.translate(canvasEl.width, 0);
     context.scale(-1, 1);
-    context.drawImage(videoEl, startX, startY, minSize, minSize, 0, 0, targetSize, targetSize);
     
+    // Tarik gambar penuh, JANGAN di-crop tengahnya
+    context.drawImage(videoEl, 0, 0, canvasEl.width, canvasEl.height);
+    
+    // Tetap PNG untuk kompatibilitas AI Proxy
     pbCapturedBase64 = canvasEl.toDataURL('image/png');
     
     document.getElementById('capture-preview-img').src = pbCapturedBase64;
@@ -379,7 +377,7 @@ function dataURItoBlob(dataURI) {
 }
 
 // ==========================================
-// PROSES AI (MENGGUNAKAN MODEL PENGUNCI WAJAH)
+// PROSES AI (MODEL PENGUNCI WAJAH - TANPA MASK)
 // ==========================================
 async function processAIGeneration() {
     document.getElementById('capture-decision')?.classList.add('hidden');
@@ -421,11 +419,10 @@ async function processAIGeneration() {
         const formData = new FormData();
         formData.append("image", dataURItoBlob(pbCapturedBase64), "image.png");
         formData.append("prompt", finalPrompt.trim());
-        
-        // Memastikan menggunakan model pengunci wajah
         formData.append("model", appSettings.aiModel || "gpt-image-2.5-sunburst");
         formData.append("n", "1");
-        formData.append("size", "1024x1024");
+        
+        // Parameter size dihapus agar AI memproses rasio asli (Landscape) dari foto yang dikirim
 
         const response = await fetch(`${appSettings.apiBaseUrl}/images/edits`, {
             method: 'POST',
@@ -459,25 +456,35 @@ async function processAIGeneration() {
     }
 }
 
+// PERBAIKAN: MENGUNGGAH DUA GAMBAR SECARA TERPISAH AGAR QR CODE BERBEDA
 async function finalizePhotoAndUpload(aiImage, originalImageBase64, isUrl = false) {
     try {
-        const payload = isUrl ? { image_url: aiImage } : { image: aiImage };
-        
-        const responseAi = await fetch(API_URLS.upload, { 
+        // 1. Unggah Foto Asli (Webcam)
+        const resOri = await fetch(API_URLS.upload, { 
             method: 'POST', 
             headers: { 'Content-Type': 'application/json' }, 
-            body: JSON.stringify(payload) 
+            body: JSON.stringify({ image: originalImageBase64 }) 
         });
-        const dataAi = await responseAi.json();
+        const dataOri = await resOri.json();
 
-        if (dataAi.success && dataAi.url) {
+        // 2. Unggah Foto Hasil AI
+        const payloadAi = isUrl ? { image_url: aiImage } : { image: aiImage };
+        const resAi = await fetch(API_URLS.upload, { 
+            method: 'POST', 
+            headers: { 'Content-Type': 'application/json' }, 
+            body: JSON.stringify(payloadAi) 
+        });
+        const dataAi = await resAi.json();
+
+        if (dataOri.success && dataAi.success) {
             document.getElementById('result-original-img').src = originalImageBase64;
             document.getElementById('result-final-img').src = dataAi.url;
             
             document.getElementById('qrcode-original').innerHTML = "";
             document.getElementById('qrcode-ai').innerHTML = "";
             
-            new QRCode(document.getElementById('qrcode-original'), { text: dataAi.url, width: 120, height: 120 });
+            // Generate QR Code dengan Link Asing-masing
+            new QRCode(document.getElementById('qrcode-original'), { text: dataOri.url, width: 120, height: 120 });
             new QRCode(document.getElementById('qrcode-ai'), { text: dataAi.url, width: 120, height: 120 });
             
             window.switchScreen('screen-result');
