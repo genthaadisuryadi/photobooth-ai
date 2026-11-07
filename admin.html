@@ -301,6 +301,18 @@
 
         let cachedStyles = {}; 
         let optionsBuilderData = []; 
+        
+        // FUNGSI BARU: LIVE PREVIEW SAAT GAMBAR DIPILIH
+        window.previewLiveImage = function(input, previewId) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = document.getElementById(previewId);
+                    if (img) img.src = e.target.result;
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        };
 
         async function loadDashboardStats() {
             try {
@@ -455,7 +467,12 @@
                 let choicesHtml = '';
                 optGroup.choices.forEach((choice, choiceIdx) => {
                     const imgPreviewUrl = choice.img ? (choice.img.startsWith('http') ? choice.img : `${ADMIN_API_URL}/${choice.img}`) : '';
-                    const imgPreview = imgPreviewUrl ? `<img src="${imgPreviewUrl}" class="w-12 h-12 rounded-lg object-cover border border-slate-200 shadow-sm">` : `<div class="w-12 h-12 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-center text-[9px] font-bold text-slate-400 text-center uppercase">No Img</div>`;
+                    const imgPreviewId = `preview_img_${groupIdx}_${choiceIdx}`;
+                    
+                    // PERBAIKAN: Selalu render tag <img> agar src-nya bisa ditimpa saat Live Preview berjalan
+                    const imgPreview = imgPreviewUrl 
+                        ? `<img id="${imgPreviewId}" src="${imgPreviewUrl}" class="w-12 h-12 rounded-lg object-cover border border-slate-200 shadow-sm">` 
+                        : `<img id="${imgPreviewId}" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MDAiIGhlaWdodD0iNDAwIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgZmlsbD0iIzFjMWYyOCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzY2NiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgYWxpZ25tZW50LWJhc2VsaW5lPSJtaWRkbGUiPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg==" class="w-12 h-12 rounded-lg object-cover border border-slate-200 shadow-sm">`;
                     
                     choicesHtml += `
                         <div class="bg-white p-4 rounded-xl border border-slate-200 relative group flex flex-col gap-3 shadow-sm">
@@ -468,7 +485,9 @@
                                 
                                 <div class="col-span-2 border-t border-slate-100 pt-3 mt-1">
                                     <span class="text-[10px] text-slate-400 font-bold block mb-2">Gambar Opsi</span>
-                                    <div class="flex items-center gap-3">${imgPreview}<div class="flex-1"><input type="file" name="optImg_${groupIdx}_${choiceIdx}" accept="image/png, image/jpeg, image/jpg" class="w-full text-xs p-1.5 bg-slate-50 border border-slate-200 rounded-lg text-slate-500 cursor-pointer"></div></div>
+                                    <div class="flex items-center gap-3">${imgPreview}<div class="flex-1">
+                                        <input type="file" name="optImg_${groupIdx}_${choiceIdx}" accept="image/png, image/jpeg, image/jpg" onchange="window.previewLiveImage(this, '${imgPreviewId}')" class="w-full text-xs p-1.5 bg-slate-50 border border-slate-200 rounded-lg text-slate-500 cursor-pointer">
+                                    </div></div>
                                 </div>
                             </div>
                             <button type="button" onclick="removeChoice(${groupIdx}, ${choiceIdx})" class="absolute top-2 right-2 text-red-500 bg-red-50 p-1.5 rounded-md opacity-0 group-hover:opacity-100 transition-opacity"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M6 18L18 6M6 6l12 12" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
@@ -516,17 +535,9 @@
             const btn = document.getElementById('btn-submit-style');
             btn.disabled = true; btn.innerText = "Proses Upload...";
 
-            // Menangkap file gambar dari opsi kustom secara dinamis
+            // PERBAIKAN FATAL: Membuang loop append ganda. 
+            // "new FormData(form)" sudah otomatis menangkap semua file input di dalam form!
             const formData = new FormData(form);
-            optionsBuilderData.forEach((optGroup, groupIdx) => {
-                optGroup.choices.forEach((choice, choiceIdx) => {
-                    const fileInputName = `optImg_${groupIdx}_${choiceIdx}`;
-                    const fileInput = document.querySelector(`input[name="${fileInputName}"]`);
-                    if (fileInput && fileInput.files.length > 0) {
-                        formData.append(fileInputName, fileInput.files[0]);
-                    }
-                });
-            });
 
             try {
                 const res = await fetch(`${ADMIN_API_URL}/styles.php`, { method: 'POST', body: formData });
