@@ -106,19 +106,24 @@ window.startAIProcessing = () => {
     processAIGeneration(); 
 };
 
-// MENCEGAT FUNGSI HTML: Memaksa Hitung Mundur Sebelum Jepret!
 window.takePhoto = () => { 
     startCountdown(); 
 };
 
+// ==========================================
+// PERUBAHAN: LOGIKA PEMILIHAN OPSI DINAMIS
+// ==========================================
 window.selectSubOption = (groupId, choiceValue, element, dependsOn) => {
     selectedOptions[groupId] = choiceValue;
+    
+    // Ganti outline aktif pada UI
     const container = document.getElementById(`choices-container-${groupId}`);
     if (container) {
-        container.querySelectorAll('.choice-card').forEach(el => el.classList.remove('border-booth-accent', 'bg-booth-accent/10', 'ring-1', 'ring-booth-accent'));
+        container.querySelectorAll('.choice-card').forEach(el => el.classList.remove('border-booth-accent', 'bg-booth-accent/10', 'ring-2', 'ring-booth-accent'));
     }
-    element.classList.add('border-booth-accent', 'bg-booth-accent/10', 'ring-1', 'ring-booth-accent');
+    element.classList.add('border-booth-accent', 'bg-booth-accent/10', 'ring-2', 'ring-booth-accent');
 
+    // Filter ketergantungan bertingkat (Muncul Jika Induk Bernilai)
     const styleData = availableStyles[selectedStyleId];
     if (styleData && styleData.options) {
         styleData.options.forEach(optGroup => {
@@ -127,13 +132,62 @@ window.selectSubOption = (groupId, choiceValue, element, dependsOn) => {
                 if (childGroupDiv) {
                     childGroupDiv.style.display = 'flex';
                     childGroupDiv.querySelectorAll('.choice-card').forEach(card => {
-                        if (card.getAttribute('data-parent-val') === choiceValue) card.classList.remove('hidden');
-                        else card.classList.add('hidden');
+                        if (card.getAttribute('data-parent-val') === choiceValue) {
+                            card.classList.remove('hidden');
+                        } else {
+                            card.classList.add('hidden');
+                            // Jika ada yang sebelumnya dipilih di subkategori ini tapi kini disembunyikan, hapus dari selectedOptions
+                            const oldVal = card.getAttribute('data-value');
+                            if (selectedOptions[optGroup.id] === oldVal) {
+                                delete selectedOptions[optGroup.id];
+                            }
+                        }
                     });
                 }
             }
         });
     }
+
+    // --- FITUR BARU: GANTI GAMBAR HEADER DINAMIS ---
+    // Cari apakah opsi yang dipilih memiliki gambar. 
+    // Jika tidak ada (NO IMG), jangan timpa gambar header.
+    let targetImageToDisplay = null;
+    
+    // Ambil gambar cover utama sebagai default (jika ingin dikembalikan)
+    const defaultCoverImg = getImageUrl(styleData.cover);
+    
+    if (styleData && styleData.options) {
+        styleData.options.forEach(optGroup => {
+            if (optGroup.id === groupId) {
+                const chosenItem = optGroup.choices.find(c => c.value === choiceValue);
+                if (chosenItem && chosenItem.img && chosenItem.img.trim() !== '') {
+                    targetImageToDisplay = getImageUrl(chosenItem.img);
+                }
+            }
+        });
+    }
+
+    // Eksekusi pergantian gambar header dengan animasi pudar (fade)
+    const previewImgElement = document.getElementById('integrated-preview-img');
+    if (previewImgElement) {
+        if (targetImageToDisplay) {
+            // Efek berkedip transisi
+            previewImgElement.style.opacity = '0';
+            setTimeout(() => {
+                previewImgElement.src = targetImageToDisplay;
+                previewImgElement.style.opacity = '1';
+            }, 150);
+        } else {
+            // Jika opsi tidak punya gambar, Anda bebas memilih: biarkan gambar yang lama, atau kembalikan ke cover.
+            // Di sini kita kembalikan ke cover utama
+            previewImgElement.style.opacity = '0';
+            setTimeout(() => {
+                previewImgElement.src = defaultCoverImg;
+                previewImgElement.style.opacity = '1';
+            }, 150);
+        }
+    }
+
     checkReadyStatus(styleData);
 };
 
@@ -190,7 +244,7 @@ function renderStyleOptions() {
     container.innerHTML = "";
 
     if (Object.keys(availableStyles).length === 0) {
-        container.innerHTML = `<div class="p-6 text-center"><p class="text-sm text-booth-muted">Belum ada gaya yang tersedia.</p></div>`;
+        container.innerHTML = `<div class="col-span-2 p-6 text-center"><p class="text-sm text-booth-muted">Belum ada gaya yang tersedia.</p></div>`;
         return;
     }
 
@@ -199,28 +253,45 @@ function renderStyleOptions() {
     for (const [id, style] of Object.entries(availableStyles)) {
         const imgSrc = getImageUrl(style.cover);
         const div = document.createElement('div');
-        div.className = 'style-card cursor-pointer p-3 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 transition-all flex items-center gap-4';
+        // PERUBAHAN: Desain Kartu GRID yang Lebih Besar dan Vertikal (Cover di atas, Teks di bawah)
+        div.className = 'style-card cursor-pointer rounded-[20px] overflow-hidden border border-white/10 bg-booth-card hover:bg-[#252833] hover:border-white/20 transition-all flex flex-col group';
         
         div.innerHTML = `
-            <img src="${imgSrc}" onerror="window.imgError(this)" class="w-16 h-16 object-cover rounded-lg shadow-md border border-white/10">
-            <div>
-                <h3 class="font-bold text-white">${style.name}</h3>
-                <p class="text-xs text-booth-muted line-clamp-1">${style.description || 'Gaya Interaktif'}</p>
+            <div class="w-full aspect-[4/3] overflow-hidden relative">
+                <img src="${imgSrc}" onerror="window.imgError(this)" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
+                <div class="absolute inset-0 bg-gradient-to-t from-booth-card via-transparent to-transparent"></div>
+            </div>
+            <div class="p-4 flex-1 flex flex-col">
+                <h3 class="font-black text-white text-base lg:text-lg leading-tight group-hover:text-booth-accent transition-colors">${style.name}</h3>
+                <p class="text-[11px] lg:text-xs text-booth-muted mt-2 line-clamp-2 leading-relaxed flex-1">${style.description || 'Gaya Interaktif'}</p>
             </div>
         `;
         
         div.onclick = () => {
             selectedStyleId = id;
-            selectedOptions = {};
+            selectedOptions = {}; // Reset opsi setiap ganti gaya besar
             
-            document.querySelectorAll('.style-card').forEach(el => el.classList.remove('border-booth-accent', 'bg-booth-accent/10'));
-            div.classList.add('border-booth-accent', 'bg-booth-accent/10');
+            // Hapus outline dari semua kartu, lalu tambahkan ke yang diklik
+            document.querySelectorAll('.style-card').forEach(el => {
+                el.classList.remove('border-booth-accent', 'ring-2', 'ring-booth-accent', 'shadow-[0_0_20px_rgba(232,84,62,0.3)]');
+                el.querySelector('h3').classList.remove('text-booth-accent');
+            });
+            div.classList.add('border-booth-accent', 'ring-2', 'ring-booth-accent', 'shadow-[0_0_20px_rgba(232,84,62,0.3)]');
+            div.querySelector('h3').classList.add('text-booth-accent');
 
+            // Update Panel Kanan
             const previewImg = document.getElementById('integrated-preview-img');
             const previewName = document.getElementById('integrated-preview-name');
             const previewDesc = document.getElementById('integrated-preview-desc');
 
-            if (previewImg) { previewImg.onerror = function(){ window.imgError(this) }; previewImg.src = imgSrc; }
+            if (previewImg) { 
+                previewImg.onerror = function(){ window.imgError(this) }; 
+                previewImg.style.opacity = '0';
+                setTimeout(() => {
+                    previewImg.src = imgSrc; 
+                    previewImg.style.opacity = '1';
+                }, 100);
+            }
             if (previewName) previewName.innerText = style.name;
             if (previewDesc) previewDesc.innerText = style.description || style.prompt_template;
 
@@ -231,30 +302,29 @@ function renderStyleOptions() {
         container.appendChild(div);
 
         if (isFirst) {
-            setTimeout(() => div.click(), 150);
+            // Beri sedikit jeda agar DOM terload sempurna
+            setTimeout(() => div.click(), 50);
             isFirst = false;
         }
     }
 }
 
 function renderSubStyleForm(styleData) {
-    let formContainer = document.getElementById('integrated-options-form');
-    if (!formContainer) {
-        const descEl = document.getElementById('integrated-preview-desc');
-        if (descEl) {
-            formContainer = document.createElement('div');
-            formContainer.id = 'integrated-options-form';
-            formContainer.className = 'mt-6 flex flex-col gap-6';
-            descEl.parentNode.insertBefore(formContainer, descEl.nextSibling);
-        } else return;
-    }
-
+    let formContainer = document.getElementById('integrated-options-wrapper');
+    if (!formContainer) return;
+    
     formContainer.innerHTML = ''; 
     if (!styleData.options || styleData.options.length === 0) return;
+
+    // Buat wadah grid vertikal
+    const innerForm = document.createElement('div');
+    innerForm.className = 'mt-6 flex flex-col gap-6';
 
     styleData.options.forEach(optGroup => {
         const groupDiv = document.createElement('div');
         groupDiv.className = `opt-group-${optGroup.id} flex flex-col gap-3`;
+        
+        // Sembunyikan default jika bergantung pada opsi lain
         if (optGroup.depends_on) groupDiv.style.display = 'none';
 
         let choicesHtml = '';
@@ -262,13 +332,20 @@ function renderSubStyleForm(styleData) {
             const dependsAttr = choice.parent_value ? `data-parent-val="${choice.parent_value}"` : '';
             const hideClass = choice.parent_value ? 'hidden' : '';
             const optImg = choice.img ? getImageUrl(choice.img) : FALLBACK_B64;
+            const itemValue = choice.value || choice.label;
 
+            // Desain kartu opsi kustom (horizontal)
             choicesHtml += `
-                <div class="choice-card ${hideClass} cursor-pointer p-3 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 flex items-center gap-3 transition-all"
+                <div class="choice-card ${hideClass} cursor-pointer p-3 rounded-xl border border-white/10 bg-[#252833] hover:bg-white/10 flex items-center gap-3 transition-all"
                      ${dependsAttr}
-                     onclick="window.selectSubOption('${optGroup.id}', '${choice.value}', this, '${optGroup.depends_on || ''}')">
-                    <img src="${optImg}" onerror="window.imgError(this)" class="w-12 h-12 object-cover rounded-md shadow-sm border border-white/10">
-                    <div><h4 class="font-bold text-sm text-white">${choice.label}</h4></div>
+                     data-value="${itemValue}"
+                     onclick="window.selectSubOption('${optGroup.id}', '${itemValue}', this, '${optGroup.depends_on || ''}')">
+                    <div class="w-14 h-14 rounded-lg overflow-hidden border border-white/10 shrink-0">
+                        <img src="${optImg}" onerror="window.imgError(this)" class="w-full h-full object-cover">
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-sm text-white">${choice.label}</h4>
+                    </div>
                 </div>
             `;
         });
@@ -280,10 +357,15 @@ function renderSubStyleForm(styleData) {
             </div>
             <div class="grid grid-cols-2 gap-3" id="choices-container-${optGroup.id}">${choicesHtml}</div>
         `;
-        formContainer.appendChild(groupDiv);
+        innerForm.appendChild(groupDiv);
     });
+    
+    formContainer.appendChild(innerForm);
 }
 
+// ==========================================
+// VALIDASI TIKET & KAMERA
+// ==========================================
 async function validateTicket(token) {
     const errEl = document.getElementById('token-error');
     if (errEl) errEl.innerText = "Memvalidasi tiket...";
@@ -307,9 +389,6 @@ async function initWebcam() {
     } catch (error) { console.error("Kamera error:", error); }
 }
 
-// ==========================================
-// HITUNG MUNDUR 5 DETIK (TAMPIL DI TENGAH LAYAR)
-// ==========================================
 function startCountdown() {
     const captureBtn = document.getElementById('btn-capture');
     if (captureBtn.disabled) return; 
@@ -337,30 +416,24 @@ function startCountdown() {
             clearInterval(timer);
             overlay.classList.add('hidden');
             captureBtn.disabled = false;
-            executeCapture(); // Eksekusi foto SETELAH 5 detik berlalu
+            executeCapture(); 
         }
     }, 1000);
 }
 
-// PENGAMBILAN FOTO: DIKEMBALIKAN KE MODE LANDSCAPE (TIDAK KOTAK 1:1)
 function executeCapture() {
     const videoEl = document.getElementById('webcam-video');
     const canvasEl = document.getElementById('capture-canvas');
     if (!videoEl || !canvasEl) return;
 
-    // Gunakan rasio aspek asli video (Landscape 16:9 / resolusi HD)
     canvasEl.width = 1280;
     canvasEl.height = 720;
     const context = canvasEl.getContext('2d');
 
-    // Balik kamera seperti cermin
     context.translate(canvasEl.width, 0);
     context.scale(-1, 1);
-    
-    // Tarik gambar penuh, JANGAN di-crop tengahnya
     context.drawImage(videoEl, 0, 0, canvasEl.width, canvasEl.height);
     
-    // Tetap PNG untuk kompatibilitas AI Proxy
     pbCapturedBase64 = canvasEl.toDataURL('image/png');
     
     document.getElementById('capture-preview-img').src = pbCapturedBase64;
@@ -377,7 +450,7 @@ function dataURItoBlob(dataURI) {
 }
 
 // ==========================================
-// PROSES AI (MODEL PENGUNCI WAJAH - TANPA MASK)
+// PROSES AI
 // ==========================================
 async function processAIGeneration() {
     document.getElementById('capture-decision')?.classList.add('hidden');
@@ -403,7 +476,7 @@ async function processAIGeneration() {
             styleData.options.forEach(optGroup => {
                 const chosenVal = selectedOptions[optGroup.id];
                 if (chosenVal) {
-                    const choiceObj = optGroup.choices.find(c => c.value === chosenVal);
+                    const choiceObj = optGroup.choices.find(c => (c.value || c.label) === chosenVal);
                     if (choiceObj && choiceObj.prompt) profileTextArr.push(choiceObj.prompt);
                 }
             });
@@ -421,8 +494,6 @@ async function processAIGeneration() {
         formData.append("prompt", finalPrompt.trim());
         formData.append("model", appSettings.aiModel || "gpt-image-2.5-sunburst");
         formData.append("n", "1");
-        
-        // Parameter size dihapus agar AI memproses rasio asli (Landscape) dari foto yang dikirim
 
         const response = await fetch(`${appSettings.apiBaseUrl}/images/edits`, {
             method: 'POST',
@@ -456,10 +527,8 @@ async function processAIGeneration() {
     }
 }
 
-// PERBAIKAN: MENGUNGGAH DUA GAMBAR SECARA TERPISAH AGAR QR CODE BERBEDA
 async function finalizePhotoAndUpload(aiImage, originalImageBase64, isUrl = false) {
     try {
-        // 1. Unggah Foto Asli (Webcam)
         const resOri = await fetch(API_URLS.upload, { 
             method: 'POST', 
             headers: { 'Content-Type': 'application/json' }, 
@@ -467,7 +536,6 @@ async function finalizePhotoAndUpload(aiImage, originalImageBase64, isUrl = fals
         });
         const dataOri = await resOri.json();
 
-        // 2. Unggah Foto Hasil AI
         const payloadAi = isUrl ? { image_url: aiImage } : { image: aiImage };
         const resAi = await fetch(API_URLS.upload, { 
             method: 'POST', 
@@ -483,7 +551,6 @@ async function finalizePhotoAndUpload(aiImage, originalImageBase64, isUrl = fals
             document.getElementById('qrcode-original').innerHTML = "";
             document.getElementById('qrcode-ai').innerHTML = "";
             
-            // Generate QR Code dengan Link Asing-masing
             new QRCode(document.getElementById('qrcode-original'), { text: dataOri.url, width: 120, height: 120 });
             new QRCode(document.getElementById('qrcode-ai'), { text: dataAi.url, width: 120, height: 120 });
             
