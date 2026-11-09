@@ -101,21 +101,19 @@ window.takePhoto = () => { startCountdown(); };
 window.selectSubOption = (groupId, choiceValue, element, dependsOn) => {
     selectedOptions[groupId] = choiceValue;
     
-    // Ganti outline aktif pada UI (Grid Opsi Kanan)
     const container = document.getElementById(`choices-container-${groupId}`);
     if (container) {
         container.querySelectorAll('.choice-card').forEach(el => el.classList.remove('border-booth-accent', 'bg-booth-accent/10', 'ring-2', 'ring-booth-accent'));
     }
     element.classList.add('border-booth-accent', 'bg-booth-accent/10', 'ring-2', 'ring-booth-accent');
 
-    // Filter ketergantungan bertingkat
     const styleData = availableStyles[selectedStyleId];
     if (styleData && styleData.options) {
         styleData.options.forEach(optGroup => {
             if (optGroup.depends_on === groupId) {
                 const childGroupDiv = document.querySelector(`.opt-group-${optGroup.id}`);
                 if (childGroupDiv) {
-                    childGroupDiv.style.display = 'block'; // Tampilkan kembali container sub-opsi
+                    childGroupDiv.style.display = 'block'; 
                     childGroupDiv.querySelectorAll('.choice-card').forEach(card => {
                         if (card.getAttribute('data-parent-val') === choiceValue) {
                             card.classList.remove('hidden');
@@ -130,7 +128,6 @@ window.selectSubOption = (groupId, choiceValue, element, dependsOn) => {
         });
     }
 
-    // Ganti Gambar Header Dinamis
     let targetImageToDisplay = null;
     const defaultCoverImg = getImageUrl(styleData.cover);
     
@@ -216,7 +213,6 @@ function renderStyleOptions() {
         const imgSrc = getImageUrl(style.cover);
         const div = document.createElement('div');
         
-        // PERBAIKAN: Dikembalikan ke bentuk LIST (Horizontal), namun DI PERBESAR secara proporsional.
         div.className = 'style-card cursor-pointer p-4 rounded-2xl border border-white/10 bg-booth-card hover:bg-[#252833] hover:border-white/20 transition-all flex items-center gap-5 group shadow-sm';
         
         div.innerHTML = `
@@ -291,7 +287,6 @@ function renderSubStyleForm(styleData) {
             const optImg = choice.img ? getImageUrl(choice.img) : FALLBACK_B64;
             const itemValue = choice.value || choice.label;
 
-            // PERBAIKAN: Kotak Opsi kanan (Eiffel Tower, dll) diubah memanjang dan lebih besar
             choicesHtml += `
                 <div class="choice-card ${hideClass} cursor-pointer p-3.5 rounded-2xl border border-white/10 bg-[#252833] hover:bg-white/10 flex items-center gap-4 transition-all"
                      ${dependsAttr} data-value="${itemValue}"
@@ -306,13 +301,13 @@ function renderSubStyleForm(styleData) {
             `;
         });
 
-        // PERBAIKAN: Mengatur Grid Kanan Menjadi 2 Kolom yang rapi
+        // PERUBAHAN 2: Mengatur Grid Kanan Menjadi 3 Kolom
         groupDiv.innerHTML = `
             <div class="flex items-center gap-2 mb-4">
                 <span class="w-6 h-6 rounded-full bg-booth-accent/20 text-booth-accent flex items-center justify-center text-xs font-bold font-mono border border-booth-accent/30">!</span>
                 <h3 class="font-bold text-white uppercase tracking-wider text-xs">${optGroup.label} ${optGroup.optional ? '(Opsional)' : ''}</h3>
             </div>
-            <div class="grid grid-cols-2 gap-4" id="choices-container-${optGroup.id}">${choicesHtml}</div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4" id="choices-container-${optGroup.id}">${choicesHtml}</div>
         `;
         innerForm.appendChild(groupDiv);
     });
