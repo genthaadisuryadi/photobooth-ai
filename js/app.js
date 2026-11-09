@@ -63,7 +63,7 @@ function getImageUrl(path) {
 }
 
 // ==========================================
-// FUNGSI GLOBAL
+// FUNGSI GLOBAL & NAVIGASI
 // ==========================================
 window.switchScreen = (screenId) => {
     document.querySelectorAll('section[id^="screen-"]').forEach(s => s.classList.add('screen-hidden'));
@@ -513,3 +513,52 @@ async function finalizePhotoAndUpload(aiImage, originalImageBase64, isUrl = fals
         window.switchScreen('screen-capture'); 
     }
 }
+
+// ==========================================
+// FITUR BARU: MODAL CETAK & CSS INJECTOR
+// ==========================================
+
+// Fungsi membuka popup modal pilihan kertas cetak
+window.openPrintModal = () => {
+    const finalImgUrl = document.getElementById('result-final-img').src;
+    if(!finalImgUrl || finalImgUrl.includes('data:image/svg+xml')) {
+        alert("Gambar hasil AI belum tersedia.");
+        return;
+    }
+    
+    // Pindahkan URL gambar hasil AI ke kontainer cetak khusus
+    document.getElementById('print-image').src = finalImgUrl;
+    
+    // Tampilkan modal pop-up
+    document.getElementById('print-modal').classList.remove('hidden');
+};
+
+// Fungsi menutup popup modal
+window.closePrintModal = () => {
+    document.getElementById('print-modal').classList.add('hidden');
+};
+
+// Fungsi eksekusi cetak dinamis sesuai ukuran kertas
+window.executePrint = (widthInch, heightInch) => {
+    // Karena foto kita berformat Landscape 16:9, kita paksa ukuran kertas menjadi landscape
+    // dengan memutar dimensi lebar x tinggi.
+    const sizeStr = `${widthInch}in ${heightInch}in landscape`; 
+    
+    let style = document.getElementById('print-page-style');
+    if (!style) {
+        style = document.createElement('style');
+        style.id = 'print-page-style';
+        document.head.appendChild(style);
+    }
+    
+    // CSS Injector: Mengatur dimensi kertas di printer sesuai pilihan pengguna
+    style.innerHTML = `@page { size: ${sizeStr}; margin: 0; }`;
+    
+    // Sembunyikan modal sebelum mencetak
+    window.closePrintModal();
+    
+    // Beri sedikit jeda waktu (300ms) agar CSS `@page` sempat ter-apply sebelum memanggil dialog print bawaan browser
+    setTimeout(() => {
+        window.print();
+    }, 300);
+};
