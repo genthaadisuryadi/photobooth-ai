@@ -101,11 +101,12 @@ window.takePhoto = () => { startCountdown(); };
 window.selectSubOption = (groupId, choiceValue, element, dependsOn) => {
     selectedOptions[groupId] = choiceValue;
     
+    // LIGHT MODE UI UPDATE
     const container = document.getElementById(`choices-container-${groupId}`);
     if (container) {
-        container.querySelectorAll('.choice-card').forEach(el => el.classList.remove('border-booth-accent', 'bg-booth-accent/10', 'ring-2', 'ring-booth-accent'));
+        container.querySelectorAll('.choice-card').forEach(el => el.classList.remove('border-booth-accent', 'bg-orange-50', 'ring-2', 'ring-booth-accent'));
     }
-    element.classList.add('border-booth-accent', 'bg-booth-accent/10', 'ring-2', 'ring-booth-accent');
+    element.classList.add('border-booth-accent', 'bg-orange-50', 'ring-2', 'ring-booth-accent');
 
     const styleData = availableStyles[selectedStyleId];
     if (styleData && styleData.options) {
@@ -190,7 +191,7 @@ function initHeroAnimation() {
     imagesToRender.forEach((key, index) => {
         const style = availableStyles[key];
         const imgSrc = getImageUrl(style.cover);
-        const imgHtml = `<img src="${imgSrc}" onerror="window.imgError(this)" class="w-full h-[280px] object-cover rounded-2xl border border-white/10 shadow-xl mb-3">`;
+        const imgHtml = `<img src="${imgSrc}" onerror="window.imgError(this)" class="w-full h-[280px] object-cover rounded-2xl border-4 border-white shadow-xl mb-4">`;
 
         if (index % 2 === 0) leftContainer.innerHTML += imgHtml;
         else rightContainer.innerHTML += imgHtml;
@@ -203,7 +204,7 @@ function renderStyleOptions() {
     container.innerHTML = "";
 
     if (Object.keys(availableStyles).length === 0) {
-        container.innerHTML = `<div class="p-6 text-center"><p class="text-sm text-booth-muted">Belum ada gaya yang tersedia.</p></div>`;
+        container.innerHTML = `<div class="p-6 text-center"><p class="text-sm text-slate-400">Belum ada gaya yang tersedia.</p></div>`;
         return;
     }
 
@@ -213,15 +214,16 @@ function renderStyleOptions() {
         const imgSrc = getImageUrl(style.cover);
         const div = document.createElement('div');
         
-        div.className = 'style-card cursor-pointer p-4 rounded-2xl border border-white/10 bg-booth-card hover:bg-[#252833] hover:border-white/20 transition-all flex items-center gap-5 group shadow-sm';
+        // LIGHT MODE KARTU GAYA KIRI
+        div.className = 'style-card cursor-pointer p-4 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 transition-all flex items-center gap-5 group shadow-sm';
         
         div.innerHTML = `
-            <div class="w-[90px] h-[90px] shrink-0 overflow-hidden rounded-xl shadow-md border border-white/10 bg-booth-surface">
+            <div class="w-[90px] h-[90px] shrink-0 overflow-hidden rounded-xl shadow-sm border border-slate-100 bg-slate-100">
                 <img src="${imgSrc}" onerror="window.imgError(this)" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
             </div>
             <div class="flex-1 min-w-0">
-                <h3 class="font-black text-white text-[19px] mb-1 group-hover:text-booth-accent transition-colors truncate">${style.name}</h3>
-                <p class="text-[13px] text-booth-muted leading-snug line-clamp-2">${style.description || 'Gaya Interaktif'}</p>
+                <h3 class="font-black text-slate-800 text-[19px] mb-1 group-hover:text-booth-accent transition-colors truncate">${style.name}</h3>
+                <p class="text-[13px] text-slate-500 leading-snug line-clamp-2">${style.description || 'Gaya Interaktif'}</p>
             </div>
         `;
         
@@ -230,11 +232,11 @@ function renderStyleOptions() {
             selectedOptions = {}; 
             
             document.querySelectorAll('.style-card').forEach(el => {
-                el.classList.remove('border-booth-accent', 'ring-2', 'ring-booth-accent', 'shadow-[0_0_20px_rgba(232,84,62,0.2)]', 'bg-booth-accent/10');
+                el.classList.remove('border-booth-accent', 'ring-2', 'ring-booth-accent', 'bg-orange-50', 'shadow-md');
                 el.querySelector('h3').classList.remove('text-booth-accent');
             });
             
-            div.classList.add('border-booth-accent', 'ring-2', 'ring-booth-accent', 'shadow-[0_0_20px_rgba(232,84,62,0.2)]', 'bg-booth-accent/10');
+            div.classList.add('border-booth-accent', 'ring-2', 'ring-booth-accent', 'bg-orange-50', 'shadow-md');
             div.querySelector('h3').classList.add('text-booth-accent');
 
             const previewImg = document.getElementById('integrated-preview-img');
@@ -245,7 +247,6 @@ function renderStyleOptions() {
                 previewImg.onerror = function(){ window.imgError(this) }; 
                 previewImg.style.opacity = '0';
                 
-                // PERBAIKAN: Pastikan gambar preview terfokus di tengah secara absolut (object-center)
                 previewImg.style.objectPosition = 'center center'; 
                 
                 setTimeout(() => {
@@ -277,7 +278,7 @@ function renderSubStyleForm(styleData) {
     if (!styleData.options || styleData.options.length === 0) return;
 
     const innerForm = document.createElement('div');
-    innerForm.className = 'mt-6 flex flex-col gap-6';
+    innerForm.className = 'mt-6 flex flex-col gap-8'; // Jarak antar grup diperlebar sedikit
 
     styleData.options.forEach(optGroup => {
         const groupDiv = document.createElement('div');
@@ -291,28 +292,28 @@ function renderSubStyleForm(styleData) {
             const optImg = choice.img ? getImageUrl(choice.img) : FALLBACK_B64;
             const itemValue = choice.value || choice.label;
 
-            // PERBAIKAN: Ubah desain opsi menjadi Grid Kotak Besar (Gambar di atas, teks di bawah)
+            // LIGHT MODE KARTU OPSI (GRID)
             choicesHtml += `
-                <div class="choice-card ${hideClass} cursor-pointer p-2 pb-3 rounded-2xl border border-white/10 bg-[#252833] hover:bg-white/10 flex flex-col items-center gap-2 transition-all group"
+                <div class="choice-card ${hideClass} cursor-pointer p-2 pb-3 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 flex flex-col items-center gap-2 transition-all group shadow-sm"
                      ${dependsAttr} data-value="${itemValue}"
                      onclick="window.selectSubOption('${optGroup.id}', '${itemValue}', this, '${optGroup.depends_on || ''}')">
-                    <div class="w-full aspect-square rounded-xl overflow-hidden shrink-0 shadow-sm relative bg-booth-surface">
+                    <div class="w-full aspect-square rounded-xl overflow-hidden shrink-0 relative bg-slate-100 border border-slate-100">
                         <img src="${optImg}" onerror="window.imgError(this)" class="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-110">
                     </div>
                     <div class="px-1 text-center w-full mt-1">
-                        <h4 class="font-bold text-[14px] text-white leading-tight break-words">${choice.label}</h4>
+                        <h4 class="font-bold text-[14px] text-slate-700 leading-tight break-words group-hover:text-booth-accent transition-colors">${choice.label}</h4>
                     </div>
                 </div>
             `;
         });
 
-        // PERBAIKAN: Bungkus dengan grid 2 kolom
+        // TAMPILAN LABEL GRUP LIGHT MODE
         groupDiv.innerHTML = `
             <div class="flex items-center gap-2 mb-4">
-                <span class="w-6 h-6 rounded-full bg-booth-accent/20 text-booth-accent flex items-center justify-center text-xs font-bold font-mono border border-booth-accent/30">!</span>
-                <h3 class="font-bold text-white uppercase tracking-wider text-xs">${optGroup.label} ${optGroup.optional ? '(Opsional)' : ''}</h3>
+                <span class="w-6 h-6 rounded-full bg-orange-100 text-booth-accent flex items-center justify-center text-xs font-bold font-mono border border-orange-200">!</span>
+                <h3 class="font-bold text-slate-800 uppercase tracking-wider text-xs">${optGroup.label} ${optGroup.optional ? '(Opsional)' : ''}</h3>
             </div>
-            <div class="grid grid-cols-2 gap-4 sm:gap-5" id="choices-container-${optGroup.id}">${choicesHtml}</div>
+            <div class="grid grid-cols-2 sm:grid-cols-2 xl:grid-cols-3 gap-4" id="choices-container-${optGroup.id}">${choicesHtml}</div>
         `;
         innerForm.appendChild(groupDiv);
     });
@@ -357,8 +358,8 @@ function startCountdown() {
         const videoContainer = document.getElementById('webcam-video').parentElement;
         overlay = document.createElement('div');
         overlay.id = 'countdown-overlay';
-        overlay.className = 'absolute inset-0 z-20 flex items-center justify-center bg-black/40 backdrop-blur-[2px] transition-all';
-        overlay.innerHTML = '<span id="countdown-number" class="text-[160px] font-black text-white drop-shadow-[0_0_30px_rgba(232,84,62,0.8)] animate-pulse">5</span>';
+        overlay.className = 'absolute inset-0 z-20 flex items-center justify-center bg-white/70 backdrop-blur-sm transition-all rounded-3xl';
+        overlay.innerHTML = '<span id="countdown-number" class="text-[160px] font-black text-booth-accent drop-shadow-[0_10px_30px_rgba(249,115,22,0.4)] animate-pulse">5</span>';
         videoContainer.appendChild(overlay);
     } else {
         overlay.classList.remove('hidden');
