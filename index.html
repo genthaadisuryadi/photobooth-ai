@@ -65,9 +65,6 @@
         .cover-img-safe { object-position: center center !important; }
         input:focus { outline: none; box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2); }
 
-        /* =========================================
-           CSS KHUSUS CETAK FISIK (PRINT MODE)
-        ========================================= */
         #print-container { display: none; }
         
         @media print {
@@ -78,10 +75,7 @@
                 width: 100% !important; 
                 height: 100% !important; 
             }
-            /* Sembunyikan seluruh UI web, header, footer, modal */
             #app-container, #print-modal { display: none !important; }
-            
-            /* Tampilkan HANYA gambar AI dengan ukuran penuh kertas */
             #print-container { 
                 display: flex !important; 
                 width: 100% !important; 
@@ -94,7 +88,7 @@
             #print-image { 
                 width: 100% !important; 
                 height: 100% !important; 
-                object-fit: cover !important; /* Menjamin gambar memenuhi kertas tanpa tepi putih */
+                object-fit: cover !important;
             }
             @page { margin: 0; }
         }
@@ -114,10 +108,12 @@
 
             <div class="relative flex min-h-[58dvh] flex-col px-5 pb-8 pt-5 sm:px-8 sm:pb-10 sm:pt-7 lg:min-h-[100dvh] lg:px-[clamp(36px,5vw,84px)] lg:pb-12 lg:pt-9 z-10">
                 <header class="flex items-center justify-between border-b border-slate-100 pb-5">
-                    <div class="flex items-center gap-4">
-                        <div class="h-10 w-auto sm:h-12 overflow-hidden flex items-center justify-start shrink-0">
+                    <!-- PERBAIKAN: Logo besar dengan tulisan AGENTIC AI -->
+                    <div class="flex items-center gap-3">
+                        <div class="h-12 w-auto sm:h-14 overflow-hidden flex items-center justify-start shrink-0">
                             <img src="logo.png" alt="Logo Agentic AI Center" class="h-full w-auto object-contain">
                         </div>
+                        <span class="font-extrabold tracking-wide text-lg sm:text-xl text-booth-accent uppercase ml-2">AI Photobooth</span>
                     </div>
                 </header>
         
@@ -157,38 +153,48 @@
         </section>
 
         <!-- SCREEN 2: PIN / TICKET -->
-        <section id="screen-pin" class="screen-hidden absolute inset-0 z-20 w-full h-full bg-slate-50 flex flex-col items-center justify-center fade-in">
+        <section id="screen-pin" class="screen-hidden absolute inset-0 z-20 w-full h-full bg-slate-50 flex flex-col fade-in">
             <div class="radial-glow absolute inset-0 pointer-events-none"></div>
             <div class="bg-grid absolute inset-0 pointer-events-none opacity-50"></div>
 
-            <div class="relative z-10 flex flex-col items-center w-full max-w-[480px] px-6 text-center">
-                <div class="flex items-center gap-3 text-slate-500 font-extrabold text-sm tracking-widest mb-6 uppercase">
-                    <img src="logo.png" alt="Logo UCIC" class="h-6 w-auto object-contain">
-                    <span>Autentikasi</span>
-                </div>
-                
-                <h1 class="text-3xl sm:text-[36px] font-black leading-tight text-slate-800 mb-2">Pindai Tiket Anda</h1>
-                <p class="text-[15px] font-medium text-slate-500 mb-8">Arahkan QR Code ke kamera, atau ketik kode di bawah.</p>
-
-                <div class="w-full bg-white border border-slate-200 rounded-2xl p-2.5 mb-6 shadow-sm relative overflow-hidden flex justify-center">
-                    <div id="qr-reader" class="w-full relative rounded-xl overflow-hidden"></div>
-                </div>
-
-                <div class="w-full">
-                    <div class="relative">
-                        <input type="text" id="token-input" placeholder="KODE TIKET..." autocomplete="off" 
-                            class="w-full bg-white border border-slate-200 shadow-inner rounded-xl py-5 px-6 text-center text-2xl font-black tracking-[0.2em] text-slate-700 uppercase outline-none focus:border-booth-accent transition-all">
-                        
-                        <button onclick="submitToken()" id="btn-submit-token" class="mt-4 w-full py-4 bg-gradient-to-r from-blue-700 to-blue-800 hover:opacity-90 rounded-xl font-bold text-[16px] text-white transition-all shadow-[0_4px_14px_rgba(30,58,138,0.25)]">
-                            Verifikasi Tiket &rarr;
-                        </button>
+            <!-- PERBAIKAN: Header Autentikasi disamakan dengan gaya screen lain -->
+            <header class="flex items-center justify-between h-[68px] px-5 sm:px-8 lg:px-10 border-b border-slate-200 shrink-0 bg-white relative z-20">
+                <div class="flex items-center gap-3">
+                    <div class="h-8 w-auto overflow-hidden flex items-center justify-start shrink-0">
+                        <img src="logo.png" alt="Logo UCIC Agentic" class="h-full w-auto object-contain">
                     </div>
-                    <p id="token-error" class="mt-3 text-sm font-bold text-red-500 min-h-[20px]"></p>
+                    <span class="font-extrabold tracking-wide text-sm sm:text-base text-booth-accent uppercase">AI Photobooth</span>
                 </div>
-                
-                <button onclick="cancelTokenScreen()" id="btn-cancel-token" class="mt-6 text-[13px] font-bold text-slate-400 hover:text-slate-600 transition-colors">
-                    &larr; Batal & Kembali
-                </button>
+                <div class="flex items-center gap-3">
+                    <span class="text-[11px] font-bold uppercase tracking-widest text-slate-500 bg-slate-100 px-3 py-1 rounded-full border border-slate-200">Autentikasi</span>
+                </div>
+            </header>
+
+            <div class="flex-1 flex flex-col items-center justify-center relative z-10 w-full px-6">
+                <div class="w-full max-w-[480px] text-center">
+                    <h1 class="text-3xl sm:text-[36px] font-black leading-tight text-slate-800 mb-2">Pindai Tiket Anda</h1>
+                    <p class="text-[15px] font-medium text-slate-500 mb-8">Arahkan QR Code ke kamera, atau ketik kode di bawah.</p>
+    
+                    <div class="w-full bg-white border border-slate-200 rounded-2xl p-2.5 mb-6 shadow-sm relative overflow-hidden flex justify-center">
+                        <div id="qr-reader" class="w-full relative rounded-xl overflow-hidden"></div>
+                    </div>
+    
+                    <div class="w-full">
+                        <div class="relative">
+                            <input type="text" id="token-input" placeholder="KODE TIKET..." autocomplete="off" 
+                                class="w-full bg-white border border-slate-200 shadow-inner rounded-xl py-5 px-6 text-center text-2xl font-black tracking-[0.2em] text-slate-700 uppercase outline-none focus:border-booth-accent transition-all">
+                            
+                            <button onclick="submitToken()" id="btn-submit-token" class="mt-4 w-full py-4 bg-gradient-to-r from-blue-700 to-blue-800 hover:opacity-90 rounded-xl font-bold text-[16px] text-white transition-all shadow-[0_4px_14px_rgba(30,58,138,0.25)]">
+                                Verifikasi Tiket &rarr;
+                            </button>
+                        </div>
+                        <p id="token-error" class="mt-3 text-sm font-bold text-red-500 min-h-[20px]"></p>
+                    </div>
+                    
+                    <button onclick="cancelTokenScreen()" id="btn-cancel-token" class="mt-6 text-[13px] font-bold text-slate-400 hover:text-slate-600 transition-colors">
+                        &larr; Batal & Kembali
+                    </button>
+                </div>
             </div>
         </section>
 
@@ -199,6 +205,7 @@
                     <div class="h-8 w-auto overflow-hidden flex items-center justify-start shrink-0">
                         <img src="logo.png" alt="Logo UCIC Agentic" class="h-full w-auto object-contain">
                     </div>
+                    <span class="font-extrabold tracking-wide text-sm sm:text-base text-booth-accent uppercase">AI Photobooth</span>
                 </div>
                 <div class="flex items-center gap-3">
                     <span class="text-[11px] font-bold uppercase tracking-widest text-booth-accent bg-blue-50 px-3 py-1 rounded-full border border-blue-100">Langkah 1 dari 3</span>
@@ -246,6 +253,7 @@
             <header class="flex items-center justify-between h-[68px] px-5 sm:px-8 lg:px-10 border-b border-slate-200 shrink-0 relative z-20 bg-white/80 backdrop-blur-md">
                 <div class="flex items-center gap-3">
                     <img src="logo.png" alt="Logo" class="h-8 w-auto object-contain">
+                    <span class="font-extrabold tracking-wide text-sm sm:text-base text-booth-accent uppercase">AI Photobooth</span>
                 </div>
                 <span class="text-[11px] font-bold uppercase tracking-widest text-booth-accent bg-blue-50 px-3 py-1 rounded-full border border-blue-100">Langkah 2 dari 3</span>
             </header>
@@ -298,6 +306,7 @@
             <header class="flex items-center justify-between h-[68px] px-5 sm:px-8 lg:px-10 border-b border-slate-200 shrink-0 bg-white">
                 <div class="flex items-center gap-3">
                     <img src="logo.png" alt="Logo" class="h-8 w-auto object-contain">
+                    <span class="font-extrabold tracking-wide text-sm sm:text-base text-booth-accent uppercase">AI Photobooth</span>
                 </div>
             </header>
             <main class="min-h-0 flex-1 flex items-center justify-center p-8 bg-gradient-to-br from-slate-50 via-blue-50/50 to-slate-50">
@@ -330,6 +339,7 @@
             <header class="flex items-center justify-between h-[68px] px-8 lg:px-12 border-b border-slate-100 shrink-0 sticky top-0 bg-white/90 backdrop-blur z-10">
                 <div class="flex items-center gap-3">
                     <img src="logo.png" alt="Logo" class="h-6 w-auto object-contain">
+                    <span class="font-extrabold tracking-widest text-sm text-slate-400 uppercase">AI Photobooth</span>
                 </div>
                 <span class="text-xs font-bold uppercase tracking-widest text-slate-500">Selesai</span>
             </header>
@@ -380,7 +390,6 @@
                 </div>
                 
                 <div class="mt-14 flex flex-col sm:flex-row items-center justify-center gap-4 w-full max-w-[500px]">
-                    <!-- TOMBOL CETAK FISIK SEKARANG MEMANGGIL POPUP -->
                     <button onclick="openPrintModal()" class="w-full h-[56px] bg-gradient-to-r from-blue-700 to-blue-800 hover:opacity-90 rounded-full font-bold text-[15px] text-white shadow-lg flex items-center justify-center gap-3 transition-all">
                         <svg class="w-5 h-5 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
                         Cetak Fisik
@@ -394,13 +403,12 @@
 
     </div>
 
-    <!-- MODAL POPUP PILIHAN UKURAN KERTAS CETAK (BARU) -->
+    <!-- MODAL POPUP PILIHAN UKURAN KERTAS CETAK -->
     <div id="print-modal" class="hidden fixed inset-0 z-[60] bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4">
         <div class="w-full max-w-[440px] bg-white rounded-3xl p-8 shadow-2xl border border-slate-100 text-center relative transform transition-all scale-100">
             <h3 class="text-2xl font-black text-slate-800 mb-2">Pilih Ukuran Kertas</h3>
             <p class="text-[14px] text-slate-500 mb-8 leading-relaxed">Pilih ukuran cetak. Gambar AI akan dicetak memenuhi seluruh area kertas.</p>
             <div class="grid grid-cols-2 gap-4 mb-8">
-                <!-- Ukuran ini dalam Inci: Lebar x Tinggi (Kertas Landscape karena Gambar Landscape 16:9) -->
                 <button onclick="executePrint(4, 2)" class="p-4 border-2 border-slate-100 rounded-2xl hover:border-blue-500 hover:bg-blue-50 hover:text-blue-700 font-black text-slate-600 transition-all text-lg shadow-sm">2 x 4</button>
                 <button onclick="executePrint(6, 4)" class="p-4 border-2 border-slate-100 rounded-2xl hover:border-blue-500 hover:bg-blue-50 hover:text-blue-700 font-black text-slate-600 transition-all text-lg shadow-sm">4 x 6</button>
                 <button onclick="executePrint(3.5, 2.5)" class="p-4 border-2 border-slate-100 rounded-2xl hover:border-blue-500 hover:bg-blue-50 hover:text-blue-700 font-black text-slate-600 transition-all text-lg shadow-sm">2R</button>
