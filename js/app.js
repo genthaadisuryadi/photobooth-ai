@@ -244,6 +244,10 @@ function renderStyleOptions() {
             if (previewImg) { 
                 previewImg.onerror = function(){ window.imgError(this) }; 
                 previewImg.style.opacity = '0';
+                
+                // PERBAIKAN: Pastikan gambar preview terfokus di tengah secara absolut (object-center)
+                previewImg.style.objectPosition = 'center center'; 
+                
                 setTimeout(() => {
                     previewImg.src = imgSrc; 
                     previewImg.style.opacity = '1';
@@ -287,27 +291,28 @@ function renderSubStyleForm(styleData) {
             const optImg = choice.img ? getImageUrl(choice.img) : FALLBACK_B64;
             const itemValue = choice.value || choice.label;
 
+            // PERBAIKAN: Ubah desain opsi menjadi Grid Kotak Besar (Gambar di atas, teks di bawah)
             choicesHtml += `
-                <div class="choice-card ${hideClass} cursor-pointer p-3.5 rounded-2xl border border-white/10 bg-[#252833] hover:bg-white/10 flex items-center gap-4 transition-all"
+                <div class="choice-card ${hideClass} cursor-pointer p-2 pb-3 rounded-2xl border border-white/10 bg-[#252833] hover:bg-white/10 flex flex-col items-center gap-2 transition-all group"
                      ${dependsAttr} data-value="${itemValue}"
                      onclick="window.selectSubOption('${optGroup.id}', '${itemValue}', this, '${optGroup.depends_on || ''}')">
-                    <div class="w-16 h-16 rounded-xl overflow-hidden border border-white/10 shrink-0 shadow-md">
-                        <img src="${optImg}" onerror="window.imgError(this)" class="w-full h-full object-cover">
+                    <div class="w-full aspect-square rounded-xl overflow-hidden shrink-0 shadow-sm relative bg-booth-surface">
+                        <img src="${optImg}" onerror="window.imgError(this)" class="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-110">
                     </div>
-                    <div>
-                        <h4 class="font-bold text-[15px] text-white leading-tight">${choice.label}</h4>
+                    <div class="px-1 text-center w-full mt-1">
+                        <h4 class="font-bold text-[14px] text-white leading-tight break-words">${choice.label}</h4>
                     </div>
                 </div>
             `;
         });
 
-        // PERUBAHAN 2: Mengatur Grid Kanan Menjadi 3 Kolom
+        // PERBAIKAN: Bungkus dengan grid 2 kolom
         groupDiv.innerHTML = `
             <div class="flex items-center gap-2 mb-4">
                 <span class="w-6 h-6 rounded-full bg-booth-accent/20 text-booth-accent flex items-center justify-center text-xs font-bold font-mono border border-booth-accent/30">!</span>
                 <h3 class="font-bold text-white uppercase tracking-wider text-xs">${optGroup.label} ${optGroup.optional ? '(Opsional)' : ''}</h3>
             </div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4" id="choices-container-${optGroup.id}">${choicesHtml}</div>
+            <div class="grid grid-cols-2 gap-4 sm:gap-5" id="choices-container-${optGroup.id}">${choicesHtml}</div>
         `;
         innerForm.appendChild(groupDiv);
     });
