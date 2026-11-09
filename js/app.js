@@ -101,12 +101,11 @@ window.takePhoto = () => { startCountdown(); };
 window.selectSubOption = (groupId, choiceValue, element, dependsOn) => {
     selectedOptions[groupId] = choiceValue;
     
-    // LIGHT MODE UI UPDATE
     const container = document.getElementById(`choices-container-${groupId}`);
     if (container) {
-        container.querySelectorAll('.choice-card').forEach(el => el.classList.remove('border-booth-accent', 'bg-orange-50', 'ring-2', 'ring-booth-accent'));
+        container.querySelectorAll('.choice-card').forEach(el => el.classList.remove('border-booth-accent', 'bg-blue-50', 'ring-2', 'ring-booth-accent'));
     }
-    element.classList.add('border-booth-accent', 'bg-orange-50', 'ring-2', 'ring-booth-accent');
+    element.classList.add('border-booth-accent', 'bg-blue-50', 'ring-2', 'ring-booth-accent');
 
     const styleData = availableStyles[selectedStyleId];
     if (styleData && styleData.options) {
@@ -214,7 +213,6 @@ function renderStyleOptions() {
         const imgSrc = getImageUrl(style.cover);
         const div = document.createElement('div');
         
-        // LIGHT MODE KARTU GAYA KIRI
         div.className = 'style-card cursor-pointer p-4 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 transition-all flex items-center gap-5 group shadow-sm';
         
         div.innerHTML = `
@@ -232,11 +230,11 @@ function renderStyleOptions() {
             selectedOptions = {}; 
             
             document.querySelectorAll('.style-card').forEach(el => {
-                el.classList.remove('border-booth-accent', 'ring-2', 'ring-booth-accent', 'bg-orange-50', 'shadow-md');
+                el.classList.remove('border-booth-accent', 'ring-2', 'ring-booth-accent', 'bg-blue-50', 'shadow-md');
                 el.querySelector('h3').classList.remove('text-booth-accent');
             });
             
-            div.classList.add('border-booth-accent', 'ring-2', 'ring-booth-accent', 'bg-orange-50', 'shadow-md');
+            div.classList.add('border-booth-accent', 'ring-2', 'ring-booth-accent', 'bg-blue-50', 'shadow-md');
             div.querySelector('h3').classList.add('text-booth-accent');
 
             const previewImg = document.getElementById('integrated-preview-img');
@@ -246,9 +244,7 @@ function renderStyleOptions() {
             if (previewImg) { 
                 previewImg.onerror = function(){ window.imgError(this) }; 
                 previewImg.style.opacity = '0';
-                
                 previewImg.style.objectPosition = 'center center'; 
-                
                 setTimeout(() => {
                     previewImg.src = imgSrc; 
                     previewImg.style.opacity = '1';
@@ -278,7 +274,7 @@ function renderSubStyleForm(styleData) {
     if (!styleData.options || styleData.options.length === 0) return;
 
     const innerForm = document.createElement('div');
-    innerForm.className = 'mt-6 flex flex-col gap-8'; // Jarak antar grup diperlebar sedikit
+    innerForm.className = 'mt-6 flex flex-col gap-8'; 
 
     styleData.options.forEach(optGroup => {
         const groupDiv = document.createElement('div');
@@ -292,7 +288,6 @@ function renderSubStyleForm(styleData) {
             const optImg = choice.img ? getImageUrl(choice.img) : FALLBACK_B64;
             const itemValue = choice.value || choice.label;
 
-            // LIGHT MODE KARTU OPSI (GRID)
             choicesHtml += `
                 <div class="choice-card ${hideClass} cursor-pointer p-2 pb-3 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 flex flex-col items-center gap-2 transition-all group shadow-sm"
                      ${dependsAttr} data-value="${itemValue}"
@@ -307,10 +302,9 @@ function renderSubStyleForm(styleData) {
             `;
         });
 
-        // TAMPILAN LABEL GRUP LIGHT MODE
         groupDiv.innerHTML = `
             <div class="flex items-center gap-2 mb-4">
-                <span class="w-6 h-6 rounded-full bg-orange-100 text-booth-accent flex items-center justify-center text-xs font-bold font-mono border border-orange-200">!</span>
+                <span class="w-6 h-6 rounded-full bg-yellow-100 text-yellow-600 flex items-center justify-center text-xs font-bold font-mono border border-yellow-200 shadow-sm">!</span>
                 <h3 class="font-bold text-slate-800 uppercase tracking-wider text-xs">${optGroup.label} ${optGroup.optional ? '(Opsional)' : ''}</h3>
             </div>
             <div class="grid grid-cols-2 sm:grid-cols-2 xl:grid-cols-3 gap-4" id="choices-container-${optGroup.id}">${choicesHtml}</div>
@@ -359,7 +353,7 @@ function startCountdown() {
         overlay = document.createElement('div');
         overlay.id = 'countdown-overlay';
         overlay.className = 'absolute inset-0 z-20 flex items-center justify-center bg-white/70 backdrop-blur-sm transition-all rounded-3xl';
-        overlay.innerHTML = '<span id="countdown-number" class="text-[160px] font-black text-booth-accent drop-shadow-[0_10px_30px_rgba(249,115,22,0.4)] animate-pulse">5</span>';
+        overlay.innerHTML = '<span id="countdown-number" class="text-[160px] font-black text-booth-accent drop-shadow-[0_10px_30px_rgba(30,58,138,0.4)] animate-pulse">5</span>';
         videoContainer.appendChild(overlay);
     } else {
         overlay.classList.remove('hidden');

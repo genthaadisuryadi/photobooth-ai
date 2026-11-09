@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Photobooth 2026</title>
+    <title>Agentic AI Photobooth</title>
     
-    <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+    <link rel="icon" href="logo.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://unpkg.com/html5-qrcode"></script>
@@ -16,15 +16,15 @@
                 extend: {
                     colors: {
                         booth: { 
-                            // TEMA LIGHT MODE BARU
-                            bg: '#f8fafc',          /* Latar belakang utama: abu-abu sangat muda / putih bersih */
-                            surface: '#ffffff',     /* Permukaan kartu: putih */
-                            card: '#ffffff',        /* Kartu/Panel: putih */
-                            text: '#0f172a',        /* Teks utama: hitam kebiruan pekat */
-                            muted: '#64748b',       /* Teks sekunder: abu-abu */
-                            accent: '#f97316',      /* Aksen: Oranye cerah */
-                            accentLight: '#fb923c', /* Aksen saat hover: Oranye muda */
-                            border: '#e2e8f0'       /* Garis batas: abu-abu terang */
+                            bg: '#f8fafc',          
+                            surface: '#ffffff',     
+                            card: '#ffffff',        
+                            text: '#0f172a',        
+                            muted: '#64748b',       
+                            accent: '#1e3a8a',      /* Biru Tua Logo */
+                            accentLight: '#2563eb', /* Biru Terang Hover */
+                            accentGold: '#eab308',  /* Kuning Emas Logo */
+                            border: '#e2e8f0'       
                         },
                     },
                     fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] }
@@ -43,9 +43,8 @@
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 999px; }
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
         
-        /* Background Grid Terang */
         .bg-grid { background-image: linear-gradient(#e2e8f0 1px, transparent 1px), linear-gradient(90deg, #e2e8f0 1px, transparent 1px); background-size: 48px 48px; }
-        .radial-glow { background: radial-gradient(ellipse 860px 600px at 50% 0%, rgba(249, 115, 22, 0.08), transparent 60%); }
+        .radial-glow { background: radial-gradient(ellipse 860px 600px at 50% 0%, rgba(30, 58, 138, 0.08), transparent 60%); }
         
         @keyframes shake { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-7px); } 40% { transform: translateX(7px); } 60% { transform: translateX(-5px); } 80% { transform: translateX(5px); } }
         .animate-shake { animation: shake 0.4s ease; }
@@ -64,33 +63,32 @@
         #qr-reader video { transform: scaleX(-1) !important; object-fit: cover !important; border-radius: 1rem; }
         
         .cover-img-safe { object-position: center center !important; }
-        
-        /* Menghilangkan garis biru saat input diklik */
-        input:focus { outline: none; box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.2); }
+        input:focus { outline: none; box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2); }
     </style>
 </head>
 <body class="font-sans text-booth-text antialiased select-none">
 
     <div id="app-container" class="relative w-full h-[100dvh] overflow-hidden bg-booth-bg">
 
-        <!-- SCREEN 1: WELCOME (LIGHT MODE) -->
+        <!-- SCREEN 1: WELCOME -->
         <section id="screen-welcome" class="absolute inset-0 z-10 w-full h-full lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(520px,1fr)] bg-white relative">
-            <!-- Elemen dekoratif gradient pastel (seperti di referensi) -->
+            <!-- Gradasi Lembut Biru dan Kuning -->
             <div class="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
-                <div class="absolute -top-[10%] -left-[10%] w-[50%] h-[50%] rounded-full bg-pink-100/50 blur-[100px]"></div>
-                <div class="absolute top-[20%] right-[40%] w-[30%] h-[40%] rounded-full bg-orange-100/50 blur-[100px]"></div>
-                <div class="absolute bottom-0 left-[20%] w-[40%] h-[40%] rounded-full bg-blue-50/50 blur-[100px]"></div>
+                <div class="absolute -top-[10%] -left-[10%] w-[50%] h-[50%] rounded-full bg-blue-100/60 blur-[100px]"></div>
+                <div class="absolute top-[20%] right-[40%] w-[30%] h-[40%] rounded-full bg-yellow-100/60 blur-[100px]"></div>
+                <div class="absolute bottom-0 left-[20%] w-[40%] h-[40%] rounded-full bg-blue-50/70 blur-[100px]"></div>
             </div>
 
             <div class="relative flex min-h-[58dvh] flex-col px-5 pb-8 pt-5 sm:px-8 sm:pb-10 sm:pt-7 lg:min-h-[100dvh] lg:px-[clamp(36px,5vw,84px)] lg:pb-12 lg:pt-9 z-10">
                 <header class="flex items-center justify-between border-b border-slate-100 pb-5">
                     <div class="flex items-center gap-3">
-                        <span class="grid h-10 w-10 place-items-center rounded-xl border border-slate-200 bg-white shadow-sm">
-                            <svg class="h-5 w-5 text-booth-text" viewBox="0 0 24 24" fill="none"><path d="M4.8 6.7h2.4l1.1-2c.2-.4.6-.7 1.1-.7h4.9c.5 0 .9.3 1.1.7l1.1 2h2.4c1.6 0 2.9 1.3 2.9 2.9v6.8c0 1.6-1.3 2.9-2.9 2.9H4.8c-1.6 0-2.9-1.3-2.9-2.9V9.6c0-1.6 1.3-2.9 2.9-2.9Z" stroke="currentColor" stroke-width="1.5"/><circle cx="12" cy="13" r="3.4" stroke="currentColor" stroke-width="1.5"/><path d="m18.5 3 .6 1.3 1.4.3-1 .9.2 1.4-1.2-.6-1.2.6.2-1.4-1-.9 1.4-.3.6-1.3Z" fill="#f97316"/></svg>
-                        </span>
+                        <!-- LOGO PENGGANTI ICON KAMERA -->
+                        <div class="h-12 w-12 rounded-xl border border-slate-200 bg-white shadow-sm flex items-center justify-center p-2 shrink-0">
+                            <img src="logo.png" alt="Logo Agentic" class="w-full h-full object-contain">
+                        </div>
                         <div>
-                            <p class="text-[12px] font-extrabold tracking-[0.12em] text-slate-800">AI PHOTOBOOTH</p>
-                            <p class="mt-0.5 text-[11px] font-medium text-slate-500">Pengalaman foto interaktif</p>
+                            <p class="text-[14px] font-extrabold tracking-[0.05em] text-booth-accent uppercase">Agentic AI Center</p>
+                            <p class="mt-0.5 text-[12px] font-medium text-slate-500">Pengalaman foto interaktif</p>
                         </div>
                     </div>
                 </header>
@@ -103,9 +101,9 @@
                         Pilih tampilan, ambil foto, lalu biarkan AI mengubahnya di Stage kami.
                     </p>
                     <div class="mt-9 flex items-center gap-4">
-                        <button onclick="switchScreen('screen-pin'); initQRScanner();" id="btn-start" class="inline-flex min-h-[56px] items-center justify-between gap-6 rounded-full bg-gradient-to-r from-orange-400 to-orange-500 px-8 text-[15px] font-bold text-white shadow-[0_8px_20px_rgba(249,115,22,0.25)] hover:shadow-[0_10px_25px_rgba(249,115,22,0.35)] hover:-translate-y-0.5 active:scale-[0.98] transition-all">
+                        <button onclick="switchScreen('screen-pin'); initQRScanner();" id="btn-start" class="inline-flex min-h-[56px] items-center justify-between gap-6 rounded-full bg-gradient-to-r from-blue-700 to-blue-800 px-8 text-[15px] font-bold text-white shadow-[0_8px_20px_rgba(30,58,138,0.25)] hover:shadow-[0_10px_25px_rgba(30,58,138,0.35)] hover:-translate-y-0.5 active:scale-[0.98] transition-all">
                             Mulai Transformasi
-                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" /></svg>
+                            <svg class="h-4 w-4 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" /></svg>
                         </button>
                     </div>
                 </div>
@@ -117,7 +115,6 @@
             </div>
         
             <aside class="relative min-h-[48dvh] overflow-hidden bg-transparent lg:min-h-[100dvh]">
-                <!-- Galeri gambar ala masonry -->
                 <div class="absolute inset-0 grid grid-cols-2 gap-4 overflow-hidden p-4 sm:p-8">
                     <div class="welcome-gallery-lane min-w-0 pt-10">
                         <div class="welcome-gallery-reel" id="welcome-gallery-left"></div>
@@ -126,38 +123,35 @@
                         <div class="welcome-gallery-reel" id="welcome-gallery-right"></div>
                     </div>
                 </div>
-                <!-- Fade effect atas dan bawah agar gambar seolah menghilang perlahan -->
                 <div class="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-white to-transparent pointer-events-none z-10"></div>
                 <div class="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-white to-transparent pointer-events-none z-10"></div>
             </aside>
         </section>
 
-        <!-- SCREEN 2: PIN / TICKET (FITUR QR DIPERTAHANKAN, DESAIN TERANG) -->
+        <!-- SCREEN 2: PIN / TICKET -->
         <section id="screen-pin" class="screen-hidden absolute inset-0 z-20 w-full h-full bg-slate-50 flex flex-col items-center justify-center fade-in">
             <div class="radial-glow absolute inset-0 pointer-events-none"></div>
             <div class="bg-grid absolute inset-0 pointer-events-none opacity-50"></div>
 
             <div class="relative z-10 flex flex-col items-center w-full max-w-[480px] px-6 text-center">
-                <div class="flex items-center gap-2 text-slate-400 font-extrabold text-sm tracking-widest mb-6 uppercase">
-                    <svg class="h-5 w-5 text-booth-accent" viewBox="0 0 24 24" fill="none"><path d="M4.8 6.7h2.4l1.1-2c.2-.4.6-.7 1.1-.7h4.9c.5 0 .9.3 1.1.7l1.1 2h2.4c1.6 0 2.9 1.3 2.9 2.9v6.8c0 1.6-1.3 2.9-2.9 2.9H4.8c-1.6 0-2.9-1.3-2.9-2.9V9.6c0-1.6 1.3-2.9 2.9-2.9Z" stroke="currentColor" stroke-width="1.5"/><circle cx="12" cy="13" r="3.4" stroke="currentColor" stroke-width="1.5"/><path d="m18.5 3 .6 1.3 1.4.3-1 .9.2 1.4-1.2-.6-1.2.6.2-1.4-1-.9 1.4-.3.6-1.3Z" fill="#f97316"/></svg>
+                <div class="flex items-center gap-3 text-slate-500 font-extrabold text-sm tracking-widest mb-6 uppercase">
+                    <img src="logo.png" alt="Logo" class="h-6 object-contain">
                     <span>Autentikasi</span>
                 </div>
                 
                 <h1 class="text-3xl sm:text-[36px] font-black leading-tight text-slate-800 mb-2">Pindai Tiket Anda</h1>
                 <p class="text-[15px] font-medium text-slate-500 mb-8">Arahkan QR Code ke kamera, atau ketik kode di bawah.</p>
 
-                <!-- Container Scanner Kamera (Tetap Ada!) -->
                 <div class="w-full bg-white border border-slate-200 rounded-2xl p-2.5 mb-6 shadow-sm relative overflow-hidden flex justify-center">
                     <div id="qr-reader" class="w-full relative rounded-xl overflow-hidden"></div>
                 </div>
 
                 <div class="w-full">
                     <div class="relative">
-                        <!-- Input Text Putih Bersih -->
                         <input type="text" id="token-input" placeholder="KODE TIKET..." autocomplete="off" 
                             class="w-full bg-white border border-slate-200 shadow-inner rounded-xl py-5 px-6 text-center text-2xl font-black tracking-[0.2em] text-slate-700 uppercase outline-none focus:border-booth-accent transition-all">
                         
-                        <button onclick="submitToken()" id="btn-submit-token" class="mt-4 w-full py-4 bg-booth-accent hover:bg-orange-500 rounded-xl font-bold text-[16px] text-white transition-all shadow-[0_4px_14px_rgba(249,115,22,0.25)]">
+                        <button onclick="submitToken()" id="btn-submit-token" class="mt-4 w-full py-4 bg-gradient-to-r from-blue-700 to-blue-800 hover:opacity-90 rounded-xl font-bold text-[16px] text-white transition-all shadow-[0_4px_14px_rgba(30,58,138,0.25)]">
                             Verifikasi Tiket &rarr;
                         </button>
                     </div>
@@ -170,42 +164,37 @@
             </div>
         </section>
 
-        <!-- SCREEN 3: STYLE SELECTION (LIGHT MODE GRID KANAN KIRI) -->
+        <!-- SCREEN 3: STYLE SELECTION -->
         <section id="screen-style" class="screen-hidden absolute inset-0 z-20 w-full h-full flex flex-col bg-slate-50 fade-in">
             <header class="flex items-center justify-between h-[68px] px-5 sm:px-8 lg:px-10 border-b border-slate-200 shrink-0 bg-white">
                 <div class="flex items-center gap-3">
-                    <span class="grid h-8 w-8 place-items-center rounded-lg border border-slate-100 bg-slate-50 shadow-sm">
-                        <svg class="h-4 w-4 text-booth-text" viewBox="0 0 24 24" fill="none"><path d="M4.8 6.7h2.4l1.1-2c.2-.4.6-.7 1.1-.7h4.9c.5 0 .9.3 1.1.7l1.1 2h2.4c1.6 0 2.9 1.3 2.9 2.9v6.8c0 1.6-1.3 2.9-2.9 2.9H4.8c-1.6 0-2.9-1.3-2.9-2.9V9.6c0-1.6 1.3-2.9 2.9-2.9Z" stroke="currentColor" stroke-width="1.5"/><circle cx="12" cy="13" r="3.4" stroke="currentColor" stroke-width="1.5"/><path d="m18.5 3 .6 1.3 1.4.3-1 .9.2 1.4-1.2-.6-1.2.6.2-1.4-1-.9 1.4-.3.6-1.3Z" fill="#f97316"/></svg>
-                    </span>
-                    <span class="font-extrabold tracking-wide text-sm sm:text-base text-slate-800">AI PHOTOBOOTH</span>
+                    <div class="h-8 w-8 overflow-hidden flex items-center justify-center shrink-0">
+                        <img src="logo.png" alt="Logo" class="h-full object-contain">
+                    </div>
+                    <span class="font-extrabold tracking-wide text-sm sm:text-base text-booth-accent uppercase">Agentic AI</span>
                 </div>
                 <div class="flex items-center gap-3">
-                    <span class="text-[11px] font-bold uppercase tracking-widest text-booth-accent bg-orange-50 px-3 py-1 rounded-full border border-orange-100">Langkah 1 dari 3</span>
+                    <span class="text-[11px] font-bold uppercase tracking-widest text-booth-accent bg-blue-50 px-3 py-1 rounded-full border border-blue-100">Langkah 1 dari 3</span>
                 </div>
             </header>
 
             <main class="grid min-h-0 flex-1 md:grid-cols-[minmax(340px,0.8fr)_minmax(0,1.2fr)] lg:grid-cols-[minmax(410px,0.8fr)_minmax(0,1.2fr)]">
                 
-                <!-- Panel Kiri: Daftar Gaya -->
-                <section class="flex min-h-0 flex-col border-r border-slate-200 bg-slate-50">
-                    <div class="shrink-0 border-b border-slate-200 px-5 py-5 sm:px-8 lg:px-10 lg:py-8 bg-white/50">
+                <section class="flex min-h-0 flex-col border-r border-slate-200 bg-slate-50 relative">
+                    <div class="absolute inset-0 bg-gradient-to-b from-blue-50/50 to-transparent pointer-events-none"></div>
+                    <div class="shrink-0 border-b border-slate-200 px-5 py-5 sm:px-8 lg:px-10 lg:py-8 bg-white/60 backdrop-blur-sm relative z-10">
                         <h1 class="text-[32px] font-extrabold leading-none tracking-[-0.04em] text-slate-800">Pilih Tema</h1>
                         <p class="mt-2 text-[13px] font-medium text-slate-500">Pilih tema besarnya, lalu sesuaikan opsi detailnya.</p>
                     </div>
-                    <div class="min-h-0 flex-1 overflow-y-auto px-5 py-6 sm:px-8 lg:px-10">
-                        <div class="flex flex-col gap-4" id="style-list-container">
-                            <!-- JS Cards render di sini -->
-                        </div>
+                    <div class="min-h-0 flex-1 overflow-y-auto px-5 py-6 sm:px-8 lg:px-10 relative z-10">
+                        <div class="flex flex-col gap-4" id="style-list-container"></div>
                     </div>
                 </section>
 
-                <!-- Panel Kanan: Opsi Kustom (Background Putih) -->
                 <section class="relative min-h-0 flex flex-col bg-white">
                     <div class="flex-1 overflow-y-auto pb-10">
-                        <!-- Preview Gambar -->
                         <div class="relative w-full h-[45%] min-h-[300px] shrink-0 bg-slate-100">
                             <img id="integrated-preview-img" src="" class="cover-img-safe absolute inset-0 h-full w-full object-cover transition-opacity duration-300">
-                            <!-- Gradien putih dari bawah ke atas agar menyatu dengan background putih konten -->
                             <div class="absolute inset-0 bg-gradient-to-t from-white via-white/50 to-transparent pointer-events-none"></div>
                         </div>
 
@@ -214,41 +203,41 @@
                             <p id="integrated-preview-desc" class="mt-3 max-w-[52ch] text-[14px] font-medium text-slate-500 leading-relaxed">Pilih salah satu tema di panel sebelah kiri untuk memulai.</p>
                         </div>
                         
-                        <div class="px-6 lg:px-10 py-4" id="integrated-options-wrapper">
-                            <!-- Opsi Grid (3 Kolom) -->
-                        </div>
+                        <div class="px-6 lg:px-10 py-4" id="integrated-options-wrapper"></div>
                     </div>
 
                     <div class="p-5 lg:px-10 border-t border-slate-200 bg-white/95 backdrop-blur-md shrink-0 flex justify-end">
-                        <button onclick="confirmIntegratedOptionsAndGo()" id="btn-next-integrated" disabled class="inline-flex min-h-[54px] min-w-[200px] shrink-0 items-center justify-between rounded-full bg-booth-accent hover:bg-orange-500 disabled:bg-slate-200 disabled:text-slate-400 px-6 text-[15px] font-bold text-white transition-all shadow-[0_4px_14px_rgba(249,115,22,0.25)] disabled:shadow-none">
-                            Lanjut ke Kamera <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        <button onclick="confirmIntegratedOptionsAndGo()" id="btn-next-integrated" disabled class="inline-flex min-h-[54px] min-w-[200px] shrink-0 items-center justify-between rounded-full bg-gradient-to-r from-blue-700 to-blue-800 hover:opacity-90 disabled:from-slate-200 disabled:to-slate-200 disabled:text-slate-400 px-6 text-[15px] font-bold text-white transition-all shadow-[0_4px_14px_rgba(30,58,138,0.25)] disabled:shadow-none">
+                            Lanjut ke Kamera <svg class="h-5 w-5 text-yellow-400" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                         </button>
                     </div>
                 </section>
             </main>
         </section>
 
-        <!-- SCREEN 4: CAPTURE (FULL SCREEN CAMERA MODE TERANG) -->
+        <!-- SCREEN 4: CAPTURE -->
         <section id="screen-capture" class="screen-hidden absolute inset-0 z-30 w-full h-full bg-slate-50 flex flex-col fade-in">
             <header class="flex items-center justify-between h-[68px] px-5 sm:px-8 lg:px-10 border-b border-slate-200 shrink-0 relative z-20 bg-white/80 backdrop-blur-md">
                 <div class="flex items-center gap-3">
-                    <span class="font-extrabold tracking-wide text-sm sm:text-base text-slate-800">AI PHOTOBOOTH</span>
+                    <img src="logo.png" alt="Logo" class="h-8 object-contain">
+                    <span class="font-extrabold tracking-wide text-sm sm:text-base text-booth-accent uppercase">Agentic AI</span>
                 </div>
-                <span class="text-[11px] font-bold uppercase tracking-widest text-booth-accent bg-orange-50 px-3 py-1 rounded-full border border-orange-100">Langkah 2 dari 3</span>
+                <span class="text-[11px] font-bold uppercase tracking-widest text-booth-accent bg-blue-50 px-3 py-1 rounded-full border border-blue-100">Langkah 2 dari 3</span>
             </header>
 
             <main class="flex-1 relative flex flex-col items-center justify-center p-2 sm:p-6 bg-slate-100">
                 <div class="relative w-full max-w-[95%] h-[82vh] rounded-3xl overflow-hidden bg-slate-900 border-4 border-white shadow-xl flex items-center justify-center group">
                     <video id="webcam-video" autoplay playsinline muted class="absolute w-full h-full object-contain transform scale-x-[-1]"></video>
                     
-                    <!-- Bingkai penanda fokus kamera -->
-                    <span class="absolute w-12 h-12 border-4 border-white/70 top-[5%] left-[4%] border-r-0 border-b-0 z-10 rounded-tl-lg"></span>
-                    <span class="absolute w-12 h-12 border-4 border-white/70 top-[5%] right-[4%] border-l-0 border-b-0 z-10 rounded-tr-lg"></span>
-                    <span class="absolute w-12 h-12 border-4 border-white/70 bottom-[5%] left-[4%] border-r-0 border-t-0 z-10 rounded-bl-lg"></span>
-                    <span class="absolute w-12 h-12 border-4 border-white/70 bottom-[5%] right-[4%] border-l-0 border-t-0 z-10 rounded-br-lg"></span>
+                    <!-- Bingkai penanda fokus kamera (Kuning Emas) -->
+                    <span class="absolute w-12 h-12 border-4 border-booth-accentGold/80 top-[5%] left-[4%] border-r-0 border-b-0 z-10 rounded-tl-lg"></span>
+                    <span class="absolute w-12 h-12 border-4 border-booth-accentGold/80 top-[5%] right-[4%] border-l-0 border-b-0 z-10 rounded-tr-lg"></span>
+                    <span class="absolute w-12 h-12 border-4 border-booth-accentGold/80 bottom-[5%] left-[4%] border-r-0 border-t-0 z-10 rounded-bl-lg"></span>
+                    <span class="absolute w-12 h-12 border-4 border-booth-accentGold/80 bottom-[5%] right-[4%] border-l-0 border-t-0 z-10 rounded-br-lg"></span>
                     
                     <div class="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex flex-col items-center gap-2 z-30 opacity-90 hover:opacity-100 transition-opacity">
                         <button onclick="takePhoto()" id="btn-capture" class="w-[86px] h-[86px] bg-white rounded-full border-[6px] border-booth-accent grid place-items-center transition-transform hover:scale-105 active:scale-95 shadow-xl">
+                            <!-- Icon Jepret berwarna Biru -->
                             <svg class="w-10 h-10 text-booth-accent" viewBox="0 0 24 24" fill="none"><path d="M4.8 6.7h2.4l1.1-2c.2-.4.6-.7 1.1-.7h4.9c.5 0 .9.3 1.1.7l1.1 2h2.4c1.6 0 2.9 1.3 2.9 2.9v6.8c0 1.6-1.3 2.9-2.9 2.9H4.8c-1.6 0-2.9-1.3-2.9-2.9V9.6c0-1.6 1.3-2.9 2.9-2.9Z" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="13" r="3.2" stroke="currentColor" stroke-width="2"/></svg>
                         </button>
                     </div>
@@ -257,7 +246,6 @@
             
             <canvas id="capture-canvas" class="hidden"></canvas>
 
-            <!-- Modal Setelah Jepret (Terang) -->
             <div id="capture-decision" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4">
                 <div class="w-full max-w-[800px] bg-white rounded-3xl p-6 flex flex-col gap-6 shadow-2xl border border-slate-100">
                     <div class="flex items-center justify-between px-2">
@@ -276,26 +264,28 @@
                     </div>
                     <div class="flex gap-4">
                         <button onclick="retakePhoto()" id="btn-retake" class="flex-1 h-[56px] rounded-full border border-slate-300 bg-white text-slate-600 font-bold hover:bg-slate-50 hover:text-slate-800 transition-all text-sm">Ambil Ulang</button>
-                        <button onclick="startAIProcessing()" id="btn-proceed-ai" class="flex-[1.5] h-[56px] rounded-full bg-gradient-to-r from-orange-400 to-orange-500 text-white font-bold hover:shadow-lg transition-all text-sm shadow-[0_4px_14px_rgba(249,115,22,0.25)]">Mulai Transformasi AI &rarr;</button>
+                        <button onclick="startAIProcessing()" id="btn-proceed-ai" class="flex-[1.5] h-[56px] rounded-full bg-gradient-to-r from-blue-700 to-blue-800 text-white font-bold hover:shadow-lg transition-all text-sm shadow-[0_4px_14px_rgba(30,58,138,0.25)]">Mulai Transformasi AI &rarr;</button>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- SCREEN 5: REVIEW / LOADING (TEMA TERANG) -->
+        <!-- SCREEN 5: REVIEW / LOADING -->
         <section id="screen-review" class="screen-hidden absolute inset-0 z-40 w-full h-full bg-slate-50 flex flex-col fade-in">
             <header class="flex items-center justify-between h-[68px] px-5 sm:px-8 lg:px-10 border-b border-slate-200 shrink-0 bg-white">
-                <span class="font-extrabold tracking-wide text-sm sm:text-base text-slate-800">AI PHOTOBOOTH</span>
+                <div class="flex items-center gap-3">
+                    <img src="logo.png" alt="Logo" class="h-8 object-contain">
+                    <span class="font-extrabold tracking-wide text-sm sm:text-base text-booth-accent uppercase">Agentic AI</span>
+                </div>
             </header>
-            <main class="min-h-0 flex-1 flex items-center justify-center p-8 bg-gradient-to-br from-slate-50 via-orange-50/30 to-slate-50">
+            <main class="min-h-0 flex-1 flex items-center justify-center p-8 bg-gradient-to-br from-slate-50 via-blue-50/50 to-slate-50">
                 <div class="grid w-full max-w-[1160px] gap-10 lg:grid-cols-[1.1fr_0.9fr] items-center">
                     <div class="rounded-3xl border border-white bg-slate-100 overflow-hidden shadow-2xl relative" style="aspect-ratio:16/9;">
                         <img id="review-blurred-img" src="" class="h-full w-full object-cover blur-2xl opacity-60">
-                        <!-- Efek cahaya pemindai -->
                         <div class="absolute inset-0 bg-gradient-to-b from-transparent via-white/40 to-transparent h-[30%] animate-[welcome-gallery-up_2s_linear_infinite]"></div>
                     </div>
                     <div class="flex flex-col items-start justify-center pr-10">
-                        <p class="text-[12px] font-bold uppercase tracking-[.15em] text-booth-accent bg-orange-100 px-3 py-1 rounded-full mb-2">Memproses Gambar</p>
+                        <p class="text-[12px] font-bold uppercase tracking-[.15em] text-booth-accent bg-blue-100 border border-blue-200 px-3 py-1 rounded-full mb-2">Memproses Gambar</p>
                         <h1 class="mt-2 text-[42px] font-black leading-[1.1] sm:text-[48px] text-slate-800 tracking-tight">Sihir AI<br>sedang bekerja.</h1>
                         <p class="mt-4 text-[15px] font-medium text-slate-500 leading-relaxed">Mohon tunggu sebentar, kami sedang menyempurnakan gaya ke foto Anda dan menyimpannya ke awan.</p>
                         
@@ -305,7 +295,7 @@
                                 <p id="ai-progress-text" class="text-[32px] font-black text-booth-accent leading-none">0%</p>
                             </div>
                             <div class="mt-5 h-2 bg-slate-100 rounded-full overflow-hidden">
-                                <div id="ai-progress-bar" class="proc-progress-fill h-full bg-gradient-to-r from-orange-400 to-orange-500 rounded-full" style="width:0%"></div>
+                                <div id="ai-progress-bar" class="proc-progress-fill h-full bg-gradient-to-r from-blue-500 to-blue-800 rounded-full" style="width:0%"></div>
                             </div>
                         </div>
                     </div>
@@ -313,17 +303,20 @@
             </main>
         </section>
 
-        <!-- SCREEN 6: RESULT & DOWNLOAD (LIGHT MODE SEPERTI REFERENSI) -->
-        <section id="screen-result" class="screen-hidden absolute inset-0 z-50 w-full h-full bg-slate-50 flex flex-col fade-in overflow-y-auto">
-            <header class="flex items-center justify-between h-[68px] px-8 lg:px-12 border-b border-slate-200 shrink-0 sticky top-0 bg-white/90 backdrop-blur z-10">
-                <span class="font-extrabold tracking-widest text-sm text-slate-400">AI PHOTOBOOTH</span>
+        <!-- SCREEN 6: RESULT & DOWNLOAD -->
+        <section id="screen-result" class="screen-hidden absolute inset-0 z-50 w-full h-full bg-white flex flex-col fade-in overflow-y-auto">
+            <header class="flex items-center justify-between h-[68px] px-8 lg:px-12 border-b border-slate-100 shrink-0 sticky top-0 bg-white/90 backdrop-blur z-10">
+                <div class="flex items-center gap-3">
+                    <img src="logo.png" alt="Logo" class="h-6 object-contain">
+                    <span class="font-extrabold tracking-widest text-sm text-slate-400 uppercase">Agentic AI</span>
+                </div>
                 <span class="text-xs font-bold uppercase tracking-widest text-slate-500">Selesai</span>
             </header>
             
-            <main class="flex-1 p-6 max-w-[1100px] mx-auto w-full flex flex-col items-center pb-20">
-                <!-- Elemen background pastel di belakang foto -->
-                <div class="absolute top-[20%] left-[20%] w-[30%] h-[30%] bg-blue-100/50 rounded-full blur-[120px] -z-10 pointer-events-none"></div>
-                <div class="absolute top-[30%] right-[20%] w-[30%] h-[30%] bg-orange-100/50 rounded-full blur-[120px] -z-10 pointer-events-none"></div>
+            <main class="flex-1 p-6 max-w-[1100px] mx-auto w-full flex flex-col items-center pb-20 bg-white relative">
+                <!-- Gradasi Tipis Background -->
+                <div class="absolute top-[10%] left-[10%] w-[40%] h-[40%] bg-blue-50/60 rounded-full blur-[100px] -z-10 pointer-events-none"></div>
+                <div class="absolute top-[20%] right-[10%] w-[30%] h-[40%] bg-yellow-50/60 rounded-full blur-[100px] -z-10 pointer-events-none"></div>
 
                 <div class="mb-10 text-center mt-6">
                     <h1 class="text-[40px] font-black leading-tight text-slate-800 tracking-tight">Transformasi Berhasil!</h1>
@@ -332,7 +325,6 @@
                 
                 <div class="w-full grid md:grid-cols-2 gap-10 items-start">
                     
-                    <!-- Kartu Foto Asli -->
                     <div class="bg-white rounded-3xl border border-slate-200 p-6 flex flex-col items-center shadow-lg relative">
                         <div class="w-full rounded-2xl overflow-hidden bg-slate-100 relative" style="aspect-ratio:16/9;">
                             <div class="absolute top-4 left-4 z-10 bg-white/90 backdrop-blur px-3 py-1.5 rounded-lg border border-slate-200 shadow-sm">
@@ -349,8 +341,7 @@
                         </div>
                     </div>
                     
-                    <!-- Kartu Foto Hasil AI (Lebih Menonjol) -->
-                    <div class="bg-white rounded-3xl border-2 border-booth-accent/20 p-6 flex flex-col items-center shadow-[0_15px_40px_rgba(249,115,22,0.12)] relative transform md:-translate-y-4">
+                    <div class="bg-white rounded-3xl border-2 border-booth-accent/20 p-6 flex flex-col items-center shadow-[0_15px_40px_rgba(30,58,138,0.12)] relative transform md:-translate-y-4">
                         <div class="w-full rounded-2xl overflow-hidden bg-slate-100 relative shadow-inner" style="aspect-ratio:16/9;">
                             <div class="absolute top-4 left-4 z-10 bg-booth-accent px-3 py-1.5 rounded-lg shadow-md">
                                 <span class="text-[10px] font-bold text-white uppercase tracking-wider">Hasil AI</span>
@@ -359,7 +350,7 @@
                         </div>
                         
                         <div class="mt-6 flex flex-col items-center w-full">
-                            <div class="bg-orange-50 p-4 rounded-2xl border border-orange-100 w-36 h-36 flex items-center justify-center shadow-sm">
+                            <div class="bg-blue-50 p-4 rounded-2xl border border-blue-100 w-36 h-36 flex items-center justify-center shadow-sm">
                                 <div id="qrcode-ai"></div>
                             </div>
                             <p class="mt-3 text-[11px] font-bold text-center text-booth-accent uppercase tracking-widest">Unduh File AI</p>
@@ -369,8 +360,8 @@
                 </div>
                 
                 <div class="mt-14 flex flex-col sm:flex-row items-center justify-center gap-4 w-full max-w-[500px]">
-                    <button onclick="window.print()" class="w-full h-[56px] bg-gradient-to-r from-blue-500 to-cyan-500 hover:opacity-90 rounded-full font-bold text-[15px] text-white shadow-lg flex items-center justify-center gap-3 transition-all">
-                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
+                    <button onclick="window.print()" class="w-full h-[56px] bg-gradient-to-r from-blue-700 to-blue-800 hover:opacity-90 rounded-full font-bold text-[15px] text-white shadow-lg flex items-center justify-center gap-3 transition-all">
+                        <svg class="w-5 h-5 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
                         Cetak Fisik
                     </button>
                     <button onclick="location.reload()" class="w-full h-[56px] bg-white border border-slate-200 hover:bg-slate-50 hover:border-slate-300 rounded-full font-bold text-[15px] text-slate-700 shadow-sm transition-all">
