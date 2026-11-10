@@ -36,7 +36,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 
     <style>
-        /* PERBAIKAN UTAMA: Mengizinkan body dan html melakukan scroll alami agar tidak gepeng di layar lain */
         html, body { background: #f8fafc; margin: 0; padding: 0; color: #0f172a; min-height: 100vh; overflow-x: hidden; }
         .screen-hidden { display: none !important; }
         
@@ -98,11 +97,10 @@
 </head>
 <body class="font-sans text-booth-text antialiased select-none relative">
 
-    <!-- Kontainer utama kini fleksibel mengikuti isi konten (min-h-screen) -->
     <div id="app-container" class="relative w-full min-h-screen bg-booth-bg flex flex-col">
 
         <!-- SCREEN 1: WELCOME -->
-        <section id="screen-welcome" class="absolute inset-0 z-10 w-full min-h-screen lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(520px,1fr)] bg-white relative">
+        <section id="screen-welcome" class="w-full min-h-screen lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(520px,1fr)] bg-white relative">
             <div class="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
                 <div class="absolute -top-[10%] -left-[10%] w-[50%] h-[50%] rounded-full bg-blue-100/60 blur-[100px]"></div>
                 <div class="absolute top-[20%] right-[40%] w-[30%] h-[40%] rounded-full bg-yellow-100/60 blur-[100px]"></div>
@@ -112,7 +110,7 @@
             <div class="relative flex min-h-screen flex-col px-5 pb-8 pt-5 sm:px-8 sm:pb-10 sm:pt-7 lg:px-[clamp(36px,5vw,84px)] lg:pb-12 lg:pt-9 z-10 justify-between">
                 <header class="flex items-center justify-between border-b border-slate-100 pb-4">
                     <div class="flex items-center">
-                        <div class="h-20 sm:h-24 w-auto flex items-center justify-start shrink-0">
+                        <div class="h-16 sm:h-20 w-auto flex items-center justify-start shrink-0">
                             <img src="logo.png" alt="Logo Agentic AI Center" class="h-full w-auto object-contain mix-blend-multiply">
                         </div>
                     </div>
@@ -154,7 +152,7 @@
         </section>
 
         <!-- SCREEN 2: PIN / TICKET -->
-        <section id="screen-pin" class="screen-hidden absolute inset-0 z-20 w-full min-h-screen bg-slate-50 flex flex-col fade-in">
+        <section id="screen-pin" class="screen-hidden w-full min-h-screen bg-slate-50 flex flex-col relative fade-in">
             <div class="radial-glow absolute inset-0 pointer-events-none"></div>
             <div class="bg-grid absolute inset-0 pointer-events-none opacity-50"></div>
 
@@ -198,8 +196,8 @@
         </section>
 
         <!-- SCREEN 3: STYLE SELECTION -->
-        <section id="screen-style" class="screen-hidden absolute inset-0 z-20 w-full min-h-screen flex flex-col bg-slate-50 fade-in">
-            <header class="flex items-center justify-between min-h-[90px] py-3 px-5 sm:px-8 lg:px-10 border-b border-slate-200 shrink-0 bg-white">
+        <section id="screen-style" class="screen-hidden w-full min-h-screen flex flex-col bg-slate-50 relative fade-in">
+            <header class="flex items-center justify-between min-h-[90px] py-3 px-5 sm:px-8 lg:px-10 border-b border-slate-200 shrink-0 bg-white relative z-20">
                 <div class="flex items-center">
                     <div class="h-16 sm:h-20 w-auto flex items-center justify-start shrink-0">
                         <img src="logo.png" alt="Logo UCIC Agentic" class="h-full w-auto object-contain mix-blend-multiply">
@@ -210,7 +208,7 @@
                 </div>
             </header>
 
-            <main class="grid min-h-0 flex-1 md:grid-cols-[minmax(340px,0.8fr)_minmax(0,1.2fr)] lg:grid-cols-[minmax(410px,0.8fr)_minmax(0,1.2fr)]">
+            <main class="grid min-h-[calc(100vh-90px)] flex-1 md:grid-cols-[minmax(340px,0.8fr)_minmax(0,1.2fr)] lg:grid-cols-[minmax(410px,0.8fr)_minmax(0,1.2fr)]">
                 <section class="flex min-h-0 flex-col border-r border-slate-200 bg-slate-50 relative">
                     <div class="absolute inset-0 bg-gradient-to-b from-blue-50/50 to-transparent pointer-events-none"></div>
                     <div class="shrink-0 border-b border-slate-200 px-5 py-5 sm:px-8 lg:px-10 lg:py-8 bg-white/60 backdrop-blur-sm relative z-10">
@@ -247,7 +245,7 @@
         </section>
 
         <!-- SCREEN 4: CAPTURE -->
-        <section id="screen-capture" class="screen-hidden absolute inset-0 z-30 w-full min-h-screen bg-slate-50 flex flex-col fade-in">
+        <section id="screen-capture" class="screen-hidden w-full min-h-screen bg-slate-50 flex flex-col relative fade-in">
             <header class="flex items-center justify-between min-h-[90px] py-3 px-5 sm:px-8 lg:px-10 border-b border-slate-200 shrink-0 relative z-20 bg-white/80 backdrop-blur-md">
                 <div class="flex items-center">
                     <div class="h-16 sm:h-20 w-auto flex items-center justify-start shrink-0">
@@ -257,8 +255,8 @@
                 <span class="text-[11px] font-bold uppercase tracking-widest text-booth-accent bg-blue-50 px-3 py-1 rounded-full border border-blue-100">Langkah 2 dari 3</span>
             </header>
 
-            <main class="flex-1 relative flex flex-col items-center justify-center p-2 sm:p-6 bg-slate-100">
-                <div class="relative w-full max-w-[95%] h-[75vh] rounded-3xl overflow-hidden bg-slate-900 border-4 border-white shadow-xl flex items-center justify-center group">
+            <main class="flex-1 relative flex flex-col items-center justify-center p-4 sm:p-6 bg-slate-100">
+                <div class="relative w-full max-w-[95%] h-[75vh] min-h-[400px] rounded-3xl overflow-hidden bg-slate-900 border-4 border-white shadow-xl flex items-center justify-center group">
                     <video id="webcam-video" autoplay playsinline muted class="absolute w-full h-full object-contain transform scale-x-[-1]"></video>
                     
                     <span class="absolute w-12 h-12 border-4 border-booth-accentGold/80 top-[5%] left-[4%] border-r-0 border-b-0 z-10 rounded-tl-lg"></span>
@@ -301,15 +299,15 @@
         </section>
 
         <!-- SCREEN 5: REVIEW / LOADING -->
-        <section id="screen-review" class="screen-hidden absolute inset-0 z-40 w-full min-h-screen bg-slate-50 flex flex-col fade-in">
-            <header class="flex items-center justify-between min-h-[90px] py-3 px-5 sm:px-8 lg:px-10 border-b border-slate-200 shrink-0 bg-white">
+        <section id="screen-review" class="screen-hidden w-full min-h-screen bg-slate-50 flex flex-col relative fade-in">
+            <header class="flex items-center justify-between min-h-[90px] py-3 px-5 sm:px-8 lg:px-10 border-b border-slate-200 shrink-0 bg-white relative z-20">
                 <div class="flex items-center">
                     <div class="h-16 sm:h-20 w-auto flex items-center justify-start shrink-0">
                         <img src="logo.png" alt="Logo" class="h-full w-auto object-contain mix-blend-multiply">
                     </div>
                 </div>
             </header>
-            <main class="min-h-0 flex-1 flex items-center justify-center p-8 bg-gradient-to-br from-slate-50 via-blue-50/50 to-slate-50">
+            <main class="min-h-[calc(100vh-90px)] flex-1 flex items-center justify-center p-8 bg-gradient-to-br from-slate-50 via-blue-50/50 to-slate-50">
                 <div class="grid w-full max-w-[1160px] gap-10 lg:grid-cols-[1.1fr_0.9fr] items-center">
                     <div class="rounded-3xl border border-white bg-slate-100 overflow-hidden shadow-2xl relative" style="aspect-ratio:16/9;">
                         <img id="review-blurred-img" src="" class="h-full w-full object-cover blur-2xl opacity-60">
@@ -335,9 +333,8 @@
         </section>
 
         <!-- SCREEN 6: RESULT & DOWNLOAD -->
-        <!-- PERBAIKAN: Menggunakan min-h-screen dan overflow-y-auto agar tidak gepeng dan bisa di-scroll di layar manapun -->
-        <section id="screen-result" class="screen-hidden absolute inset-0 z-50 w-full min-h-screen bg-white flex flex-col fade-in overflow-y-auto">
-            <header class="flex items-center justify-between min-h-[90px] py-3 px-8 lg:px-12 border-b border-slate-100 shrink-0 sticky top-0 bg-white/90 backdrop-blur z-10">
+        <section id="screen-result" class="screen-hidden w-full min-h-screen bg-white flex flex-col relative fade-in">
+            <header class="flex items-center justify-between min-h-[90px] py-3 px-8 lg:px-12 border-b border-slate-100 shrink-0 sticky top-0 bg-white/90 backdrop-blur z-20">
                 <div class="flex items-center">
                     <div class="h-14 sm:h-16 w-auto flex items-center justify-start shrink-0">
                         <img src="logo.png" alt="Logo" class="h-full w-auto object-contain mix-blend-multiply">
@@ -346,7 +343,7 @@
                 <span class="text-xs font-bold uppercase tracking-widest text-slate-500">Selesai</span>
             </header>
             
-            <main class="flex-1 p-6 max-w-[1100px] mx-auto w-full flex flex-col items-center pb-20 bg-white relative my-auto">
+            <main class="flex-1 p-6 max-w-[1100px] mx-auto w-full flex flex-col items-center justify-center pb-20 bg-white relative my-auto">
                 <div class="absolute top-[10%] left-[10%] w-[40%] h-[40%] bg-blue-50/60 rounded-full blur-[100px] -z-10 pointer-events-none"></div>
                 <div class="absolute top-[20%] right-[10%] w-[30%] h-[40%] bg-yellow-50/60 rounded-full blur-[100px] -z-10 pointer-events-none"></div>
 
