@@ -58,10 +58,11 @@
         
         .proc-progress-fill { transition: width 0.3s ease-out; }
         
+        /* PERBAIKAN: Menghilangkan efek mirror pada QR scanner agar teks normal dan mudah dipindai */
         #qr-reader { width: 100%; border: none !important; border-radius: 1rem; overflow: hidden; background: white; }
         #qr-reader img[alt="Info icon"] { display: none; }
         #qr-reader__dashboard_section_csr span { color: #334155 !important; }
-        #qr-reader video { transform: scaleX(-1) !important; object-fit: cover !important; border-radius: 1rem; }
+        #qr-reader video { object-fit: cover !important; border-radius: 1rem; transform: none !important; }
         
         .cover-img-safe { object-position: center center !important; }
         input:focus { outline: none; box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2); }
@@ -255,18 +256,19 @@
                 <span class="text-[11px] font-bold uppercase tracking-widest text-booth-accent bg-blue-50 px-3 py-1 rounded-full border border-blue-100">Langkah 2 dari 3</span>
             </header>
 
-            <main class="flex-1 relative flex flex-col items-center justify-center p-4 sm:p-6 bg-slate-100">
-                <div class="relative w-full max-w-[95%] h-[75vh] min-h-[400px] rounded-3xl overflow-hidden bg-slate-900 border-4 border-white shadow-xl flex items-center justify-center group">
-                    <video id="webcam-video" autoplay playsinline muted class="absolute w-full h-full object-contain transform scale-x-[-1]"></video>
+            <!-- PERBAIKAN: Wadah kamera flex-1 fleksibel dengan object-cover agar memenuhi layar tanpa gepeng / black bar -->
+            <main class="flex-1 relative flex flex-col items-center justify-center p-3 sm:p-6 bg-slate-100">
+                <div class="relative w-full max-w-md sm:max-w-lg md:max-w-xl aspect-[3/4] sm:aspect-[9/16] max-h-[75vh] rounded-3xl overflow-hidden bg-slate-900 border-4 border-white shadow-xl flex items-center justify-center group">
+                    <video id="webcam-video" autoplay playsinline muted class="absolute inset-0 w-full h-full object-cover"></video>
                     
-                    <span class="absolute w-12 h-12 border-4 border-booth-accentGold/80 top-[5%] left-[4%] border-r-0 border-b-0 z-10 rounded-tl-lg"></span>
-                    <span class="absolute w-12 h-12 border-4 border-booth-accentGold/80 top-[5%] right-[4%] border-l-0 border-b-0 z-10 rounded-tr-lg"></span>
-                    <span class="absolute w-12 h-12 border-4 border-booth-accentGold/80 bottom-[5%] left-[4%] border-r-0 border-t-0 z-10 rounded-bl-lg"></span>
-                    <span class="absolute w-12 h-12 border-4 border-booth-accentGold/80 bottom-[5%] right-[4%] border-l-0 border-t-0 z-10 rounded-br-lg"></span>
+                    <span class="absolute w-12 h-12 border-4 border-booth-accentGold/80 top-[5%] left-[4%] border-r-0 border-b-0 z-10 rounded-tl-lg pointer-events-none"></span>
+                    <span class="absolute w-12 h-12 border-4 border-booth-accentGold/80 top-[5%] right-[4%] border-l-0 border-b-0 z-10 rounded-tr-lg pointer-events-none"></span>
+                    <span class="absolute w-12 h-12 border-4 border-booth-accentGold/80 bottom-[5%] left-[4%] border-r-0 border-t-0 z-10 rounded-bl-lg pointer-events-none"></span>
+                    <span class="absolute w-12 h-12 border-4 border-booth-accentGold/80 bottom-[5%] right-[4%] border-l-0 border-t-0 z-10 rounded-br-lg pointer-events-none"></span>
                     
-                    <div class="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex flex-col items-center gap-2 z-30 opacity-90 hover:opacity-100 transition-opacity">
-                        <button onclick="takePhoto()" id="btn-capture" class="w-[86px] h-[86px] bg-white rounded-full border-[6px] border-booth-accent grid place-items-center transition-transform hover:scale-105 active:scale-95 shadow-xl">
-                            <svg class="w-10 h-10 text-booth-accent" viewBox="0 0 24 24" fill="none"><path d="M4.8 6.7h2.4l1.1-2c.2-.4.6-.7 1.1-.7h4.9c.5 0 .9.3 1.1.7l1.1 2h2.4c1.6 0 2.9 1.3 2.9 2.9v6.8c0 1.6-1.3 2.9-2.9 2.9H4.8c-1.6 0-2.9-1.3-2.9-2.9V9.6c0-1.6 1.3-2.9 2.9-2.9Z" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="13" r="3.2" stroke="currentColor" stroke-width="2"/></svg>
+                    <div class="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex flex-col items-center gap-2 z-30 opacity-90 hover:opacity-100 transition-opacity">
+                        <button onclick="takePhoto()" id="btn-capture" class="w-[80px] h-[80px] bg-white rounded-full border-[6px] border-booth-accent grid place-items-center transition-transform hover:scale-105 active:scale-95 shadow-xl">
+                            <svg class="w-9 h-9 text-booth-accent" viewBox="0 0 24 24" fill="none"><path d="M4.8 6.7h2.4l1.1-2c.2-.4.6-.7 1.1-.7h4.9c.5 0 .9.3 1.1.7l1.1 2h2.4c1.6 0 2.9 1.3 2.9 2.9v6.8c0 1.6-1.3 2.9-2.9 2.9H4.8c-1.6 0-2.9-1.3-2.9-2.9V9.6c0-1.6 1.3-2.9 2.9-2.9Z" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="13" r="3.2" stroke="currentColor" stroke-width="2"/></svg>
                         </button>
                     </div>
                 </div>
@@ -274,9 +276,9 @@
             
             <canvas id="capture-canvas" class="hidden"></canvas>
 
-            <!-- MODAL PREVIEW: Mengikuti rasio asli foto secara natural tanpa dipaksa lanskap -->
-            <div id="capture-decision" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-md overflow-y-auto p-4 flex items-start sm:items-center justify-center">
-                <div class="w-full max-w-[500px] bg-white rounded-3xl p-5 sm:p-6 flex flex-col gap-4 shadow-2xl border border-slate-100 my-8">
+            <!-- MODAL PREVIEW: Responsif sempurna mengikuti orientasi asli tanpa terpotong -->
+            <div id="capture-decision" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-md overflow-y-auto p-4 flex items-center justify-center">
+                <div class="w-full max-w-[480px] bg-white rounded-3xl p-5 sm:p-6 flex flex-col gap-4 shadow-2xl border border-slate-100 my-auto">
                     <div class="flex items-center gap-3">
                         <div class="w-10 h-10 rounded-full bg-green-100 grid place-items-center shrink-0">
                             <svg class="w-5 h-5 text-green-600" fill="none" viewBox="0 0 24 24"><path d="m5 13 4 4L19 7" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>
@@ -287,9 +289,8 @@
                         </div>
                     </div>
                     
-                    <!-- KOTAK GAMBAR MENGIKUTI DIMENSI ASLI FOTO (TIDAK DIPAKSA KOTAK 16:9) -->
-                    <div class="w-full rounded-2xl overflow-hidden border border-slate-200 bg-slate-900 shadow-inner flex items-center justify-center">
-                        <img id="capture-preview-img" src="" class="w-auto h-auto max-w-full max-h-[60vh] object-contain">
+                    <div class="w-full rounded-2xl overflow-hidden border border-slate-200 bg-slate-900 shadow-inner flex items-center justify-center p-1">
+                        <img id="capture-preview-img" src="" class="w-full h-auto max-h-[55vh] object-contain rounded-xl">
                     </div>
                     
                     <div class="flex flex-col sm:flex-row gap-3 pt-1">
@@ -335,7 +336,6 @@
         </section>
 
         <!-- SCREEN 6: RESULT & DOWNLOAD -->
-        <!-- Menghapus aspek rasio kaku di layar hasil akhir agar foto potret tampil natural sesuai orientasi foto -->
         <section id="screen-result" class="screen-hidden w-full min-h-screen bg-white flex flex-col relative fade-in overflow-y-auto">
             <header class="flex items-center justify-between min-h-[90px] py-3 px-8 lg:px-12 border-b border-slate-100 shrink-0 sticky top-0 bg-white/90 backdrop-blur z-20">
                 <div class="flex items-center">
@@ -358,7 +358,6 @@
                 <div class="w-full grid md:grid-cols-2 gap-10 items-start">
                     
                     <div class="bg-white rounded-3xl border border-slate-200 p-6 flex flex-col items-center shadow-lg relative">
-                        <!-- CONTAINER FOTO ASLI: Tanpa aspect-ratio kaku, menyesuaikan natural -->
                         <div class="w-full rounded-2xl overflow-hidden bg-slate-900 relative flex items-center justify-center p-2">
                             <div class="absolute top-4 left-4 z-10 bg-white/90 backdrop-blur px-3 py-1.5 rounded-lg border border-slate-200 shadow-sm">
                                 <span class="text-[10px] font-bold text-slate-600 uppercase tracking-wider">Foto Asli</span>
@@ -375,7 +374,6 @@
                     </div>
                     
                     <div class="bg-white rounded-3xl border-2 border-booth-accent/20 p-6 flex flex-col items-center shadow-[0_15px_40px_rgba(30,58,138,0.12)] relative">
-                        <!-- CONTAINER FOTO AI: Tanpa aspect-ratio kaku, menyesuaikan natural -->
                         <div class="w-full rounded-2xl overflow-hidden bg-slate-900 relative shadow-inner flex items-center justify-center p-2">
                             <div class="absolute top-4 left-4 z-10 bg-booth-accent px-3 py-1.5 rounded-lg shadow-md">
                                 <span class="text-[10px] font-bold text-white uppercase tracking-wider">Hasil AI</span>
@@ -408,7 +406,7 @@
     </div>
 
     <!-- MODAL POPUP PILIHAN KERTAS CETAK -->
-    <div id="print-modal" class="hidden fixed inset-0 z-[60] bg-slate-900/60 backdrop-blur-md overflow-y-auto p-4 flex items-start sm:items-center justify-center">
+    <div id="print-modal" class="hidden fixed inset-0 z-[60] bg-slate-900/60 backdrop-blur-md overflow-y-auto p-4 flex items-center justify-center">
         <div class="w-full max-w-[440px] bg-white rounded-3xl p-8 shadow-2xl border border-slate-100 text-center relative my-8">
             <h3 class="text-2xl font-black text-slate-800 mb-2">Pilih Ukuran Kertas</h3>
             <p class="text-[14px] text-slate-500 mb-8 leading-relaxed">Pilih ukuran cetak. Gambar AI akan dicetak memenuhi seluruh area kertas.</p>

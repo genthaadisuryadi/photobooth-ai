@@ -75,6 +75,7 @@ window.initQRScanner = () => {
     if (html5QrcodeScanner) return; 
     const qrNode = document.getElementById('qr-reader');
     if (!qrNode) return;
+    // Konfigurasi QR scanner standar tanpa mirror agar mudah mendeteksi kode
     html5QrcodeScanner = new Html5QrcodeScanner("qr-reader", { fps: 10, qrbox: { width: 250, height: 250 } }, false);
     html5QrcodeScanner.render((decodedText) => {
         document.getElementById('token-input').value = decodedText;
@@ -336,12 +337,11 @@ async function initWebcam() {
     const videoEl = document.getElementById('webcam-video');
     if (!videoEl) return;
     try {
-        // PERBAIKAN: Deteksi orientasi layar. Jika di HP (portrait), minta resolusi vertikal (720x1280)
-        const isPortrait = window.innerHeight > window.innerWidth;
+        const isMobile = window.innerWidth < 768;
         const constraints = {
             video: {
-                width: isPortrait ? { ideal: 720 } : { ideal: 1920 },
-                height: isPortrait ? { ideal: 1280 } : { ideal: 1080 },
+                width: isMobile ? { ideal: 720 } : { ideal: 1280 },
+                height: isMobile ? { ideal: 1280 } : { ideal: 720 },
                 facingMode: "user"
             },
             audio: false
@@ -388,31 +388,12 @@ function executeCapture() {
     const canvasEl = document.getElementById('capture-canvas');
     if (!videoEl || !canvasEl) return;
 
-    const vWidth = videoEl.videoWidth || 1280;
-    const vHeight = videoEl.videoHeight || 720;
-    const isPortraitScreen = window.innerHeight > window.innerWidth;
-
-    // Jika di layar potret (HP), pastikan ukuran canvas mengikuti orientasi potret (lebar < tinggi)
-    if (isPortraitScreen && vWidth > vHeight) {
-        canvasEl.width = vHeight;
-        canvasEl.height = vWidth;
-    } else {
-        canvasEl.width = vWidth;
-        canvasEl.height = vHeight;
-    }
+    // Mengambil dimensi asli video secara natural tanpa memaksa orientasi kaku
+    canvasEl.width = videoEl.videoWidth || videoEl.clientWidth || 720;
+    canvasEl.height = videoEl.videoHeight || videoEl.clientHeight || 1280;
 
     const context = canvasEl.getContext('2d');
-    context.save();
-    context.translate(canvasEl.width, 0);
-    context.scale(-1, 1);
-
-    if (isPortraitScreen && vWidth > vHeight) {
-        // Lakukan penyesuaian rotasi/crop tengah agar pas portrait
-        context.drawImage(videoEl, 0, 0, canvasEl.width, canvasEl.height);
-    } else {
-        context.drawImage(videoEl, 0, 0, canvasEl.width, canvasEl.height);
-    }
-    context.restore();
+    context.drawImage(videoEl, 0, 0, canvasEl.width, canvasEl.height);
     
     pbCapturedBase64 = canvasEl.toDataURL('image/png');
     

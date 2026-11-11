@@ -9,10 +9,18 @@ async function initCamera() {
             videoStream.getTracks().forEach(track => track.stop());
         }
         
-        videoStream = await navigator.mediaDevices.getUserMedia({
-            video: { width: { ideal: 1920 }, height: { ideal: 1080 }, facingMode: "user" },
+        // Deteksi apakah perangkat mobile/potret atau desktop/lanskap
+        const isPortrait = window.innerHeight > window.innerWidth;
+        const constraints = {
+            video: {
+                width: isPortrait ? { ideal: 720 } : { ideal: 1920 },
+                height: isPortrait ? { ideal: 1280 } : { ideal: 1080 },
+                facingMode: "user"
+            },
             audio: false
-        });
+        };
+
+        videoStream = await navigator.mediaDevices.getUserMedia(constraints);
         
         video.srcObject = videoStream;
         await video.play();
@@ -59,34 +67,31 @@ function takePhoto() {
     const video = document.getElementById('webcam-video');
     const ctx = canvas.getContext('2d');
     
-    canvas.width = 1920; 
-    canvas.height = 1200;
+    const vWidth = video.videoWidth || 1280;
+    const vHeight = video.videoHeight || 720;
+    const isPortrait = window.innerHeight > window.innerWidth;
 
-    // =======================================================
-    // LOGIKA ANTI-MIRROR SAAT MEMOTRET (FOTO DIAMBIL)
-    // =======================================================
-    ctx.translate(canvas.width, 0);
-    ctx.scale(-1, 1);
-    
-    const videoRatio = video.videoWidth / video.videoHeight;
-    const canvasRatio = canvas.width / canvas.height;
-    
-    let drawWidth, drawHeight, offsetX, offsetY;
-
-    if (videoRatio > canvasRatio) {
-        drawHeight = canvas.height;
-        drawWidth = video.videoWidth * (canvas.height / video.videoHeight);
-        offsetX = (canvas.width - drawWidth) / 2;
-        offsetY = 0;
+    // Menyesuaikan ukuran canvas secara dinamis dengan orientasi asli kamera (Potret vs Lanskap)
+    if (isPortrait && vWidth > vHeight) {
+        canvas.width = vHeight;
+        canvas.height = vWidth;
     } else {
-        drawWidth = canvas.width;
-        drawHeight = video.videoHeight * (canvas.width / video.videoWidth);
-        offsetX = 0;
-        offsetY = (canvas.height - drawHeight) / 2;
+        canvas.width = vWidth;
+        canvas.height = vHeight;
     }
 
-    ctx.drawImage(video, offsetX, offsetY, drawWidth, drawHeight);
-    ctx.setTransform(1, 0, 0, 1, 0, 0); // Wajib kembalikan matriks normal
+    // =======================================================
+    // LOGIKA PENGAMBILAN FOTO: MENGIKUTI ORIENTASI ALAMI
+    // =======================================================
+    ctx.save();
+    
+    // Jika ingin efek cermin saat foto, aktifkan baris translate & scale di bawah. 
+    // Jika tidak ingin terbalik sama sekali, biarkan tanpa translate/scale mirror.
+    ctx.translate(canvas.width, 0);
+    ctx.scale(-1, 1);
+
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    ctx.restore();
 
     const imgData = canvas.toDataURL('image/jpeg', 0.95);
     AppState.captureImageURL = imgData;

@@ -17,8 +17,8 @@ function renderFrameScreen() {
                 </button>
             `).join('')}
         </div>
-        <div class="relative p-2 bg-gray-800 rounded-2xl border-4 border-gray-700 shadow-2xl">
-            <img id="frame-preview-img" src="${AppState.aiResultImageURL}" class="w-[800px] h-[500px] object-cover rounded-xl" />
+        <div class="relative p-2 bg-gray-800 rounded-2xl border-4 border-gray-700 shadow-2xl flex items-center justify-center">
+            <img id="frame-preview-img" src="${AppState.aiResultImageURL}" class="max-w-full max-h-[500px] object-contain rounded-xl" />
         </div>
         <button onclick="finalizePhoto()" class="mt-10 px-12 py-5 bg-secondary hover:bg-green-600 rounded-full font-bold text-2xl shadow-[0_0_20px_rgba(16,185,129,0.4)] text-white transition-all transform hover:scale-105">
             Lanjut Cetak & Unduh
@@ -36,7 +36,7 @@ async function applyFrame(frameKey) {
         return;
     }
 
-    // Proses Layering Canvas 2D
+    // Proses Layering Canvas 2D secara dinamis mengikuti dimensi foto AI
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
     
@@ -44,14 +44,14 @@ async function applyFrame(frameKey) {
         const aiImg = await loadImage(AppState.aiResultImageURL);
         const frameImg = await loadImage(CUSTOM_FRAME_ASSETS[frameKey]);
 
-        // Output rasio 16:10
-        canvas.width = 1600;
-        canvas.height = 1000;
+        // Mengikuti ukuran asli gambar AI (potret atau lanskap)
+        canvas.width = aiImg.naturalWidth || 1200;
+        canvas.height = aiImg.naturalHeight || 800;
 
-        // 1. Gambar foto AI sebagai Base (Center Cover)
+        // 1. Gambar foto AI sebagai Base
         ctx.drawImage(aiImg, 0, 0, canvas.width, canvas.height);
         
-        // 2. Gambar Frame PNG transparan di atasnya
+        // 2. Gambar Frame PNG transparan di atasnya disesuaikan dengan ukuran kanvas
         ctx.drawImage(frameImg, 0, 0, canvas.width, canvas.height);
 
         const finalBase64 = canvas.toDataURL('image/jpeg', 0.95);
@@ -86,12 +86,14 @@ function renderResultScreen() {
     container.innerHTML = `
         <h2 class="text-5xl font-extrabold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-secondary">Foto Selesai!</h2>
         
-        <div class="flex gap-10 items-center bg-gray-800 p-8 rounded-3xl border-2 border-gray-700 shadow-2xl">
-            <!-- Foto Final -->
-            <img src="${AppState.finalImageURL}" class="w-[640px] h-[400px] object-cover rounded-xl shadow-md border-4 border-gray-900" />
+        <div class="flex flex-col lg:flex-row gap-10 items-center bg-gray-800 p-8 rounded-3xl border-2 border-gray-700 shadow-2xl max-w-5xl w-full">
+            <!-- Foto Final yang Responsif -->
+            <div class="flex items-center justify-center bg-gray-900 rounded-2xl p-4 max-w-full">
+                <img src="${AppState.finalImageURL}" class="max-w-full max-h-[450px] object-contain rounded-xl shadow-md border-4 border-gray-900" />
+            </div>
             
             <!-- Panel Aksi -->
-            <div class="flex flex-col items-center justify-center gap-6 w-64">
+            <div class="flex flex-col items-center justify-center gap-6 w-full lg:w-64">
                 
                 <div class="p-3 bg-white rounded-xl shadow-lg transform hover:scale-105 transition-all">
                     <div id="qrcode-container"></div>
