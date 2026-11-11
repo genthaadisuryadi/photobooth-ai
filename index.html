@@ -274,9 +274,9 @@
             
             <canvas id="capture-canvas" class="hidden"></canvas>
 
-            <!-- MODAL PREVIEW: Menggunakan items-start sm:items-center + overflow-y-auto agar aman di HP kecil -->
+            <!-- MODAL PREVIEW: Mengikuti rasio asli foto secara natural tanpa dipaksa lanskap -->
             <div id="capture-decision" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-md overflow-y-auto p-4 flex items-start sm:items-center justify-center">
-                <div class="w-full max-w-[540px] bg-white rounded-3xl p-5 sm:p-6 flex flex-col gap-4 shadow-2xl border border-slate-100 my-8">
+                <div class="w-full max-w-[500px] bg-white rounded-3xl p-5 sm:p-6 flex flex-col gap-4 shadow-2xl border border-slate-100 my-8">
                     <div class="flex items-center gap-3">
                         <div class="w-10 h-10 rounded-full bg-green-100 grid place-items-center shrink-0">
                             <svg class="w-5 h-5 text-green-600" fill="none" viewBox="0 0 24 24"><path d="m5 13 4 4L19 7" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>
@@ -287,9 +287,9 @@
                         </div>
                     </div>
                     
-                    <!-- GAMBAR PREVIEW BEBAS GEPENG & TIDAK TERPOTONG -->
+                    <!-- KOTAK GAMBAR MENGIKUTI DIMENSI ASLI FOTO (TIDAK DIPAKSA KOTAK 16:9) -->
                     <div class="w-full rounded-2xl overflow-hidden border border-slate-200 bg-slate-900 shadow-inner flex items-center justify-center">
-                        <img id="capture-preview-img" src="" class="w-full h-auto max-h-[55vh] object-contain">
+                        <img id="capture-preview-img" src="" class="w-auto h-auto max-w-full max-h-[60vh] object-contain">
                     </div>
                     
                     <div class="flex flex-col sm:flex-row gap-3 pt-1">
@@ -335,7 +335,7 @@
         </section>
 
         <!-- SCREEN 6: RESULT & DOWNLOAD -->
-        <!-- Menggunakan overflow-y-auto dan padding atas-bawah yang longgar agar bisa digulir bebas di HP -->
+        <!-- Menghapus aspek rasio kaku di layar hasil akhir agar foto potret tampil natural sesuai orientasi foto -->
         <section id="screen-result" class="screen-hidden w-full min-h-screen bg-white flex flex-col relative fade-in overflow-y-auto">
             <header class="flex items-center justify-between min-h-[90px] py-3 px-8 lg:px-12 border-b border-slate-100 shrink-0 sticky top-0 bg-white/90 backdrop-blur z-20">
                 <div class="flex items-center">
@@ -358,11 +358,12 @@
                 <div class="w-full grid md:grid-cols-2 gap-10 items-start">
                     
                     <div class="bg-white rounded-3xl border border-slate-200 p-6 flex flex-col items-center shadow-lg relative">
-                        <div class="w-full rounded-2xl overflow-hidden bg-slate-100 relative">
+                        <!-- CONTAINER FOTO ASLI: Tanpa aspect-ratio kaku, menyesuaikan natural -->
+                        <div class="w-full rounded-2xl overflow-hidden bg-slate-900 relative flex items-center justify-center p-2">
                             <div class="absolute top-4 left-4 z-10 bg-white/90 backdrop-blur px-3 py-1.5 rounded-lg border border-slate-200 shadow-sm">
                                 <span class="text-[10px] font-bold text-slate-600 uppercase tracking-wider">Foto Asli</span>
                             </div>
-                            <img id="result-original-img" src="" class="w-full h-auto object-contain">
+                            <img id="result-original-img" src="" class="w-auto h-auto max-w-full max-h-[450px] object-contain">
                         </div>
                         
                         <div class="mt-6 flex flex-col items-center w-full">
@@ -374,11 +375,12 @@
                     </div>
                     
                     <div class="bg-white rounded-3xl border-2 border-booth-accent/20 p-6 flex flex-col items-center shadow-[0_15px_40px_rgba(30,58,138,0.12)] relative">
-                        <div class="w-full rounded-2xl overflow-hidden bg-slate-100 relative shadow-inner">
+                        <!-- CONTAINER FOTO AI: Tanpa aspect-ratio kaku, menyesuaikan natural -->
+                        <div class="w-full rounded-2xl overflow-hidden bg-slate-900 relative shadow-inner flex items-center justify-center p-2">
                             <div class="absolute top-4 left-4 z-10 bg-booth-accent px-3 py-1.5 rounded-lg shadow-md">
                                 <span class="text-[10px] font-bold text-white uppercase tracking-wider">Hasil AI</span>
                             </div>
-                            <img id="result-final-img" src="" class="w-full h-auto object-contain">
+                            <img id="result-final-img" src="" class="w-auto h-auto max-w-full max-h-[450px] object-contain">
                         </div>
                         
                         <div class="mt-6 flex flex-col items-center w-full">
