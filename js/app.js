@@ -94,7 +94,13 @@ window.submitToken = () => {
 };
 
 window.confirmIntegratedOptionsAndGo = () => { window.switchScreen('screen-capture'); initWebcam(); };
-window.retakePhoto = () => { document.getElementById('capture-decision')?.classList.add('hidden'); };
+window.retakePhoto = () => { 
+    const decisionModal = document.getElementById('capture-decision');
+    if (decisionModal) {
+        decisionModal.classList.add('hidden');
+        decisionModal.style.display = 'none';
+    }
+};
 window.startAIProcessing = () => { processAIGeneration(); };
 window.takePhoto = () => { startCountdown(); };
 
@@ -336,9 +342,27 @@ async function initWebcam() {
     const videoEl = document.getElementById('webcam-video');
     if (!videoEl) return;
     try {
-        pbVideoStream = await navigator.mediaDevices.getUserMedia({ video: { width: 1920, height: 1080, facingMode: "user" }, audio: false });
+        // Otomatis sesuaikan resolusi ideal berdasarkan orientasi layar (potret / lanskap)
+        const isPortrait = window.innerWidth < window.innerHeight;
+        const constraints = {
+            video: {
+                width: { ideal: isPortrait ? 720 : 1280 },
+                height: { ideal: isPortrait ? 1280 : 720 },
+                facingMode: "user"
+            },
+            audio: false
+        };
+        pbVideoStream = await navigator.mediaDevices.getUserMedia(constraints);
         videoEl.srcObject = pbVideoStream;
-    } catch (error) { console.error("Kamera error:", error); }
+    } catch (error) { 
+        console.error("Kamera error:", error);
+        try {
+            pbVideoStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+            videoEl.srcObject = pbVideoStream;
+        } catch (e) {
+            console.error("Fallback kamera gagal:", e);
+        }
+    }
 }
 
 function startCountdown() {
@@ -378,20 +402,30 @@ function executeCapture() {
     const canvasEl = document.getElementById('capture-canvas');
     if (!videoEl || !canvasEl) return;
 
-    // Mengambil dimensi asli video kamera secara dinamis (mengikuti potret/lanskap perangkat)
-    canvasEl.width = videoEl.videoWidth || 1280;
-    canvasEl.height = videoEl.videoHeight || 720;
+    // Menyesuaikan ukuran kanvas sesuai orientasi asli video kamera agar tidak dipaksa lanskap
+    canvasEl.width = videoEl.videoWidth || 720;
+    canvasEl.height = videoEl.videoHeight || 1280;
     
     const context = canvasEl.getContext('2d');
-
+    context.save();
     context.translate(canvasEl.width, 0);
     context.scale(-1, 1);
     context.drawImage(videoEl, 0, 0, canvasEl.width, canvasEl.height);
+    context.restore();
     
     pbCapturedBase64 = canvasEl.toDataURL('image/png');
     
-    document.getElementById('capture-preview-img').src = pbCapturedBase64;
-    document.getElementById('capture-decision').classList.remove('hidden');
+    const previewImg = document.getElementById('capture-preview-img');
+    if (previewImg) {
+        previewImg.src = pbCapturedBase64;
+    }
+
+    // PAKSA TAMPILKAN MODAL PREVIEW DAN JANGAN LANGSUNG KE AI
+    const decisionModal = document.getElementById('capture-decision');
+    if (decisionModal) {
+        decisionModal.classList.remove('hidden');
+        decisionModal.style.display = 'flex';
+    }
 }
 
 function dataURItoBlob(dataURI) {
@@ -407,7 +441,12 @@ function dataURItoBlob(dataURI) {
 // PROSES AI
 // ==========================================
 async function processAIGeneration() {
-    document.getElementById('capture-decision')?.classList.add('hidden');
+    const decisionModal = document.getElementById('capture-decision');
+    if (decisionModal) {
+        decisionModal.classList.add('hidden');
+        decisionModal.style.display = 'none';
+    }
+    
     window.switchScreen('screen-review');
     document.getElementById('review-blurred-img').src = pbCapturedBase64;
     
@@ -518,37 +557,3 @@ async function finalizePhotoAndUpload(aiImage, originalImageBase64, isUrl = fals
 
 // ==========================================
 // FITUR BARU: MODAL CETAK & CSS INJECTOR
-// ==========================================
-
-window.openPrintModal = () => {
-    const finalImgUrl = document.getElementById('result-final-img').src;
-    if(!finalImgUrl || finalImgUrl.includes('data:image/svg+xml')) {
-        alert("Gambar hasil AI belum tersedia.");
-        return;
-    }
-    
-    document.getElementById('print-image').src = finalImgUrl;
-    document.getElementById('print-modal').classList.remove('hidden');
-};
-
-window.closePrintModal = () => {
-    document.getElementById('print-modal').classList.add('hidden');
-};
-
-window.executePrint = (widthInch, heightInch) => {
-    const sizeStr = `${widthInch}in ${heightInch}in landscape`; 
-    
-    let style = document.getElementById('print-page-style');
-    if (!style) {
-        style = document.createElement('style');
-        style.id = 'print-page-style';
-        document.head.appendChild(style);
-    }
-    
-    style.innerHTML = `@page { size: ${sizeStr}; margin: 0; }`;
-    window.closePrintModal();
-    
-    setTimeout(() => {
-        window.print();
-    }, 300);
-};
