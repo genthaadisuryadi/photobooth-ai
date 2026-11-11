@@ -94,13 +94,7 @@ window.submitToken = () => {
 };
 
 window.confirmIntegratedOptionsAndGo = () => { window.switchScreen('screen-capture'); initWebcam(); };
-window.retakePhoto = () => { 
-    const decisionModal = document.getElementById('capture-decision');
-    if (decisionModal) {
-        decisionModal.classList.add('hidden');
-        decisionModal.style.display = 'none';
-    }
-};
+window.retakePhoto = () => { document.getElementById('capture-decision')?.classList.add('hidden'); };
 window.startAIProcessing = () => { processAIGeneration(); };
 window.takePhoto = () => { startCountdown(); };
 
@@ -342,27 +336,19 @@ async function initWebcam() {
     const videoEl = document.getElementById('webcam-video');
     if (!videoEl) return;
     try {
-        // Otomatis sesuaikan resolusi ideal berdasarkan orientasi layar (potret / lanskap)
-        const isPortrait = window.innerWidth < window.innerHeight;
+        // PERBAIKAN: Deteksi orientasi layar. Jika di HP (portrait), minta resolusi vertikal (720x1280)
+        const isPortrait = window.innerHeight > window.innerWidth;
         const constraints = {
             video: {
-                width: { ideal: isPortrait ? 720 : 1280 },
-                height: { ideal: isPortrait ? 1280 : 720 },
+                width: isPortrait ? { ideal: 720 } : { ideal: 1920 },
+                height: isPortrait ? { ideal: 1280 } : { ideal: 1080 },
                 facingMode: "user"
             },
             audio: false
         };
         pbVideoStream = await navigator.mediaDevices.getUserMedia(constraints);
         videoEl.srcObject = pbVideoStream;
-    } catch (error) { 
-        console.error("Kamera error:", error);
-        try {
-            pbVideoStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
-            videoEl.srcObject = pbVideoStream;
-        } catch (e) {
-            console.error("Fallback kamera gagal:", e);
-        }
-    }
+    } catch (error) { console.error("Kamera error:", error); }
 }
 
 function startCountdown() {
@@ -402,30 +388,36 @@ function executeCapture() {
     const canvasEl = document.getElementById('capture-canvas');
     if (!videoEl || !canvasEl) return;
 
-    // Menyesuaikan ukuran kanvas sesuai orientasi asli video kamera agar tidak dipaksa lanskap
-    canvasEl.width = videoEl.videoWidth || 720;
-    canvasEl.height = videoEl.videoHeight || 1280;
-    
+    const vWidth = videoEl.videoWidth || 1280;
+    const vHeight = videoEl.videoHeight || 720;
+    const isPortraitScreen = window.innerHeight > window.innerWidth;
+
+    // Jika di layar potret (HP), pastikan ukuran canvas mengikuti orientasi potret (lebar < tinggi)
+    if (isPortraitScreen && vWidth > vHeight) {
+        canvasEl.width = vHeight;
+        canvasEl.height = vWidth;
+    } else {
+        canvasEl.width = vWidth;
+        canvasEl.height = vHeight;
+    }
+
     const context = canvasEl.getContext('2d');
     context.save();
     context.translate(canvasEl.width, 0);
     context.scale(-1, 1);
-    context.drawImage(videoEl, 0, 0, canvasEl.width, canvasEl.height);
+
+    if (isPortraitScreen && vWidth > vHeight) {
+        // Lakukan penyesuaian rotasi/crop tengah agar pas portrait
+        context.drawImage(videoEl, 0, 0, canvasEl.width, canvasEl.height);
+    } else {
+        context.drawImage(videoEl, 0, 0, canvasEl.width, canvasEl.height);
+    }
     context.restore();
     
     pbCapturedBase64 = canvasEl.toDataURL('image/png');
     
-    const previewImg = document.getElementById('capture-preview-img');
-    if (previewImg) {
-        previewImg.src = pbCapturedBase64;
-    }
-
-    // PAKSA TAMPILKAN MODAL PREVIEW DAN JANGAN LANGSUNG KE AI
-    const decisionModal = document.getElementById('capture-decision');
-    if (decisionModal) {
-        decisionModal.classList.remove('hidden');
-        decisionModal.style.display = 'flex';
-    }
+    document.getElementById('capture-preview-img').src = pbCapturedBase64;
+    document.getElementById('capture-decision').classList.remove('hidden');
 }
 
 function dataURItoBlob(dataURI) {
@@ -441,12 +433,7 @@ function dataURItoBlob(dataURI) {
 // PROSES AI
 // ==========================================
 async function processAIGeneration() {
-    const decisionModal = document.getElementById('capture-decision');
-    if (decisionModal) {
-        decisionModal.classList.add('hidden');
-        decisionModal.style.display = 'none';
-    }
-    
+    document.getElementById('capture-decision')?.classList.add('hidden');
     window.switchScreen('screen-review');
     document.getElementById('review-blurred-img').src = pbCapturedBase64;
     
@@ -557,3 +544,37 @@ async function finalizePhotoAndUpload(aiImage, originalImageBase64, isUrl = fals
 
 // ==========================================
 // FITUR BARU: MODAL CETAK & CSS INJECTOR
+// ==========================================
+
+window.openPrintModal = () => {
+    const finalImgUrl = document.getElementById('result-final-img').src;
+    if(!finalImgUrl || finalImgUrl.includes('data:image/svg+xml')) {
+        alert("Gambar hasil AI belum tersedia.");
+        return;
+    }
+    
+    document.getElementById('print-image').src = finalImgUrl;
+    document.getElementById('print-modal').classList.remove('hidden');
+};
+
+window.closePrintModal = () => {
+    document.getElementById('print-modal').classList.add('hidden');
+};
+
+window.executePrint = (widthInch, heightInch) => {
+    const sizeStr = `${widthInch}in ${heightInch}in landscape`; 
+    
+    let style = document.getElementById('print-page-style');
+    if (!style) {
+        style = document.createElement('style');
+        style.id = 'print-page-style';
+        document.head.appendChild(style);
+    }
+    
+    style.innerHTML = `@page { size: ${sizeStr}; margin: 0; }`;
+    window.closePrintModal();
+    
+    setTimeout(() => {
+        window.print();
+    }, 300);
+};
