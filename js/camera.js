@@ -9,11 +9,10 @@ async function initCamera() {
             videoStream.getTracks().forEach(track => track.stop());
         }
         
-        const isPortrait = window.innerHeight > window.innerWidth;
         const constraints = {
             video: {
-                width: isPortrait ? { ideal: 720 } : { ideal: 1920 },
-                height: isPortrait ? { ideal: 1280 } : { ideal: 1080 },
+                width: { ideal: 1280 },
+                height: { ideal: 720 },
                 facingMode: "user"
             },
             audio: false
@@ -23,9 +22,9 @@ async function initCamera() {
         
         video.srcObject = videoStream;
         
-        // PERBAIKAN: Menambahkan gaya transform scaleX(-1) agar preview kamera depan tidak terbalik (mirror) secara natural
+        // Mengatur agar pratinjau kamera depan memiliki efek cermin (mirror) yang natural dan tidak terbalik arah
         video.style.transform = "scaleX(-1)";
-        video.style.objectFit = "contain"; // Mencegah efek zoom/potong berlebihan
+        video.style.objectFit = "cover";
 
         await video.play();
 
@@ -44,24 +43,31 @@ async function initCamera() {
 
 function startCountdown() {
     const btnCapture = document.getElementById('btn-capture');
-    btnCapture.disabled = true;
+    if (btnCapture) btnCapture.disabled = true;
     
-    const display = document.getElementById('countdown-display');
-    const number = document.getElementById('countdownNumber');
-    if (display) display.classList.remove('hidden');
-    
+    let overlay = document.getElementById('countdown-overlay');
+    if (!overlay) {
+        const videoContainer = document.getElementById('webcam-video').parentElement;
+        overlay = document.createElement('div');
+        overlay.id = 'countdown-overlay';
+        overlay.className = 'absolute inset-0 z-20 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm transition-all';
+        overlay.innerHTML = '<span id="countdown-number" class="text-[160px] font-black text-white drop-shadow-[0_10px_30px_rgba(0,0,0,0.5)] animate-pulse">3</span>';
+        videoContainer.appendChild(overlay);
+    } else {
+        overlay.classList.remove('hidden');
+        document.getElementById('countdown-number').innerText = '3';
+    }
+
     let count = 3;
-    if (number) number.innerText = count;
-    
-    const interval = setInterval(() => {
+    const timer = setInterval(() => {
         count--;
         if (count > 0) {
-            if (number) number.innerText = count;
+            document.getElementById('countdown-number').innerText = count;
         } else {
-            clearInterval(interval);
-            if (display) display.classList.add('hidden');
-            takePhoto();
-            btnCapture.disabled = false;
+            clearInterval(timer);
+            overlay.classList.add('hidden');
+            if (btnCapture) btnCapture.disabled = false;
+            takePhoto(); 
         }
     }, 1000);
 }
@@ -69,22 +75,16 @@ function startCountdown() {
 function takePhoto() {
     const canvas = document.getElementById('capture-canvas');
     const video = document.getElementById('webcam-video');
+    if (!video || !canvas) return;
+    
     const ctx = canvas.getContext('2d');
     
-    const vWidth = video.videoWidth || 1280;
-    const vHeight = video.videoHeight || 720;
-    const isPortrait = window.innerHeight > window.innerWidth;
-
-    if (isPortrait && vWidth > vHeight) {
-        canvas.width = vHeight;
-        canvas.height = vWidth;
-    } else {
-        canvas.width = vWidth;
-        canvas.height = vHeight;
-    }
+    canvas.width = video.videoWidth || 1280;
+    canvas.height = video.videoHeight || 720;
 
     ctx.save();
-    // Mengembalikan posisi gambar agar hasil cetak/AI tidak terbalik mirror
+    
+    // Menyelaraskan hasil tangkapan foto agar sama persis dengan apa yang dilihat pengguna di layar (tidak terbalik kiri-kanan)
     ctx.translate(canvas.width, 0);
     ctx.scale(-1, 1);
 
