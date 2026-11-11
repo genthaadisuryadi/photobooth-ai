@@ -1,7 +1,7 @@
 // js/camera.js
 
 let videoStream = null;
-let currentFacingMode = "user"; // "user" untuk depan, "environment" untuk belakang
+let currentFacingMode = "user"; // "user" untuk depan/webcam, "environment" untuk belakang
 
 async function initCamera(facing = "user") {
     const video = document.getElementById('webcam-video');
@@ -26,7 +26,7 @@ async function initCamera(facing = "user") {
         videoStream = await navigator.mediaDevices.getUserMedia(constraints);
         video.srcObject = videoStream;
         
-        // Membalikkan arah preview video agar natural (mirror) khusus kamera depan
+        // Selalu aktifkan mirror (scaleX(-1)) untuk kamera depan / webcam agar gerakan natural
         if (currentFacingMode === "user") {
             video.style.transform = "scaleX(-1)";
         } else {
@@ -86,7 +86,7 @@ function takePhoto() {
 
     ctx.save();
     
-    // KOREKSI PRESISI: Menggeser titik sumbu X sejauh canvas.width lalu dibalik dengan scale(-1, 1)
+    // Menyelaraskan hasil tangkapan foto dengan preview kamera depan/webcam
     if (currentFacingMode === "user") {
         ctx.translate(canvas.width, 0);
         ctx.scale(-1, 1);
