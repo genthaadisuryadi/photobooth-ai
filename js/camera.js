@@ -1,33 +1,38 @@
 // js/camera.js
 
 let videoStream = null;
+let currentFacingMode = "user"; // "user" untuk depan, "environment" untuk belakang
 
-async function initCamera() {
+async function initCamera(facing = "user") {
     const video = document.getElementById('webcam-video');
     if (!video) return;
+
+    currentFacingMode = facing;
 
     try {
         if (videoStream) {
             videoStream.getTracks().forEach(track => track.stop());
         }
         
-        // Meminta resolusi standar yang stabil agar tidak memaksa crop/zoom berlebihan di HP
         const constraints = {
             video: {
                 width: { ideal: 1280 },
                 height: { ideal: 720 },
-                facingMode: "user"
+                facingMode: currentFacingMode
             },
             audio: false
         };
 
         videoStream = await navigator.mediaDevices.getUserMedia(constraints);
-        
         video.srcObject = videoStream;
         
-        // Mengatur efek cermin (mirror) yang natural pada preview kamera depan
-        video.style.transform = "scaleX(-1)";
-        video.style.objectFit = "contain";
+        // HANYA berikan efek mirror jika menggunakan kamera depan ("user")
+        if (currentFacingMode === "user") {
+            video.style.transform = "scaleX(-1)";
+        } else {
+            video.style.transform = "none";
+        }
+        video.style.objectFit = "cover";
 
         await video.play();
 
@@ -40,7 +45,7 @@ async function initCamera() {
 
     } catch (err) {
         console.error("Akses kamera ditolak atau tidak ditemukan:", err);
-        alert("Gagal mengakses kamera. Pastikan izin kamera telah diberikan di peramban Anda.");
+        alert("Gagal mengakses kamera. Pastikan izin kamera telah diberikan.");
     }
 }
 
@@ -76,15 +81,16 @@ function takePhoto() {
     
     const ctx = canvas.getContext('2d');
     
-    // Mengambil ukuran sensor asli video
     canvas.width = video.videoWidth || 1280;
     canvas.height = video.videoHeight || 720;
 
     ctx.save();
     
-    // Menyelaraskan hasil tangkapan foto agar normal dan tidak terbalik mirror
-    ctx.translate(canvas.width, 0);
-    ctx.scale(-1, 1);
+    // Sesuaikan arah canvas tangkapan foto dengan kamera aktif
+    if (currentFacingMode === "user") {
+        ctx.translate(canvas.width, 0);
+        ctx.scale(-1, 1);
+    }
 
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     ctx.restore();
