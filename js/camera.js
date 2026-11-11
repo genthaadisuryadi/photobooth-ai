@@ -26,7 +26,7 @@ async function initCamera(facing = "user") {
         videoStream = await navigator.mediaDevices.getUserMedia(constraints);
         video.srcObject = videoStream;
         
-        // HANYA berikan efek mirror jika menggunakan kamera depan ("user")
+        // Efek cermin hanya pada preview kamera depan agar natural
         if (currentFacingMode === "user") {
             video.style.transform = "scaleX(-1)";
         } else {
@@ -86,13 +86,15 @@ function takePhoto() {
 
     ctx.save();
     
-    // Sesuaikan arah canvas tangkapan foto dengan kamera aktif
+    // PERBAIKAN: Jika menggunakan kamera depan, balikkan kanvas horizontal agar hasil foto tidak terbalik kanan-kiri.
+    // Jika menggunakan kamera belakang, biarkan normal tanpa transform agar tidak terbalik.
     if (currentFacingMode === "user") {
-        ctx.translate(canvas.width, 0);
         ctx.scale(-1, 1);
+        ctx.drawImage(video, -canvas.width, 0, canvas.width, canvas.height);
+    } else {
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     }
-
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    
     ctx.restore();
 
     const imgData = canvas.toDataURL('image/jpeg', 0.95);
