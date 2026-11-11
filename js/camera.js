@@ -11,7 +11,7 @@ async function initCamera() {
             videoStream.getTracks().forEach(track => track.stop());
         }
         
-        // Meminta stream kamera depan secara stabil
+        // Meminta resolusi standar yang stabil agar tidak memaksa crop/zoom berlebihan di HP
         const constraints = {
             video: {
                 width: { ideal: 1280 },
@@ -25,13 +25,12 @@ async function initCamera() {
         
         video.srcObject = videoStream;
         
-        // Mengatur gaya mirror yang natural dan ukuran penuh
+        // Mengatur efek cermin (mirror) yang natural pada preview kamera depan
         video.style.transform = "scaleX(-1)";
-        video.style.objectFit = "cover";
+        video.style.objectFit = "contain";
 
         await video.play();
 
-        // Memastikan tombol ambil foto terikat dengan benar
         const btnCapture = document.getElementById('btn-capture');
         if (btnCapture) {
             const newBtn = btnCapture.cloneNode(true);
@@ -49,29 +48,23 @@ function startCountdown() {
     const btnCapture = document.getElementById('btn-capture');
     if (btnCapture) btnCapture.disabled = true;
     
-    let overlay = document.getElementById('countdown-overlay');
-    if (!overlay) {
-        const videoContainer = document.getElementById('webcam-video').parentElement;
-        overlay = document.createElement('div');
-        overlay.id = 'countdown-overlay';
-        overlay.className = 'absolute inset-0 z-20 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm transition-all';
-        overlay.innerHTML = '<span id="countdown-number" class="text-[160px] font-black text-white drop-shadow-[0_10px_30px_rgba(0,0,0,0.5)] animate-pulse">3</span>';
-        videoContainer.appendChild(overlay);
-    } else {
-        overlay.classList.remove('hidden');
-        document.getElementById('countdown-number').innerText = '3';
-    }
-
+    let display = document.getElementById('countdown-display');
+    let number = document.getElementById('countdownNumber');
+    
+    if (display) display.classList.remove('hidden');
+    
     let count = 3;
-    const timer = setInterval(() => {
+    if (number) number.innerText = count;
+    
+    const interval = setInterval(() => {
         count--;
         if (count > 0) {
-            document.getElementById('countdown-number').innerText = count;
+            if (number) number.innerText = count;
         } else {
-            clearInterval(timer);
-            overlay.classList.add('hidden');
+            clearInterval(interval);
+            if (display) display.classList.add('hidden');
+            takePhoto();
             if (btnCapture) btnCapture.disabled = false;
-            takePhoto(); 
         }
     }, 1000);
 }
@@ -83,12 +76,13 @@ function takePhoto() {
     
     const ctx = canvas.getContext('2d');
     
+    // Mengambil ukuran sensor asli video
     canvas.width = video.videoWidth || 1280;
     canvas.height = video.videoHeight || 720;
 
     ctx.save();
     
-    // Menyelaraskan hasil tangkapan foto agar normal dan tidak terbalik
+    // Menyelaraskan hasil tangkapan foto agar normal dan tidak terbalik mirror
     ctx.translate(canvas.width, 0);
     ctx.scale(-1, 1);
 
