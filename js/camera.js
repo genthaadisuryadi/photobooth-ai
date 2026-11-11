@@ -16,8 +16,8 @@ async function initCamera(facing = "user") {
         
         const constraints = {
             video: {
-                width: { ideal: 1280 },
-                height: { ideal: 720 },
+                width: { ideal: 1920 },
+                height: { ideal: 1080 },
                 facingMode: currentFacingMode
             },
             audio: false
@@ -26,7 +26,7 @@ async function initCamera(facing = "user") {
         videoStream = await navigator.mediaDevices.getUserMedia(constraints);
         video.srcObject = videoStream;
         
-        // Selalu aktifkan mirror (scaleX(-1)) untuk kamera depan / webcam agar gerakan natural
+        // Mengatur cermin (mirror) khusus kamera depan / webcam
         if (currentFacingMode === "user") {
             video.style.transform = "scaleX(-1)";
         } else {
@@ -86,15 +86,13 @@ function takePhoto() {
 
     ctx.save();
     
-    // Menyelaraskan hasil tangkapan foto dengan preview kamera depan/webcam
+    // PERBAIKAN PRESISI: Membalikkan posisi canvas agar hasil foto tidak terbalik saat pakai kamera depan/webcam
     if (currentFacingMode === "user") {
         ctx.translate(canvas.width, 0);
         ctx.scale(-1, 1);
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    } else {
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     }
     
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     ctx.restore();
 
     const imgData = canvas.toDataURL('image/jpeg', 0.95);
