@@ -244,59 +244,56 @@
             </main>
         </section>
 
-        <!-- SCREEN 4: CAPTURE (FULL SCREEN TANPA RUANG GELAP ATAS-BAWAH) -->
-        <section id="screen-capture" class="screen-hidden w-full min-h-screen bg-slate-900 flex flex-col relative fade-in">
-            <header class="flex items-center justify-between min-h-[90px] py-3 px-5 sm:px-8 lg:px-10 border-b border-slate-800 shrink-0 relative z-20 bg-slate-900/80 backdrop-blur-md">
-                <div class="flex items-center">
-                    <div class="h-16 sm:h-20 w-auto flex items-center justify-start shrink-0">
-                        <img src="logo.png" alt="Logo" class="h-full w-auto object-contain brightness-0 invert">
-                    </div>
-                </div>
-                <span class="text-[11px] font-bold uppercase tracking-widest text-white bg-blue-600/30 px-3 py-1 rounded-full border border-blue-500/30">Langkah 2 dari 3</span>
-            </header>
+        <!-- SCREEN 4: CAPTURE -->
+<section id="screen-capture" class="screen-hidden w-full min-h-screen bg-slate-900 flex flex-col relative fade-in">
+    <header class="flex items-center justify-between min-h-[90px] py-3 px-5 sm:px-8 lg:px-10 border-b border-slate-800 shrink-0 relative z-20 bg-slate-900/80 backdrop-blur-md">
+        <div class="flex items-center">
+            <div class="h-16 sm:h-20 w-auto flex items-center justify-start shrink-0">
+                <img src="logo.png" alt="Logo" class="h-full w-auto object-contain brightness-0 invert">
+            </div>
+        </div>
+        <span class="text-[11px] font-bold uppercase tracking-widest text-white bg-blue-600/30 px-3 py-1 rounded-full border border-blue-500/30">Langkah 2 dari 3</span>
+    </header>
 
-            <main class="flex-1 relative flex flex-col items-center justify-center p-0 overflow-hidden bg-black">
-                <div class="relative w-full h-full flex items-center justify-center">
-                    <video id="webcam-video" autoplay playsinline muted class="absolute inset-0 w-full h-full object-cover"></video>
-                    
-                    <div id="countdown-display" class="hidden absolute inset-0 z-20 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm">
-                        <span id="countdownNumber" class="text-[160px] font-black text-white drop-shadow-2xl animate-pulse">3</span>
-                    </div>
-
-                    <div class="absolute bottom-10 left-1/2 transform -translate-x-1/2 flex flex-col items-center gap-2 z-30">
-                        <button onclick="takePhoto()" id="btn-capture" class="w-[86px] h-[86px] bg-white rounded-full border-[6px] border-booth-accent grid place-items-center transition-transform hover:scale-105 active:scale-95 shadow-2xl">
-                            <svg class="w-10 h-10 text-booth-accent" viewBox="0 0 24 24" fill="none"><path d="M4.8 6.7h2.4l1.1-2c.2-.4.6-.7 1.1-.7h4.9c.5 0 .9.3 1.1.7l1.1 2h2.4c1.6 0 2.9 1.3 2.9 2.9v6.8c0 1.6-1.3 2.9-2.9 2.9H4.8c-1.6 0-2.9-1.3-2.9-2.9V9.6c0-1.6 1.3-2.9 2.9-2.9Z" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="13" r="3.2" stroke="currentColor" stroke-width="2"/></svg>
-                        </button>
-                    </div>
-                </div>
-            </main>
+    <!-- Wajib memiliki flex-1 dan h-full agar video muncul dan tidak hitam -->
+    <main class="flex-1 w-full h-[calc(100vh-90px)] relative flex flex-col items-center justify-center p-0 overflow-hidden bg-black">
+        <div class="relative w-full h-full flex items-center justify-center">
+            <video id="webcam-video" autoplay playsinline muted class="absolute inset-0 w-full h-full object-cover"></video>
             
-            <canvas id="capture-canvas" class="hidden"></canvas>
+            <div class="absolute bottom-10 left-1/2 transform -translate-x-1/2 flex flex-col items-center gap-2 z-30">
+                <button onclick="takePhoto()" id="btn-capture" class="w-[86px] h-[86px] bg-white rounded-full border-[6px] border-booth-accent grid place-items-center transition-transform hover:scale-105 active:scale-95 shadow-2xl">
+                    <svg class="w-10 h-10 text-booth-accent" viewBox="0 0 24 24" fill="none"><path d="M4.8 6.7h2.4l1.1-2c.2-.4.6-.7 1.1-.7h4.9c.5 0 .9.3 1.1.7l1.1 2h2.4c1.6 0 2.9 1.3 2.9 2.9v6.8c0 1.6-1.3 2.9-2.9 2.9H4.8c-1.6 0-2.9-1.3-2.9-2.9V9.6c0-1.6 1.3-2.9 2.9-2.9Z" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="13" r="3.2" stroke="currentColor" stroke-width="2"/></svg>
+                </button>
+            </div>
+        </div>
+    </main>
+    
+    <canvas id="capture-canvas" class="hidden"></canvas>
 
-            <!-- MODAL PREVIEW -->
-            <div id="capture-decision" class="hidden fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-md overflow-y-auto p-4 flex items-center justify-center">
-                <div class="w-full max-w-[480px] bg-white rounded-3xl p-5 sm:p-6 flex flex-col gap-4 shadow-2xl border border-slate-100 my-auto">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-full bg-green-100 grid place-items-center shrink-0">
-                            <svg class="w-5 h-5 text-green-600" fill="none" viewBox="0 0 24 24"><path d="m5 13 4 4L19 7" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>
-                        </div>
-                        <div>
-                            <h2 class="text-xl font-black text-slate-800">Foto Diambil!</h2>
-                            <p class="text-xs font-medium text-slate-500">Lanjutkan transformasi AI atau ambil ulang?</p>
-                        </div>
-                    </div>
-                    
-                    <div class="w-full rounded-2xl overflow-hidden border border-slate-200 bg-slate-900 shadow-inner flex items-center justify-center p-1">
-                        <img id="capture-preview-img" src="" class="w-full h-auto max-h-[55vh] object-contain rounded-xl">
-                    </div>
-                    
-                    <div class="flex flex-col sm:flex-row gap-3 pt-1">
-                        <button onclick="retakePhoto()" id="btn-retake" class="w-full sm:flex-1 h-[50px] rounded-full border border-slate-300 bg-white text-slate-600 font-bold hover:bg-slate-50 transition-all text-sm">Ambil Ulang</button>
-                        <button onclick="startAIProcessing()" id="btn-proceed-ai" class="w-full sm:flex-[1.5] h-[50px] rounded-full bg-gradient-to-r from-blue-700 to-blue-800 text-white font-bold hover:shadow-lg transition-all text-sm shadow-[0_4px_14px_rgba(30,58,138,0.25)]">Mulai Transformasi AI &rarr;</button>
-                    </div>
+    <!-- MODAL PREVIEW -->
+    <div id="capture-decision" class="hidden fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-md overflow-y-auto p-4 flex items-center justify-center">
+        <div class="w-full max-w-[480px] bg-white rounded-3xl p-5 sm:p-6 flex flex-col gap-4 shadow-2xl border border-slate-100 my-auto">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-green-100 grid place-items-center shrink-0">
+                    <svg class="w-5 h-5 text-green-600" fill="none" viewBox="0 0 24 24"><path d="m5 13 4 4L19 7" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>
+                </div>
+                <div>
+                    <h2 class="text-xl font-black text-slate-800">Foto Diambil!</h2>
+                    <p class="text-xs font-medium text-slate-500">Lanjutkan transformasi AI atau ambil ulang?</p>
                 </div>
             </div>
-        </section>
+            
+            <div class="w-full rounded-2xl overflow-hidden border border-slate-200 bg-slate-900 shadow-inner flex items-center justify-center p-1">
+                <img id="capture-preview-img" src="" class="w-full h-auto max-h-[55vh] object-contain rounded-xl">
+            </div>
+            
+            <div class="flex flex-col sm:flex-row gap-3 pt-1">
+                <button onclick="retakePhoto()" id="btn-retake" class="w-full sm:flex-1 h-[50px] rounded-full border border-slate-300 bg-white text-slate-600 font-bold hover:bg-slate-50 transition-all text-sm">Ambil Ulang</button>
+                <button onclick="startAIProcessing()" id="btn-proceed-ai" class="w-full sm:flex-[1.5] h-[50px] rounded-full bg-gradient-to-r from-blue-700 to-blue-800 text-white font-bold hover:shadow-lg transition-all text-sm shadow-[0_4px_14px_rgba(30,58,138,0.25)]">Mulai Transformasi AI &rarr;</button>
+            </div>
+        </div>
+    </div>
+</section>
 
         <!-- SCREEN 5: REVIEW / LOADING -->
         <section id="screen-review" class="screen-hidden w-full min-h-screen bg-slate-50 flex flex-col relative fade-in">

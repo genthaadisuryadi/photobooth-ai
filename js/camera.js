@@ -4,11 +4,14 @@ let videoStream = null;
 
 async function initCamera() {
     const video = document.getElementById('webcam-video');
+    if (!video) return;
+
     try {
         if (videoStream) {
             videoStream.getTracks().forEach(track => track.stop());
         }
         
+        // Meminta stream kamera depan secara stabil
         const constraints = {
             video: {
                 width: { ideal: 1280 },
@@ -22,12 +25,13 @@ async function initCamera() {
         
         video.srcObject = videoStream;
         
-        // Mengatur agar pratinjau kamera depan memiliki efek cermin (mirror) yang natural dan tidak terbalik arah
+        // Mengatur gaya mirror yang natural dan ukuran penuh
         video.style.transform = "scaleX(-1)";
         video.style.objectFit = "cover";
 
         await video.play();
 
+        // Memastikan tombol ambil foto terikat dengan benar
         const btnCapture = document.getElementById('btn-capture');
         if (btnCapture) {
             const newBtn = btnCapture.cloneNode(true);
@@ -37,7 +41,7 @@ async function initCamera() {
 
     } catch (err) {
         console.error("Akses kamera ditolak atau tidak ditemukan:", err);
-        alert("Gagal mengakses kamera. Pastikan webcam terhubung dan diizinkan oleh peramban.");
+        alert("Gagal mengakses kamera. Pastikan izin kamera telah diberikan di peramban Anda.");
     }
 }
 
@@ -84,7 +88,7 @@ function takePhoto() {
 
     ctx.save();
     
-    // Menyelaraskan hasil tangkapan foto agar sama persis dengan apa yang dilihat pengguna di layar (tidak terbalik kiri-kanan)
+    // Menyelaraskan hasil tangkapan foto agar normal dan tidak terbalik
     ctx.translate(canvas.width, 0);
     ctx.scale(-1, 1);
 
