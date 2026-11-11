@@ -9,7 +9,6 @@ async function initCamera() {
             videoStream.getTracks().forEach(track => track.stop());
         }
         
-        // Deteksi apakah perangkat mobile/potret atau desktop/lanskap
         const isPortrait = window.innerHeight > window.innerWidth;
         const constraints = {
             video: {
@@ -23,6 +22,11 @@ async function initCamera() {
         videoStream = await navigator.mediaDevices.getUserMedia(constraints);
         
         video.srcObject = videoStream;
+        
+        // PERBAIKAN: Menambahkan gaya transform scaleX(-1) agar preview kamera depan tidak terbalik (mirror) secara natural
+        video.style.transform = "scaleX(-1)";
+        video.style.objectFit = "contain"; // Mencegah efek zoom/potong berlebihan
+
         await video.play();
 
         const btnCapture = document.getElementById('btn-capture');
@@ -44,18 +48,18 @@ function startCountdown() {
     
     const display = document.getElementById('countdown-display');
     const number = document.getElementById('countdownNumber');
-    display.classList.remove('hidden');
+    if (display) display.classList.remove('hidden');
     
     let count = 3;
-    number.innerText = count;
+    if (number) number.innerText = count;
     
     const interval = setInterval(() => {
         count--;
         if (count > 0) {
-            number.innerText = count;
+            if (number) number.innerText = count;
         } else {
             clearInterval(interval);
-            display.classList.add('hidden');
+            if (display) display.classList.add('hidden');
             takePhoto();
             btnCapture.disabled = false;
         }
@@ -71,7 +75,6 @@ function takePhoto() {
     const vHeight = video.videoHeight || 720;
     const isPortrait = window.innerHeight > window.innerWidth;
 
-    // Menyesuaikan ukuran canvas secara dinamis dengan orientasi asli kamera (Potret vs Lanskap)
     if (isPortrait && vWidth > vHeight) {
         canvas.width = vHeight;
         canvas.height = vWidth;
@@ -80,13 +83,8 @@ function takePhoto() {
         canvas.height = vHeight;
     }
 
-    // =======================================================
-    // LOGIKA PENGAMBILAN FOTO: MENGIKUTI ORIENTASI ALAMI
-    // =======================================================
     ctx.save();
-    
-    // Jika ingin efek cermin saat foto, aktifkan baris translate & scale di bawah. 
-    // Jika tidak ingin terbalik sama sekali, biarkan tanpa translate/scale mirror.
+    // Mengembalikan posisi gambar agar hasil cetak/AI tidak terbalik mirror
     ctx.translate(canvas.width, 0);
     ctx.scale(-1, 1);
 
@@ -97,20 +95,24 @@ function takePhoto() {
     AppState.captureImageURL = imgData;
     
     const previewImg = document.getElementById('capture-preview-img');
-    previewImg.src = imgData;
+    if (previewImg) previewImg.src = imgData;
     
-    document.getElementById('capture-decision').classList.remove('hidden');
+    const decisionEl = document.getElementById('capture-decision');
+    if (decisionEl) decisionEl.classList.remove('hidden');
+    
     video.pause(); 
 }
 
 window.retakePhoto = function() {
-    document.getElementById('capture-decision').classList.add('hidden');
+    const decisionEl = document.getElementById('capture-decision');
+    if (decisionEl) decisionEl.classList.add('hidden');
     const video = document.getElementById('webcam-video');
-    video.play();
+    if (video) video.play();
 }
 
 window.startAIProcessing = function() {
-    document.getElementById('capture-decision').classList.add('hidden');
+    const decisionEl = document.getElementById('capture-decision');
+    if (decisionEl) decisionEl.classList.add('hidden');
     navigateTo('screen-review');
     
     if (typeof processAI === 'function') {
