@@ -76,11 +76,38 @@ window.initQRScanner = () => {
     if (html5QrcodeScanner) return; 
     const qrNode = document.getElementById('qr-reader');
     if (!qrNode) return;
+    
     html5QrcodeScanner = new Html5QrcodeScanner("qr-reader", { fps: 10, qrbox: { width: 250, height: 250 } }, false);
+    
     html5QrcodeScanner.render((decodedText) => {
         document.getElementById('token-input').value = decodedText;
         window.submitToken();
     }, (error) => {});
+
+    // Mengatur Mirror secara dinamis: Depan = Mirror, Belakang = Normal (Non-Mirror)
+    setTimeout(() => {
+        const selectEl = document.querySelector('#qr-reader select');
+        
+        const updateScannerMirror = () => {
+            const currentVideo = document.querySelector('#qr-reader video');
+            const currentSelect = document.querySelector('#qr-reader select');
+            if (!currentVideo) return;
+            
+            const selectedText = currentSelect ? currentSelect.options[currentSelect.selectedIndex]?.text.toLowerCase() : '';
+            if (selectedText.includes('back') || selectedText.includes('0') || selectedText.includes('environment')) {
+                currentVideo.style.transform = 'scaleX(1)'; // Kamera Belakang: Normal
+            } else {
+                currentVideo.style.transform = 'scaleX(-1)'; // Kamera Depan: Mirror
+            }
+        };
+
+        if (selectEl) {
+            selectEl.addEventListener('change', () => {
+                setTimeout(updateScannerMirror, 400);
+            });
+        }
+        updateScannerMirror();
+    }, 800);
 };
 
 window.cancelTokenScreen = () => {
@@ -321,7 +348,7 @@ function renderSubStyleForm(styleData) {
 }
 
 // ==========================================
-// VALIDASI TIKET & KAMERA
+// VALIDASI TIKET & KAMERA UTAMA
 // ==========================================
 async function validateTicket(token) {
     const errEl = document.getElementById('token-error');

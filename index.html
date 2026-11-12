@@ -61,8 +61,8 @@
         #qr-reader { width: 100%; border: none !important; border-radius: 1rem; overflow: hidden; background: white; }
         #qr-reader img[alt="Info icon"] { display: none; }
         #qr-reader__dashboard_section_csr span { color: #334155 !important; }
-        /* PEMBAHARUAN KHUSUS: Mengaktifkan cermin/mirror pada video QR Scanner */
-        #qr-reader video { object-fit: cover !important; border-radius: 1rem; transform: scaleX(-1) !important; }
+        /* QR Reader video diatur secara dinamis via JS (bisa normal/mirror tergantung pilihan kamera depan/belakang) */
+        #qr-reader video { object-fit: cover !important; border-radius: 1rem; }
         
         .cover-img-safe { object-position: center center !important; }
         input:focus { outline: none; box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2); }
