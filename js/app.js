@@ -84,42 +84,40 @@ window.initQRScanner = () => {
         window.submitToken();
     }, (error) => {});
 
-    // PENYEMPURNAAN KETAT LOGIKA MIRROR / NON-MIRROR KAMERA QR SCANNER
-    const applyDynamicMirror = () => {
-        const currentVideo = document.querySelector('#qr-reader video');
-        const currentSelect = document.querySelector('#qr-reader select');
-        if (!currentVideo) return;
-        
-        const selectedText = currentSelect ? currentSelect.options[currentSelect.selectedIndex]?.text.toLowerCase() : '';
-        
-        // Cek secara eksplisit apakah opsi memilih kamera depan atau belakang
-        const isBackCamera = selectedText.includes('back') || selectedText.includes('environment');
-        const isFrontCamera = selectedText.includes('front') || selectedText.includes('user');
+    // Solusi pasti: Deteksi jenis kamera yang dipilih pada dropdown Html5QrcodeScanner
+    const applyCorrectMirror = () => {
+        const videoEl = document.querySelector('#qr-reader video');
+        const selectEl = document.querySelector('#qr-reader select');
+        if (!videoEl) return;
 
-        if (isBackCamera) {
-            currentVideo.style.setProperty('transform', 'scaleX(1)', 'important');  // Kamera Belakang = Normal (Tidak Mirror)
-        } else if (isFrontCamera) {
-            currentVideo.style.setProperty('transform', 'scaleX(-1)', 'important'); // Kamera Depan = Mirror (Cermin)
+        const selectedText = selectEl ? selectEl.options[selectEl.selectedIndex]?.text.toLowerCase() : '';
+        
+        // Jika teks dropdown mengandung 'back' atau 'environment', pastikan TIDAK ADA efek mirror (normal)
+        // Jika mengandung 'front' atau 'user', berikan efek mirror (scaleX(-1))
+        if (selectedText.includes('back') || selectedText.includes('environment')) {
+            videoEl.style.cssText += "transform: scaleX(1) !important;";
+        } else if (selectedText.includes('front') || selectedText.includes('user')) {
+            videoEl.style.cssText += "transform: scaleX(-1) !important;";
         } else {
-            // Default jika teks opsi tidak terdeteksi spesifik (anggap kamera depan/webcam)
-            currentVideo.style.setProperty('transform', 'scaleX(-1)', 'important');
+            // Default aman jika belum terdeteksi spesifik
+            videoEl.style.cssText += "transform: scaleX(-1) !important;";
         }
     };
 
-    // Jalankan pengecekan secara berulang singkat saat kamera dimuat atau diganti
-    setTimeout(applyDynamicMirror, 500);
-    setTimeout(applyDynamicMirror, 1200);
+    // Jalankan berulang saat inisialisasi awal agar elemen video sudah terbentuk
+    setTimeout(applyCorrectMirror, 600);
+    setTimeout(applyCorrectMirror, 1500);
 
-    // Pasang listener jika pengguna mengganti opsi kamera pada dropdown
+    // Pantau jika pengguna mengganti pilihan kamera di dropdown
     setTimeout(() => {
         const selectEl = document.querySelector('#qr-reader select');
         if (selectEl) {
             selectEl.addEventListener('change', () => {
-                setTimeout(applyDynamicMirror, 300);
-                setTimeout(applyDynamicMirror, 800);
+                setTimeout(applyCorrectMirror, 300);
+                setTimeout(applyCorrectMirror, 800);
             });
         }
-    }, 600);
+    }, 800);
 };
 
 window.cancelTokenScreen = () => {
