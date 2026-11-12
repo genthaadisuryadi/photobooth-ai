@@ -26,7 +26,7 @@ async function initCamera(facing = "user") {
         videoStream = await navigator.mediaDevices.getUserMedia(constraints);
         video.srcObject = videoStream;
         
-        // Mengatur cermin (mirror) khusus kamera depan / webcam
+        // Pratinjau kamera depan / webcam diberi efek mirror agar natural
         if (currentFacingMode === "user") {
             video.style.transform = "scaleX(-1)";
         } else {
@@ -86,13 +86,11 @@ function takePhoto() {
 
     ctx.save();
     
-    // PERBAIKAN PRESISI: Membalikkan posisi canvas agar hasil foto tidak terbalik saat pakai kamera depan/webcam
-    if (currentFacingMode === "user") {
-        ctx.translate(canvas.width, 0);
-        ctx.scale(-1, 1);
-    }
-    
+    // KOREKSI UTAMA SESI POTRET: 
+    // Jangan lakukan scale(-1, 1) dua kali jika video preview sudah di-mirror oleh CSS.
+    // Cukup gambar langsung (drawImage) agar hasil tangkapan sama persis dengan apa yang dilihat di layar tanpa terbalik.
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    
     ctx.restore();
 
     const imgData = canvas.toDataURL('image/jpeg', 0.95);
