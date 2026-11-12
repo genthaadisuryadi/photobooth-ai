@@ -84,32 +84,42 @@ window.initQRScanner = () => {
         window.submitToken();
     }, (error) => {});
 
-    // Logika Pembalik: Default Depan = Mirror, Jika Belakang = Normal
+    // PENYEMPURNAAN KETAT LOGIKA MIRROR / NON-MIRROR KAMERA QR SCANNER
+    const applyDynamicMirror = () => {
+        const currentVideo = document.querySelector('#qr-reader video');
+        const currentSelect = document.querySelector('#qr-reader select');
+        if (!currentVideo) return;
+        
+        const selectedText = currentSelect ? currentSelect.options[currentSelect.selectedIndex]?.text.toLowerCase() : '';
+        
+        // Cek secara eksplisit apakah opsi memilih kamera depan atau belakang
+        const isBackCamera = selectedText.includes('back') || selectedText.includes('environment');
+        const isFrontCamera = selectedText.includes('front') || selectedText.includes('user');
+
+        if (isBackCamera) {
+            currentVideo.style.setProperty('transform', 'scaleX(1)', 'important');  // Kamera Belakang = Normal (Tidak Mirror)
+        } else if (isFrontCamera) {
+            currentVideo.style.setProperty('transform', 'scaleX(-1)', 'important'); // Kamera Depan = Mirror (Cermin)
+        } else {
+            // Default jika teks opsi tidak terdeteksi spesifik (anggap kamera depan/webcam)
+            currentVideo.style.setProperty('transform', 'scaleX(-1)', 'important');
+        }
+    };
+
+    // Jalankan pengecekan secara berulang singkat saat kamera dimuat atau diganti
+    setTimeout(applyDynamicMirror, 500);
+    setTimeout(applyDynamicMirror, 1200);
+
+    // Pasang listener jika pengguna mengganti opsi kamera pada dropdown
     setTimeout(() => {
         const selectEl = document.querySelector('#qr-reader select');
-        
-        const updateScannerMirror = () => {
-            const currentVideo = document.querySelector('#qr-reader video');
-            const currentSelect = document.querySelector('#qr-reader select');
-            if (!currentVideo) return;
-            
-            const selectedText = currentSelect ? currentSelect.options[currentSelect.selectedIndex]?.text.toLowerCase() : '';
-            
-            // Jika pilih kamera belakang, jadikan normal. Jika kamera depan, jadikan mirror.
-            if (selectedText.includes('back') || selectedText.includes('0') || selectedText.includes('environment')) {
-                currentVideo.style.transform = 'scaleX(1)';  // Kamera Belakang: Normal
-            } else {
-                currentVideo.style.transform = 'scaleX(-1)'; // Kamera Depan: Mirror (Cermin)
-            }
-        };
-
         if (selectEl) {
             selectEl.addEventListener('change', () => {
-                setTimeout(updateScannerMirror, 400);
+                setTimeout(applyDynamicMirror, 300);
+                setTimeout(applyDynamicMirror, 800);
             });
         }
-        updateScannerMirror();
-    }, 800);
+    }, 600);
 };
 
 window.cancelTokenScreen = () => {
