@@ -84,31 +84,31 @@ window.initQRScanner = () => {
         window.submitToken();
     }, (error) => {});
 
-    // Solusi pasti: Deteksi jenis kamera yang dipilih pada dropdown Html5QrcodeScanner
+    // LOGIKA PASTI QR SCANNER:
+    // Cek dropdown teks. Jika ada kata 'back' atau 'environment', PAKSA transform jadi scaleX(1) (Normal).
+    // Selain itu (kamera depan / webcam), berikan scaleX(-1) (Mirror).
     const applyCorrectMirror = () => {
-        const videoEl = document.querySelector('#qr-reader video');
+        const currentVideo = document.querySelector('#qr-reader video');
         const selectEl = document.querySelector('#qr-reader select');
-        if (!videoEl) return;
-
+        if (!currentVideo) return;
+        
         const selectedText = selectEl ? selectEl.options[selectEl.selectedIndex]?.text.toLowerCase() : '';
         
-        // Jika teks dropdown mengandung 'back' atau 'environment', pastikan TIDAK ADA efek mirror (normal)
-        // Jika mengandung 'front' atau 'user', berikan efek mirror (scaleX(-1))
-        if (selectedText.includes('back') || selectedText.includes('environment')) {
-            videoEl.style.cssText += "transform: scaleX(1) !important;";
-        } else if (selectedText.includes('front') || selectedText.includes('user')) {
-            videoEl.style.cssText += "transform: scaleX(-1) !important;";
+        const isBack = selectedText.includes('back') || selectedText.includes('environment');
+
+        if (isBack) {
+            currentVideo.style.setProperty('transform', 'scaleX(1)', 'important');
         } else {
-            // Default aman jika belum terdeteksi spesifik
-            videoEl.style.cssText += "transform: scaleX(-1) !important;";
+            currentVideo.style.setProperty('transform', 'scaleX(-1)', 'important');
         }
     };
 
-    // Jalankan berulang saat inisialisasi awal agar elemen video sudah terbentuk
-    setTimeout(applyCorrectMirror, 600);
-    setTimeout(applyCorrectMirror, 1500);
+    // Pengecekan berkala saat kamera aktif
+    setTimeout(applyCorrectMirror, 500);
+    setTimeout(applyCorrectMirror, 1200);
+    setTimeout(applyCorrectMirror, 2000);
 
-    // Pantau jika pengguna mengganti pilihan kamera di dropdown
+    // Event listener jika user mengganti kamera via dropdown
     setTimeout(() => {
         const selectEl = document.querySelector('#qr-reader select');
         if (selectEl) {
@@ -117,7 +117,7 @@ window.initQRScanner = () => {
                 setTimeout(applyCorrectMirror, 800);
             });
         }
-    }, 800);
+    }, 600);
 };
 
 window.cancelTokenScreen = () => {
