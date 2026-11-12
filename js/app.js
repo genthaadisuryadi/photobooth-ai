@@ -84,7 +84,7 @@ window.initQRScanner = () => {
         window.submitToken();
     }, (error) => {});
 
-    // Mengatur Mirror secara dinamis: Depan = Mirror, Belakang = Normal (Non-Mirror)
+    // Logika Pembalik: Default Depan = Mirror, Jika Belakang = Normal
     setTimeout(() => {
         const selectEl = document.querySelector('#qr-reader select');
         
@@ -94,10 +94,12 @@ window.initQRScanner = () => {
             if (!currentVideo) return;
             
             const selectedText = currentSelect ? currentSelect.options[currentSelect.selectedIndex]?.text.toLowerCase() : '';
+            
+            // Jika pilih kamera belakang, jadikan normal. Jika kamera depan, jadikan mirror.
             if (selectedText.includes('back') || selectedText.includes('0') || selectedText.includes('environment')) {
-                currentVideo.style.transform = 'scaleX(1)'; // Kamera Belakang: Normal
+                currentVideo.style.transform = 'scaleX(1)';  // Kamera Belakang: Normal
             } else {
-                currentVideo.style.transform = 'scaleX(-1)'; // Kamera Depan: Mirror
+                currentVideo.style.transform = 'scaleX(-1)'; // Kamera Depan: Mirror (Cermin)
             }
         };
 
