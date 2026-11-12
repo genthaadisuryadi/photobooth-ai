@@ -321,7 +321,7 @@ function renderSubStyleForm(styleData) {
 }
 
 // ==========================================
-// VALIDASI TIKET & KAMERA (DENGAN MIRROR)
+// VALIDASI TIKET & KAMERA
 // ==========================================
 async function validateTicket(token) {
     const errEl = document.getElementById('token-error');
@@ -356,7 +356,6 @@ async function initWebcam(facing = "user") {
         pbVideoStream = await navigator.mediaDevices.getUserMedia(constraints);
         videoEl.srcObject = pbVideoStream;
         
-        // Mengaktifkan efek mirror pada pratinjau kamera depan
         if (currentFacingMode === "user") {
             videoEl.style.transform = "scaleX(-1)";
         } else {
@@ -407,7 +406,6 @@ function executeCapture() {
     const context = canvasEl.getContext('2d');
     context.save();
     
-    // Hasil tangkapan foto disamakan dengan mode mirror preview di layar
     if (currentFacingMode === "user") {
         context.scale(-1, 1);
         context.drawImage(videoEl, -canvasEl.width, 0, canvasEl.width, canvasEl.height);
