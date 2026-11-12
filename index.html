@@ -255,18 +255,18 @@
                 <span class="text-[11px] font-bold uppercase tracking-widest text-booth-accent bg-blue-50 px-3 py-1 rounded-full border border-blue-100">Langkah 2 dari 3</span>
             </header>
 
-            <!-- Wadah kamera responsif: fleksibel dan melebar penuh di laptop/monitor, proporsional di HP -->
-            <main class="flex-1 relative flex flex-col items-center justify-center p-4 sm:p-8 bg-slate-100 overflow-hidden">
-                <div class="relative w-full max-w-xl lg:max-w-4xl aspect-[3/4] sm:aspect-[16/10] lg:aspect-[16/9] max-h-[80vh] rounded-3xl overflow-hidden bg-slate-900 border-4 border-white shadow-2xl flex items-center justify-center">
+            <!-- Wadah kamera diperbesar hampir full memenuhi layar -->
+            <main class="flex-1 relative flex flex-col items-center justify-center p-4 sm:p-6 bg-slate-900 overflow-hidden">
+                <div class="relative w-full max-w-[1280px] h-[calc(100vh-160px)] rounded-3xl overflow-hidden bg-black border-4 border-white shadow-2xl flex items-center justify-center">
                     
                     <!-- Elemen Video Kamera -->
                     <video id="webcam-video" autoplay playsinline muted class="absolute inset-0 w-full h-full object-cover"></video>
                     
                     <!-- Bingkai Sudut Estetik (Golden Corners) -->
-                    <span class="absolute w-10 h-10 border-4 border-booth-accentGold top-[4%] left-[4%] border-r-0 border-b-0 z-10 rounded-tl-md pointer-events-none"></span>
-                    <span class="absolute w-10 h-10 border-4 border-booth-accentGold top-[4%] right-[4%] border-l-0 border-b-0 z-10 rounded-tr-md pointer-events-none"></span>
-                    <span class="absolute w-10 h-10 border-4 border-booth-accentGold bottom-[4%] left-[4%] border-r-0 border-t-0 z-10 rounded-bl-md pointer-events-none"></span>
-                    <span class="absolute w-10 h-10 border-4 border-booth-accentGold bottom-[4%] right-[4%] border-l-0 border-t-0 z-10 rounded-br-md pointer-events-none"></span>
+                    <span class="absolute w-12 h-12 border-4 border-booth-accentGold top-[4%] left-[4%] border-r-0 border-b-0 z-10 rounded-tl-lg pointer-events-none"></span>
+                    <span class="absolute w-12 h-12 border-4 border-booth-accentGold top-[4%] right-[4%] border-l-0 border-b-0 z-10 rounded-tr-lg pointer-events-none"></span>
+                    <span class="absolute w-12 h-12 border-4 border-booth-accentGold bottom-[4%] left-[4%] border-r-0 border-t-0 z-10 rounded-bl-lg pointer-events-none"></span>
+                    <span class="absolute w-12 h-12 border-4 border-booth-accentGold bottom-[4%] right-[4%] border-l-0 border-t-0 z-10 rounded-br-lg pointer-events-none"></span>
                     
                     <!-- Countdown Overlay -->
                     <div id="countdown-display" class="hidden absolute inset-0 z-20 flex items-center justify-center bg-white/70 backdrop-blur-sm">
@@ -343,9 +343,8 @@
             </main>
         </section>
 
-        <!-- SCREEN 6: FRAME SELECTION (OPSIONAL / DARI CANVAS.JS) -->
+        <!-- SCREEN 6: FRAME SELECTION -->
         <section id="screen-frame" class="screen-hidden w-full min-h-screen bg-slate-900 flex flex-col items-center justify-center p-6 fade-in">
-            <!-- Konten frame dinamis dimuat oleh canvas.js -->
         </section>
 
         <!-- SCREEN 7: RESULT & DOWNLOAD -->
@@ -435,7 +434,7 @@
         </div>
     </div>
 
-    <!-- KONTAINER KHUSUS UNTUK PRINT FISIK HANYA GAMBAR -->
+    <!-- KONTAINER KHUSUS UNTUK PRINT FISIK -->
     <div id="print-container">
         <img id="print-image" src="" alt="Hasil AI">
     </div>

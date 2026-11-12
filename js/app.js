@@ -22,6 +22,7 @@ let selectedOptions = {};
 let pbVideoStream = null;
 let pbCapturedBase64 = null;
 let html5QrcodeScanner = null;
+let currentFacingMode = "user";
 
 // ==========================================
 // INISIALISASI UTAMA
@@ -75,7 +76,6 @@ window.initQRScanner = () => {
     if (html5QrcodeScanner) return; 
     const qrNode = document.getElementById('qr-reader');
     if (!qrNode) return;
-    // Konfigurasi QR scanner standar tanpa mirror agar mudah mendeteksi kode
     html5QrcodeScanner = new Html5QrcodeScanner("qr-reader", { fps: 10, qrbox: { width: 250, height: 250 } }, false);
     html5QrcodeScanner.render((decodedText) => {
         document.getElementById('token-input').value = decodedText;
@@ -95,7 +95,11 @@ window.submitToken = () => {
 };
 
 window.confirmIntegratedOptionsAndGo = () => { window.switchScreen('screen-capture'); initWebcam(); };
-window.retakePhoto = () => { document.getElementById('capture-decision')?.classList.add('hidden'); };
+window.retakePhoto = () => { 
+    document.getElementById('capture-decision')?.classList.add('hidden'); 
+    const video = document.getElementById('webcam-video');
+    if (video) video.play();
+};
 window.startAIProcessing = () => { processAIGeneration(); };
 window.takePhoto = () => { startCountdown(); };
 
@@ -317,7 +321,7 @@ function renderSubStyleForm(styleData) {
 }
 
 // ==========================================
-// VALIDASI TIKET & KAMERA
+// VALIDASI TIKET & KAMERA (DENGAN MIRROR)
 // ==========================================
 async function validateTicket(token) {
     const errEl = document.getElementById('token-error');
@@ -333,50 +337,59 @@ async function validateTicket(token) {
     } catch (error) { if (errEl) errEl.innerText = "Gagal terhubung ke server API."; }
 }
 
-async function initWebcam() {
+async function initWebcam(facing = "user") {
     const videoEl = document.getElementById('webcam-video');
     if (!videoEl) return;
+    currentFacingMode = facing;
     try {
-        const isMobile = window.innerWidth < 768;
+        if (pbVideoStream) {
+            pbVideoStream.getTracks().forEach(track => track.stop());
+        }
         const constraints = {
             video: {
-                width: isMobile ? { ideal: 720 } : { ideal: 1280 },
-                height: isMobile ? { ideal: 1280 } : { ideal: 720 },
-                facingMode: "user"
+                width: { ideal: 1920 },
+                height: { ideal: 1080 },
+                facingMode: currentFacingMode
             },
             audio: false
         };
         pbVideoStream = await navigator.mediaDevices.getUserMedia(constraints);
         videoEl.srcObject = pbVideoStream;
-    } catch (error) { console.error("Kamera error:", error); }
+        
+        // Mengaktifkan efek mirror pada pratinjau kamera depan
+        if (currentFacingMode === "user") {
+            videoEl.style.transform = "scaleX(-1)";
+        } else {
+            videoEl.style.transform = "none";
+        }
+        videoEl.style.objectFit = "cover";
+
+        await videoEl.play();
+    } catch (error) { 
+        console.error("Kamera error:", error); 
+        alert("Gagal mengakses kamera. Pastikan izin kamera telah diberikan.");
+    }
 }
 
 function startCountdown() {
     const captureBtn = document.getElementById('btn-capture');
     if (captureBtn.disabled) return; 
     captureBtn.disabled = true; 
-    let count = 5;
+    let count = 3;
     
-    let overlay = document.getElementById('countdown-overlay');
-    if (!overlay) {
-        const videoContainer = document.getElementById('webcam-video').parentElement;
-        overlay = document.createElement('div');
-        overlay.id = 'countdown-overlay';
-        overlay.className = 'absolute inset-0 z-20 flex items-center justify-center bg-white/70 backdrop-blur-sm transition-all rounded-3xl';
-        overlay.innerHTML = '<span id="countdown-number" class="text-[160px] font-black text-booth-accent drop-shadow-[0_10px_30px_rgba(30,58,138,0.4)] animate-pulse">5</span>';
-        videoContainer.appendChild(overlay);
-    } else {
-        overlay.classList.remove('hidden');
-        document.getElementById('countdown-number').innerText = count;
-    }
+    let display = document.getElementById('countdown-display');
+    let number = document.getElementById('countdownNumber');
+    
+    if (display) display.classList.remove('hidden');
+    if (number) number.innerText = count;
 
     const timer = setInterval(() => {
         count--;
         if (count > 0) {
-            document.getElementById('countdown-number').innerText = count;
+            if (number) number.innerText = count;
         } else {
             clearInterval(timer);
-            overlay.classList.add('hidden');
+            if (display) display.classList.add('hidden');
             captureBtn.disabled = false;
             executeCapture(); 
         }
@@ -388,17 +401,28 @@ function executeCapture() {
     const canvasEl = document.getElementById('capture-canvas');
     if (!videoEl || !canvasEl) return;
 
-    // Mengambil dimensi asli video secara natural tanpa memaksa orientasi kaku
-    canvasEl.width = videoEl.videoWidth || videoEl.clientWidth || 720;
-    canvasEl.height = videoEl.videoHeight || videoEl.clientHeight || 1280;
+    canvasEl.width = videoEl.videoWidth || 1280;
+    canvasEl.height = videoEl.videoHeight || 720;
 
     const context = canvasEl.getContext('2d');
-    context.drawImage(videoEl, 0, 0, canvasEl.width, canvasEl.height);
+    context.save();
     
-    pbCapturedBase64 = canvasEl.toDataURL('image/png');
+    // Hasil tangkapan foto disamakan dengan mode mirror preview di layar
+    if (currentFacingMode === "user") {
+        context.scale(-1, 1);
+        context.drawImage(videoEl, -canvasEl.width, 0, canvasEl.width, canvasEl.height);
+    } else {
+        context.drawImage(videoEl, 0, 0, canvasEl.width, canvasEl.height);
+    }
+    
+    context.restore();
+    
+    pbCapturedBase64 = canvasEl.toDataURL('image/jpeg', 0.95);
     
     document.getElementById('capture-preview-img').src = pbCapturedBase64;
     document.getElementById('capture-decision').classList.remove('hidden');
+    
+    videoEl.pause();
 }
 
 function dataURItoBlob(dataURI) {
@@ -411,7 +435,7 @@ function dataURItoBlob(dataURI) {
 }
 
 // ==========================================
-// PROSES AI
+// PROSES AI & UPLOAD
 // ==========================================
 async function processAIGeneration() {
     document.getElementById('capture-decision')?.classList.add('hidden');
@@ -524,16 +548,14 @@ async function finalizePhotoAndUpload(aiImage, originalImageBase64, isUrl = fals
 }
 
 // ==========================================
-// FITUR BARU: MODAL CETAK & CSS INJECTOR
+// FITUR MODAL CETAK & CSS INJECTOR
 // ==========================================
-
 window.openPrintModal = () => {
     const finalImgUrl = document.getElementById('result-final-img').src;
     if(!finalImgUrl || finalImgUrl.includes('data:image/svg+xml')) {
         alert("Gambar hasil AI belum tersedia.");
         return;
     }
-    
     document.getElementById('print-image').src = finalImgUrl;
     document.getElementById('print-modal').classList.remove('hidden');
 };
@@ -544,18 +566,13 @@ window.closePrintModal = () => {
 
 window.executePrint = (widthInch, heightInch) => {
     const sizeStr = `${widthInch}in ${heightInch}in landscape`; 
-    
     let style = document.getElementById('print-page-style');
     if (!style) {
         style = document.createElement('style');
         style.id = 'print-page-style';
         document.head.appendChild(style);
     }
-    
     style.innerHTML = `@page { size: ${sizeStr}; margin: 0; }`;
     window.closePrintModal();
-    
-    setTimeout(() => {
-        window.print();
-    }, 300);
+    setTimeout(() => { window.print(); }, 300);
 };
