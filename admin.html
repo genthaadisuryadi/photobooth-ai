@@ -65,7 +65,6 @@
     <!-- ========================================== -->
     <!-- KONTEN ADMIN DASHBOARD -->
     <!-- ========================================== -->
-    <!-- PERBAIKAN: Menambahkan div flex h-screen agar sidebar & konten sejajar -->
     <div id="admin-dashboard" class="hidden">
         <div class="flex h-screen overflow-hidden w-full">
             
@@ -361,7 +360,8 @@
             if (isLoggedIn === "true") {
                 document.getElementById('login-screen').classList.add('hidden');
                 document.getElementById('admin-dashboard').classList.remove('hidden');
-                switchTab('dashboard'); // Muat konten awal setelah login otomatis
+                switchTab('dashboard');
+                loadSettingsData(); // Menarik data API Settings saat load ulang tab
             }
         });
 
@@ -377,12 +377,10 @@
             btn.innerText = "Memeriksa...";
 
             try {
-                // Membaca kredensial dari file credentials.json
                 const response = await fetch('credentials.json');
                 const credentials = await response.json();
 
                 if (emailInput === credentials.email_admin && passwordInput === credentials.pass) {
-                    // Berhasil Login
                     errorText.classList.add('hidden');
                     sessionStorage.setItem("adminLoggedIn", "true"); 
                     
@@ -392,11 +390,11 @@
                     setTimeout(() => {
                         loginScreen.classList.add('hidden');
                         document.getElementById('admin-dashboard').classList.remove('hidden');
-                        switchTab('dashboard'); // Muat konten awal
+                        switchTab('dashboard');
+                        loadSettingsData(); // Menarik data API Settings saat baru login
                     }, 300); 
                     
                 } else {
-                    // Gagal Login
                     errorText.classList.remove('hidden');
                     const form = document.getElementById('form-login');
                     form.classList.add('animate-shake');
@@ -429,6 +427,19 @@
                 reader.readAsDataURL(input.files[0]);
             }
         };
+
+        // KEMBALIKAN FUNGSI PENARIK DATA PENGATURAN API
+        async function loadSettingsData() {
+            try {
+                const res = await fetch(`${ADMIN_API_URL}/settings.php`);
+                const data = await res.json();
+                document.getElementById('set-apiKey').value = data.apiKey || '';
+                document.getElementById('set-apiBaseUrl').value = data.apiBaseUrl || 'https://api.openai.com/v1';
+                document.getElementById('set-aiModel').value = data.aiModel || 'gpt-image-2.5-sunburst';
+            } catch (e) {
+                console.warn("Gagal memuat pengaturan API, server mungkin belum siap.", e);
+            }
+        }
 
         async function loadDashboardStats() {
             try {
