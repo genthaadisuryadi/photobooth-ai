@@ -12,6 +12,8 @@
             #ticket-print-area, #ticket-print-area * { visibility: visible; }
             #ticket-print-area { position: absolute; left: 0; top: 0; width: 100%; border: none; padding: 0; margin: 0; }
         }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-7px); } 40% { transform: translateX(7px); } 60% { transform: translateX(-5px); } 80% { transform: translateX(5px); } }
+        .animate-shake { animation: shake 0.4s ease; }
     </style>
     <script>
         tailwind.config = {
@@ -28,7 +30,43 @@
     </script>
 </head>
 <body class="bg-surface text-slate-800 font-sans antialiased">
-    <div class="flex h-screen overflow-hidden">
+
+    <!-- ========================================== -->
+    <!-- LAYAR LOGIN -->
+    <!-- ========================================== -->
+    <div id="login-screen" class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900 p-4 transition-opacity duration-300">
+        <div class="w-full max-w-md bg-white rounded-3xl p-8 shadow-2xl relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-brand-400 to-brand-600"></div>
+            <div class="flex justify-center mb-6 mt-4">
+                <img src="logo.png" alt="Logo" class="h-16 object-contain">
+            </div>
+            <h2 class="text-2xl font-black text-center text-slate-800 mb-2">Login Admin</h2>
+            <p class="text-sm text-center text-slate-500 mb-8">Masukkan kredensial untuk mengakses panel</p>
+            
+            <form id="form-login" onsubmit="handleLogin(event)" class="space-y-5">
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-1">Email</label>
+                    <input type="email" id="login-email" required placeholder="admin@ucic.id" 
+                        class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-brand-500 focus:ring-2 focus:ring-brand-200 outline-none transition-all">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-1">Password</label>
+                    <input type="password" id="login-password" required placeholder="••••••••" 
+                        class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-brand-500 focus:ring-2 focus:ring-brand-200 outline-none transition-all">
+                </div>
+                <p id="login-error" class="text-xs font-bold text-red-500 hidden text-center">Email atau Password salah!</p>
+                <button type="submit" id="btn-login-submit" class="w-full py-4 mt-2 bg-slate-800 text-white font-bold rounded-xl hover:bg-slate-700 hover:shadow-lg transition-all">
+                    Masuk ke Panel &rarr;
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- KONTEN ADMIN DASHBOARD -->
+    <!-- ========================================== -->
+    <div id="admin-dashboard" class="hidden h-screen overflow-hidden">
+        
         <!-- Sidebar -->
         <aside class="w-64 hidden md:flex flex-col bg-panel border-r border-slate-200 shadow-sm z-20">
             <div class="h-16 flex items-center px-6 border-b border-slate-100">
@@ -58,6 +96,7 @@
             </nav>
         </aside>
 
+        <!-- Main Content -->
         <main class="flex-1 flex flex-col min-w-0 overflow-y-auto">
             <header class="h-16 flex items-center px-8 border-b border-slate-200 bg-panel/80 backdrop-blur-md sticky top-0 z-10 justify-between">
                 <div class="flex items-center text-sm text-slate-500 gap-2">
@@ -65,6 +104,11 @@
                     <svg class="w-4 h-4 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
                     <span id="header-title" class="font-bold text-slate-800">Dashboard</span>
                 </div>
+                <!-- Tombol Logout -->
+                <button onclick="handleLogout()" class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-red-50 text-red-600 text-xs font-bold border border-red-100 hover:bg-red-100 transition-colors">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+                    Logout
+                </button>
             </header>
 
             <div class="p-6 sm:p-10 max-w-6xl mx-auto w-full">
@@ -292,17 +336,86 @@
             </div>
         </div>
     </div>
-    <div id="toast-notification" class="fixed top-6 right-6 z-50 transform transition-all duration-300 translate-y-[-150%] opacity-0 flex w-full max-w-sm rounded-xl bg-white shadow-lg border border-slate-100 p-4">
+    
+    <div id="toast-notification" class="fixed top-6 right-6 z-[200] transform transition-all duration-300 translate-y-[-150%] opacity-0 flex w-full max-w-sm rounded-xl bg-white shadow-lg border border-slate-100 p-4">
         <div id="toast-title" class="text-sm font-bold text-slate-800 w-full text-center"></div>
     </div>
 
+    <!-- ========================================== -->
+    <!-- SCRIPT LOGIKA APLIKASI DAN LOGIN -->
+    <!-- ========================================== -->
     <script>
         const ADMIN_API_URL = 'https://api.agenticaicenter.id';
-
         let cachedStyles = {}; 
         let optionsBuilderData = []; 
         
-        // FUNGSI BARU: LIVE PREVIEW SAAT GAMBAR DIPILIH
+        // ----------------------------------------------------
+        // SISTEM LOGIN SEDERHANA (Client-Side Security)
+        // ----------------------------------------------------
+        document.addEventListener("DOMContentLoaded", () => {
+            const isLoggedIn = sessionStorage.getItem("adminLoggedIn");
+            if (isLoggedIn === "true") {
+                document.getElementById('login-screen').classList.add('hidden');
+                document.getElementById('admin-dashboard').classList.remove('hidden');
+                switchTab('dashboard'); // Muat konten awal setelah login otomatis
+            }
+        });
+
+        async function handleLogin(e) {
+            e.preventDefault(); 
+            
+            const emailInput = document.getElementById('login-email').value;
+            const passwordInput = document.getElementById('login-password').value;
+            const errorText = document.getElementById('login-error');
+            const btn = document.getElementById('btn-login-submit');
+
+            btn.disabled = true;
+            btn.innerText = "Memeriksa...";
+
+            try {
+                // Membaca kredensial dari file credentials.json
+                const response = await fetch('credentials.json');
+                const credentials = await response.json();
+
+                // PERBAIKAN LOGIKA: Sekarang mengecek email_admin dan pass
+                if (emailInput === credentials.email_admin && passwordInput === credentials.pass) {
+                    // Berhasil Login
+                    errorText.classList.add('hidden');
+                    sessionStorage.setItem("adminLoggedIn", "true"); 
+                    
+                    const loginScreen = document.getElementById('login-screen');
+                    loginScreen.style.opacity = '0';
+                    
+                    setTimeout(() => {
+                        loginScreen.classList.add('hidden');
+                        document.getElementById('admin-dashboard').classList.remove('hidden');
+                        switchTab('dashboard'); // Muat konten awal
+                    }, 300); 
+                    
+                } else {
+                    // Gagal Login
+                    errorText.classList.remove('hidden');
+                    const form = document.getElementById('form-login');
+                    form.classList.add('animate-shake');
+                    setTimeout(() => form.classList.remove('animate-shake'), 400);
+                }
+            } catch (error) {
+                console.error("Gagal membaca credentials.json", error);
+                alert("Terjadi kesalahan sistem saat memvalidasi kredensial.");
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "Masuk ke Panel →";
+            }
+        }
+
+        function handleLogout() {
+            sessionStorage.removeItem("adminLoggedIn");
+            location.reload(); 
+        }
+
+        // ----------------------------------------------------
+        // FUNGSI ADMIN LAINNYA
+        // ----------------------------------------------------
         window.previewLiveImage = function(input, previewId) {
             if (input.files && input.files[0]) {
                 const reader = new FileReader();
@@ -469,7 +582,6 @@
                     const imgPreviewUrl = choice.img ? (choice.img.startsWith('http') ? choice.img : `${ADMIN_API_URL}/${choice.img}`) : '';
                     const imgPreviewId = `preview_img_${groupIdx}_${choiceIdx}`;
                     
-                    // PERBAIKAN: Selalu render tag <img> agar src-nya bisa ditimpa saat Live Preview berjalan
                     const imgPreview = imgPreviewUrl 
                         ? `<img id="${imgPreviewId}" src="${imgPreviewUrl}" class="w-12 h-12 rounded-lg object-cover border border-slate-200 shadow-sm">` 
                         : `<img id="${imgPreviewId}" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MDAiIGhlaWdodD0iNDAwIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgZmlsbD0iIzFjMWYyOCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzY2NiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgYWxpZ25tZW50LWJhc2VsaW5lPSJtaWRkbGUiPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg==" class="w-12 h-12 rounded-lg object-cover border border-slate-200 shadow-sm">`;
@@ -535,8 +647,6 @@
             const btn = document.getElementById('btn-submit-style');
             btn.disabled = true; btn.innerText = "Proses Upload...";
 
-            // PERBAIKAN FATAL: Membuang loop append ganda. 
-            // "new FormData(form)" sudah otomatis menangkap semua file input di dalam form!
             const formData = new FormData(form);
 
             try {
@@ -586,18 +696,7 @@
             document.getElementById('toast-title').innerText = msg; 
             setTimeout(() => t.classList.add('translate-y-[-150%]', 'opacity-0'), 3000); 
         }
-
-        window.addEventListener('DOMContentLoaded', async () => { 
-            switchTab('dashboard'); 
-            try {
-                const res = await fetch(`${ADMIN_API_URL}/settings.php`);
-                const data = await res.json();
-                document.getElementById('set-apiKey').value = data.apiKey || '';
-                document.getElementById('set-apiBaseUrl').value = data.apiBaseUrl || 'https://api.openai.com/v1';
-                document.getElementById('set-aiModel').value = data.aiModel || 'gpt-image-2.5-sunburst';
-            } catch(e){}
-        });
-
+        
         document.getElementById('settings-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const dataObj = {
