@@ -178,7 +178,7 @@ window.retakePhoto = function() {
     if (btnCapture) btnCapture.disabled = false;
     
     const statusText = document.getElementById('hand-detector-status');
-    if(statusText) statusText.innerText = "Menunggu Pose 5 Jari✋";
+    if(statusText) statusText.innerText = "Menunggu Pose 5 Jari";
     
     const decisionEl = document.getElementById('capture-decision');
     if (decisionEl) decisionEl.classList.add('hidden');
