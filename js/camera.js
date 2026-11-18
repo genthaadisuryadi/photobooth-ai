@@ -1,7 +1,7 @@
 // js/camera.js
 
 let videoStream = null;
-let currentFacingMode = "user"; 
+currentFacingMode = "user"; 
 let isCountingDown = false;
 let handsDetector = null;
 let handsCamera = null;
