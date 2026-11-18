@@ -1,6 +1,5 @@
-// js/camera.js
-
 let videoStream = null;
+// Variabel currentFacingMode sudah dihapus let-nya di sini agar tidak bentrok dengan app.js
 currentFacingMode = "user"; 
 let isCountingDown = false;
 let handsDetector = null;
@@ -69,7 +68,8 @@ function initHandTracking(videoElement) {
 
     handsDetector.onResults(onHandDetected);
 
-    handsCamera = new camera_utils.Camera(videoElement, {
+    // MENGHAPUS camera_utils. dan HANYA MEMAKAI Camera
+    handsCamera = new Camera(videoElement, {
         onFrame: async () => {
             if (!isCountingDown && handsDetector) {
                 await handsDetector.send({image: videoElement});
