@@ -24,6 +24,13 @@ let pbCapturedBase64 = null;
 let html5QrcodeScanner = null;
 let currentFacingMode = "user";
 
+const AppState = {
+    selectedStyle: null,
+    selectedStyleOptions: [],
+    ticketToken: null,
+    captureImageURL: null
+};
+
 // ==========================================
 // INISIALISASI UTAMA
 // ==========================================
@@ -84,16 +91,12 @@ window.initQRScanner = () => {
         window.submitToken();
     }, (error) => {});
 
-    // LOGIKA PASTI QR SCANNER:
-    // Cek dropdown teks. Jika ada kata 'back' atau 'environment', PAKSA transform jadi scaleX(1) (Normal).
-    // Selain itu (kamera depan / webcam), berikan scaleX(-1) (Mirror).
     const applyCorrectMirror = () => {
         const currentVideo = document.querySelector('#qr-reader video');
         const selectEl = document.querySelector('#qr-reader select');
         if (!currentVideo) return;
         
         const selectedText = selectEl ? selectEl.options[selectEl.selectedIndex]?.text.toLowerCase() : '';
-        
         const isBack = selectedText.includes('back') || selectedText.includes('environment');
 
         if (isBack) {
@@ -103,12 +106,10 @@ window.initQRScanner = () => {
         }
     };
 
-    // Pengecekan berkala saat kamera aktif
     setTimeout(applyCorrectMirror, 500);
     setTimeout(applyCorrectMirror, 1200);
     setTimeout(applyCorrectMirror, 2000);
 
-    // Event listener jika user mengganti kamera via dropdown
     setTimeout(() => {
         const selectEl = document.querySelector('#qr-reader select');
         if (selectEl) {
@@ -130,15 +131,6 @@ window.submitToken = () => {
     if (token) validateTicket(token);
     else { const err = document.getElementById('token-error'); if (err) err.innerText = "Masukkan kode tiket terlebih dahulu!"; }
 };
-
-window.confirmIntegratedOptionsAndGo = () => { window.switchScreen('screen-capture'); initWebcam(); };
-window.retakePhoto = () => { 
-    document.getElementById('capture-decision')?.classList.add('hidden'); 
-    const video = document.getElementById('webcam-video');
-    if (video) video.play();
-};
-window.startAIProcessing = () => { processAIGeneration(); };
-window.takePhoto = () => { startCountdown(); };
 
 window.selectSubOption = (groupId, choiceValue, element, dependsOn) => {
     selectedOptions[groupId] = choiceValue;
@@ -198,23 +190,34 @@ window.selectSubOption = (groupId, choiceValue, element, dependsOn) => {
 
 function checkReadyStatus(styleData) {
     let isComplete = true;
+    let selectedArr = [];
     if (styleData && styleData.options && styleData.options.length > 0) {
         styleData.options.forEach(optGroup => {
-            if (!optGroup.optional) {
-                let shouldShow = true;
-                if (optGroup.depends_on) {
-                    const parentVal = selectedOptions[optGroup.depends_on];
-                    if (!parentVal) shouldShow = false;
+            let shouldShow = true;
+            if (optGroup.depends_on) {
+                const parentVal = selectedOptions[optGroup.depends_on];
+                if (!parentVal) shouldShow = false;
+            }
+            if (shouldShow) {
+                if (!optGroup.optional && !selectedOptions[optGroup.id]) {
+                    isComplete = false;
+                } else if (selectedOptions[optGroup.id]) {
+                    selectedArr.push(selectedOptions[optGroup.id]);
                 }
-                if (shouldShow && !selectedOptions[optGroup.id]) isComplete = false;
             }
         });
     }
     const btnNext = document.getElementById('btn-next-integrated');
     if (btnNext) {
         btnNext.disabled = !isComplete;
-        if(isComplete) btnNext.classList.remove('opacity-50');
-        else btnNext.classList.add('opacity-50');
+        if(isComplete) {
+            btnNext.classList.remove('opacity-50');
+            AppState.selectedStyle = selectedStyleId;
+            AppState.selectedStyleOptions = selectedArr;
+        } else {
+            btnNext.classList.add('opacity-50');
+            AppState.selectedStyleOptions = [];
+        }
     }
 }
 
@@ -367,97 +370,21 @@ async function validateTicket(token) {
         const response = await fetch(`${API_URLS.tickets}?action=validate`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token: token }) });
         const data = await response.json();
         if (data.success) {
+            AppState.ticketToken = token;
             if (errEl) errEl.innerText = "";
-            window.switchScreen('screen-style');
-            if (html5QrcodeScanner) { html5QrcodeScanner.clear(); html5QrcodeScanner = null; }
+            
+            if (html5QrcodeScanner) { 
+                html5QrcodeScanner.clear().catch(e => console.error(e)); 
+                html5QrcodeScanner = null; 
+            }
+            
+            window.switchScreen('screen-capture');
+            setTimeout(() => {
+                if (typeof initCamera === 'function') initCamera();
+            }, 500); 
+
         } else { if (errEl) errEl.innerText = "Tiket tidak valid atau sudah terpakai."; }
     } catch (error) { if (errEl) errEl.innerText = "Gagal terhubung ke server API."; }
-}
-
-async function initWebcam(facing = "user") {
-    const videoEl = document.getElementById('webcam-video');
-    if (!videoEl) return;
-    currentFacingMode = facing;
-    try {
-        if (pbVideoStream) {
-            pbVideoStream.getTracks().forEach(track => track.stop());
-        }
-        const constraints = {
-            video: {
-                width: { ideal: 1920 },
-                height: { ideal: 1080 },
-                facingMode: currentFacingMode
-            },
-            audio: false
-        };
-        pbVideoStream = await navigator.mediaDevices.getUserMedia(constraints);
-        videoEl.srcObject = pbVideoStream;
-        
-        if (currentFacingMode === "user") {
-            videoEl.style.transform = "scaleX(-1)";
-        } else {
-            videoEl.style.transform = "none";
-        }
-        videoEl.style.objectFit = "cover";
-
-        await videoEl.play();
-    } catch (error) { 
-        console.error("Kamera error:", error); 
-        alert("Gagal mengakses kamera. Pastikan izin kamera telah diberikan.");
-    }
-}
-
-function startCountdown() {
-    const captureBtn = document.getElementById('btn-capture');
-    if (captureBtn.disabled) return; 
-    captureBtn.disabled = true; 
-    let count = 3;
-    
-    let display = document.getElementById('countdown-display');
-    let number = document.getElementById('countdownNumber');
-    
-    if (display) display.classList.remove('hidden');
-    if (number) number.innerText = count;
-
-    const timer = setInterval(() => {
-        count--;
-        if (count > 0) {
-            if (number) number.innerText = count;
-        } else {
-            clearInterval(timer);
-            if (display) display.classList.add('hidden');
-            captureBtn.disabled = false;
-            executeCapture(); 
-        }
-    }, 1000);
-}
-
-function executeCapture() {
-    const videoEl = document.getElementById('webcam-video');
-    const canvasEl = document.getElementById('capture-canvas');
-    if (!videoEl || !canvasEl) return;
-
-    canvasEl.width = videoEl.videoWidth || 1280;
-    canvasEl.height = videoEl.videoHeight || 720;
-
-    const context = canvasEl.getContext('2d');
-    context.save();
-    
-    if (currentFacingMode === "user") {
-        context.scale(-1, 1);
-        context.drawImage(videoEl, -canvasEl.width, 0, canvasEl.width, canvasEl.height);
-    } else {
-        context.drawImage(videoEl, 0, 0, canvasEl.width, canvasEl.height);
-    }
-    
-    context.restore();
-    
-    pbCapturedBase64 = canvasEl.toDataURL('image/jpeg', 0.95);
-    
-    document.getElementById('capture-preview-img').src = pbCapturedBase64;
-    document.getElementById('capture-decision').classList.remove('hidden');
-    
-    videoEl.pause();
 }
 
 function dataURItoBlob(dataURI) {
@@ -472,9 +399,10 @@ function dataURItoBlob(dataURI) {
 // ==========================================
 // PROSES AI & UPLOAD
 // ==========================================
-async function processAIGeneration() {
+window.processAI = async function() {
     document.getElementById('capture-decision')?.classList.add('hidden');
-    window.switchScreen('screen-review');
+    
+    const pbCapturedBase64 = AppState.captureImageURL;
     document.getElementById('review-blurred-img').src = pbCapturedBase64;
     
     const updateProgress = (pct, txt) => {
@@ -488,7 +416,7 @@ async function processAIGeneration() {
         if (!appSettings.apiKey) throw new Error("API Key belum diatur di Admin Panel!");
 
         updateProgress(20, "Menganalisis opsi yang dipilih...");
-        const styleData = availableStyles[selectedStyleId];
+        const styleData = availableStyles[AppState.selectedStyle];
         let finalPrompt = styleData.prompt_template || "HD Portrait";
         
         let profileTextArr = [];
