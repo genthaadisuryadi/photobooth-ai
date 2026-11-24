@@ -4,41 +4,226 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Stage - AI Photobooth</title>
+
+    <!-- Sinkron dengan tema Photobooth utama sebelum render agar bebas kedip -->
+    <script>
+        if (localStorage.getItem('photobooth-theme') === 'dark') {
+            document.documentElement.classList.add('dark');
+        }
+    </script>
+
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <style>
-        @media print {
-            body * { visibility: hidden; }
-            #ticket-print-area, #ticket-print-area * { visibility: visible; }
-            #ticket-print-area { position: absolute; left: 0; top: 0; width: 100%; border: none; padding: 0; margin: 0; }
-        }
-        @keyframes shake { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-7px); } 40% { transform: translateX(7px); } 60% { transform: translateX(-5px); } 80% { transform: translateX(5px); } }
-        .animate-shake { animation: shake 0.4s ease; }
-    </style>
     <script>
         tailwind.config = {
+            darkMode: 'class',
             theme: {
                 extend: {
                     fontFamily: { sans: ['Inter', 'sans-serif'] },
                     colors: {
-                        brand: { 50: '#fff3f1', 100: '#ffe4df', 500: '#e8543e', 600: '#d64530', 900: '#7a2214' },
-                        surface: '#f8fafc', panel: '#ffffff'
+                        brand: { 50: '#fff3f1', 100: '#ffe4df', 200: '#ffc7bd', 400: '#f17460', 500: '#e8543e', 600: '#d64530', 800: '#9c2d1c', 900: '#7a2214' },
+                        surface: '#f8fafc',
+                        panel: '#ffffff'
                     }
                 }
             }
         }
     </script>
+    <style>
+        html { scrollbar-gutter: stable; }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-7px); } 40% { transform: translateX(7px); } 60% { transform: translateX(-5px); } 80% { transform: translateX(5px); } }
+        .animate-shake { animation: shake 0.4s ease; }
+
+        /* Scrollbar halus */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 999px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* Logo wrapper: padding & dimensi IDENTIK di Light/Dark agar 0px geser */
+        .logo-wrap {
+            padding: 8px 16px;
+            border-radius: 14px;
+            background-color: transparent;
+        }
+        html.dark .logo-wrap {
+            background-color: rgba(255, 255, 255, 0.96);
+        }
+
+        /* =========================================================
+           VENOM INK-BLEED VIEW TRANSITION (3.0s SLOW & CRISP)
+        ========================================================= */
+        ::view-transition-group(root) {
+            animation-duration: 3.0s;
+        }
+        ::view-transition-old(root),
+        ::view-transition-new(root) {
+            animation-duration: 3.0s;
+            animation-timing-function: linear;
+            mix-blend-mode: normal;
+        }
+        ::view-transition-old(root) {
+            animation-name: ink-hold;
+            z-index: 1;
+        }
+        ::view-transition-new(root) {
+            animation-name: ink-hold;
+            mask-image: url(#ink-mask);
+            -webkit-mask-image: url(#ink-mask);
+            z-index: 2;
+        }
+        @keyframes ink-hold {
+            from { opacity: 1; }
+            to { opacity: 1; }
+        }
+
+        /* =========================================================
+           DARK MODE GLOBAL (HANYA WARNA — ZERO LAYOUT SHIFT)
+        ========================================================= */
+        html.dark,
+        html.dark body {
+            background-color: #090d16 !important;
+            color: #f8fafc !important;
+        }
+        html.dark ::-webkit-scrollbar-track { background: #0f172a; }
+        html.dark ::-webkit-scrollbar-thumb { background: #334155; }
+        html.dark ::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+        html.dark .bg-surface { background-color: #090d16 !important; }
+        html.dark .bg-panel,
+        html.dark .bg-white { background-color: #0f172a !important; }
+        html.dark .bg-panel\/80,
+        html.dark .bg-white\/90 { background-color: rgba(15, 23, 42, 0.88) !important; }
+        html.dark .bg-white\/50 { background-color: rgba(15, 23, 42, 0.55) !important; }
+        html.dark .bg-slate-50 { background-color: #162033 !important; }
+        html.dark .bg-slate-100 { background-color: #1e293b !important; }
+        html.dark .bg-brand-50 { background-color: rgba(232, 84, 62, 0.16) !important; }
+        html.dark .bg-brand-100 { background-color: rgba(232, 84, 62, 0.24) !important; }
+        html.dark .bg-red-50 { background-color: rgba(239, 68, 68, 0.14) !important; }
+        html.dark .bg-green-50 { background-color: rgba(34, 197, 94, 0.14) !important; }
+        html.dark .bg-green-100 { background-color: rgba(34, 197, 94, 0.2) !important; }
+        html.dark .bg-blue-50 { background-color: rgba(59, 130, 246, 0.16) !important; }
+        html.dark .bg-amber-50 { background-color: rgba(245, 158, 11, 0.12) !important; }
+        html.dark .bg-amber-100 { background-color: rgba(245, 158, 11, 0.2) !important; }
+
+        html.dark .hover\:bg-slate-50:hover,
+        html.dark .hover\:bg-slate-100:hover { background-color: #1e293b !important; }
+        html.dark .hover\:bg-red-100:hover { background-color: rgba(239, 68, 68, 0.24) !important; }
+        html.dark .focus\:bg-white:focus { background-color: #0f172a !important; }
+
+        /* Teks */
+        html.dark .text-slate-900,
+        html.dark .text-slate-800,
+        html.dark .text-slate-700 { color: #f8fafc !important; }
+        html.dark .text-slate-600,
+        html.dark .text-slate-500 { color: #94a3b8 !important; }
+        html.dark .text-slate-400 { color: #64748b !important; }
+        html.dark .text-brand-600 { color: #fb715c !important; }
+        html.dark .text-green-700,
+        html.dark .text-green-600 { color: #4ade80 !important; }
+        html.dark .text-blue-700,
+        html.dark .text-blue-600 { color: #60a5fa !important; }
+        html.dark .text-amber-700 { color: #fbbf24 !important; }
+        html.dark .text-red-600 { color: #f87171 !important; }
+
+        /* Border (warna saja, ketebalan tetap) */
+        html.dark .border-slate-50,
+        html.dark .border-slate-100,
+        html.dark .border-slate-200,
+        html.dark .border-slate-300 { border-color: #1e293b !important; }
+        html.dark .divide-slate-100 > :not([hidden]) ~ :not([hidden]) { border-color: #1e293b !important; }
+        html.dark .border-red-100 { border-color: rgba(239, 68, 68, 0.28) !important; }
+        html.dark .border-green-200,
+        html.dark .border-green-100\/50 { border-color: rgba(34, 197, 94, 0.28) !important; }
+        html.dark .border-blue-200,
+        html.dark .border-blue-100\/50 { border-color: rgba(59, 130, 246, 0.28) !important; }
+        html.dark .border-amber-200 { border-color: rgba(245, 158, 11, 0.32) !important; }
+
+        /* Input & Textarea */
+        html.dark input:not([type="checkbox"]):not([type="file"]),
+        html.dark textarea {
+            color: #f8fafc !important;
+        }
+        html.dark input::placeholder,
+        html.dark textarea::placeholder {
+            color: #64748b !important;
+        }
+        html.dark .hero-glow {
+            opacity: 0.12 !important;
+        }
+
+        /* Tombol gelap tetap kontras saat dark mode */
+        html.dark .btn-dark-action {
+            background-color: #2563eb !important;
+            color: #ffffff !important;
+        }
+        html.dark .btn-dark-action:hover {
+            background-color: #1d4ed8 !important;
+        }
+
+        /* Area Print Tiket wajib tetap putih & teks hitam agar QR tajam & siap cetak */
+        #ticket-print-area,
+        html.dark #ticket-print-area {
+            background-color: #ffffff !important;
+            color: #0f172a !important;
+            border-color: #cbd5e1 !important;
+        }
+        html.dark #ticket-print-area h3,
+        html.dark #ticket-print-area #ticket-code {
+            color: #0f172a !important;
+        }
+        html.dark #ticket-print-area p {
+            color: #64748b !important;
+        }
+
+        @media print {
+            body * { visibility: hidden; }
+            #ticket-print-area, #ticket-print-area * { visibility: visible; }
+            #ticket-print-area { position: absolute; left: 0; top: 0; width: 100%; border: none; padding: 0; margin: 0; }
+        }
+    </style>
 </head>
 <body class="bg-surface text-slate-800 font-sans antialiased">
+
+    <!-- SVG LUMINANCE MASK TAJAM UNTUK TRANSISI VENOM INK-BLEED -->
+    <svg id="ink-transition-svg" width="0" height="0" style="position:fixed;top:0;left:0;pointer-events:none;z-index:-1;" aria-hidden="true">
+        <defs>
+            <filter id="ink-threshold" filterUnits="userSpaceOnUse" x="0" y="0" width="1920" height="1080" color-interpolation-filters="sRGB">
+                <feColorMatrix id="ink-matrix" type="matrix"
+                    values="-240 0 0 0 -5
+                            -240 0 0 0 -5
+                            -240 0 0 0 -5
+                             0   0 0 0  1" />
+            </filter>
+            <mask id="ink-mask" style="mask-type:luminance;" maskUnits="userSpaceOnUse" maskContentUnits="userSpaceOnUse" x="0" y="0" width="1920" height="1080">
+                <image id="ink-heightmap" x="0" y="0" width="1920" height="1080" preserveAspectRatio="none" filter="url(#ink-threshold)" />
+            </mask>
+        </defs>
+    </svg>
 
     <!-- ========================================== -->
     <!-- LAYAR LOGIN -->
     <!-- ========================================== -->
     <div id="login-screen" class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900 p-4 transition-opacity duration-300">
-        <div class="w-full max-w-md bg-white rounded-3xl p-8 shadow-2xl relative overflow-hidden">
+        <!-- Toggle Tema di Layar Login -->
+        <button type="button" onclick="toggleThemeWithInk(event)" title="Ganti Mode Terang / Gelap"
+            class="theme-toggle-btn fixed top-5 right-5 z-[110] inline-flex items-center justify-center gap-2 h-10 w-10 sm:w-[100px] rounded-full bg-white/90 backdrop-blur-md border border-slate-200 shadow-md hover:scale-105 active:scale-95 transition-transform duration-150 text-xs font-bold text-slate-700">
+            <svg class="icon-moon w-4 h-4 shrink-0 text-blue-800" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z" />
+            </svg>
+            <svg class="icon-sun w-4 h-4 shrink-0 text-yellow-400 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+                <circle cx="12" cy="12" r="4" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 2v2m0 16v2m10-10h-2M4 12H2m15.364-7.364l-1.414 1.414M8.05 15.95l-1.414 1.414m12.728 0l-1.414-1.414M8.05 8.05L6.636 6.636" />
+            </svg>
+            <span class="theme-toggle-label hidden sm:inline">Gelap</span>
+        </button>
+
+        <div class="w-full max-w-md bg-white rounded-3xl p-6 sm:p-8 shadow-2xl border border-slate-100 relative overflow-hidden">
             <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-brand-400 to-brand-600"></div>
             <div class="flex justify-center mb-6 mt-4">
-                <img src="logo.png" alt="Logo" class="h-16 object-contain">
+                <div class="logo-wrap inline-flex items-center justify-center">
+                    <img src="logo.png" alt="Logo" class="h-14 sm:h-16 object-contain">
+                </div>
             </div>
             <h2 class="text-2xl font-black text-center text-slate-800 mb-2">Login Admin</h2>
             <p class="text-sm text-center text-slate-500 mb-8">Masukkan kredensial untuk mengakses panel</p>
@@ -47,15 +232,15 @@
                 <div>
                     <label class="block text-sm font-bold text-slate-700 mb-1">Email</label>
                     <input type="email" id="login-email" required placeholder="admin@ucic.id" 
-                        class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-brand-500 focus:ring-2 focus:ring-brand-200 outline-none transition-all">
+                        class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-brand-500 focus:ring-2 focus:ring-brand-200 outline-none transition-colors">
                 </div>
                 <div>
                     <label class="block text-sm font-bold text-slate-700 mb-1">Password</label>
                     <input type="password" id="login-password" required placeholder="••••••••" 
-                        class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-brand-500 focus:ring-2 focus:ring-brand-200 outline-none transition-all">
+                        class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-brand-500 focus:ring-2 focus:ring-brand-200 outline-none transition-colors">
                 </div>
                 <p id="login-error" class="text-xs font-bold text-red-500 hidden text-center">Email atau Password salah!</p>
-                <button type="submit" id="btn-login-submit" class="w-full py-4 mt-2 bg-slate-800 text-white font-bold rounded-xl hover:bg-slate-700 hover:shadow-lg transition-all">
+                <button type="submit" id="btn-login-submit" class="btn-dark-action w-full py-4 mt-2 bg-slate-800 text-white font-bold rounded-xl hover:bg-slate-700 hover:shadow-lg transition-all">
                     Masuk ke Panel &rarr;
                 </button>
             </form>
@@ -66,62 +251,92 @@
     <!-- KONTEN ADMIN DASHBOARD -->
     <!-- ========================================== -->
     <div id="admin-dashboard" class="hidden">
-        <div class="flex h-screen overflow-hidden w-full">
-            
-            <!-- Sidebar -->
-            <aside class="w-64 hidden md:flex flex-col bg-panel border-r border-slate-200 shadow-sm z-20">
-                <div class="h-16 flex items-center px-6 border-b border-slate-100">
+        <div class="flex h-screen overflow-hidden w-full relative">
+
+            <!-- Backdrop Mobile Sidebar -->
+            <div id="sidebar-backdrop" onclick="closeMobileSidebar()" class="fixed inset-0 bg-slate-900/50 backdrop-blur-[2px] z-30 hidden md:hidden transition-opacity"></div>
+
+            <!-- Sidebar (Responsive Drawer di Mobile, Permanen di Desktop) -->
+            <aside id="admin-sidebar" class="fixed inset-y-0 left-0 z-40 w-64 flex flex-col bg-panel border-r border-slate-200 shadow-xl md:shadow-sm transform -translate-x-full md:translate-x-0 md:static transition-transform duration-300 ease-out shrink-0">
+                <div class="h-16 flex items-center justify-between px-6 border-b border-slate-100 shrink-0">
                     <div class="flex items-center gap-2 font-bold text-lg text-slate-800">
-                        <div class="w-8 h-8 rounded-lg bg-brand-500 text-white flex items-center justify-center shadow-md">
+                        <div class="w-8 h-8 rounded-lg bg-brand-500 text-white flex items-center justify-center shadow-md shrink-0">
                             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
                         </div>
-                        Admin Stage
+                        <span>Admin Stage</span>
                     </div>
+                    <!-- Tombol Tutup Sidebar (Mobile) -->
+                    <button type="button" onclick="closeMobileSidebar()" aria-label="Tutup Menu" class="md:hidden p-1.5 rounded-lg text-slate-500 hover:bg-slate-100">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
                 </div>
                 <nav class="flex-1 p-4 space-y-1 overflow-y-auto">
-                    <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-link active w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg bg-brand-50 text-brand-600 transition-all">
-                        <svg class="w-5 h-5 text-brand-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg> Dashboard
+                    <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-link active w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg bg-brand-50 text-brand-600 transition-colors">
+                        <svg class="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg> Dashboard
                     </button>
                     <div class="pt-4 pb-2 px-3"><p class="text-xs font-bold uppercase text-slate-400 tracking-wider">Penjualan</p></div>
-                    <button onclick="switchTab('tickets')" id="nav-tickets" class="nav-link w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg text-slate-600 hover:bg-slate-50 transition-all">
-                        <svg class="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" /></svg> Manajemen Tiket
+                    <button onclick="switchTab('tickets')" id="nav-tickets" class="nav-link w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg text-slate-600 hover:bg-slate-50 transition-colors">
+                        <svg class="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" /></svg> Manajemen Tiket
                     </button>
                     <div class="pt-4 pb-2 px-3"><p class="text-xs font-bold uppercase text-slate-400 tracking-wider">Katalog</p></div>
-                    <button onclick="switchTab('style-list')" id="nav-style-list" class="nav-link w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg text-slate-600 hover:bg-slate-50 transition-all">
-                        <svg class="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" /></svg> Daftar Style
+                    <button onclick="switchTab('style-list')" id="nav-style-list" class="nav-link w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg text-slate-600 hover:bg-slate-50 transition-colors">
+                        <svg class="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" /></svg> Daftar Style
                     </button>
                     <div class="pt-4 pb-2 px-3"><p class="text-xs font-bold uppercase text-slate-400 tracking-wider">Sistem</p></div>
-                    <button onclick="switchTab('settings')" id="nav-settings" class="nav-link w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg text-slate-600 hover:bg-slate-50 transition-all">
-                        <svg class="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" /></svg> API Settings
+                    <button onclick="switchTab('settings')" id="nav-settings" class="nav-link w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg text-slate-600 hover:bg-slate-50 transition-colors">
+                        <svg class="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" /></svg> API Settings
                     </button>
                 </nav>
             </aside>
 
             <!-- Main Content -->
             <main class="flex-1 flex flex-col min-w-0 overflow-y-auto">
-                <header class="h-16 flex items-center px-8 border-b border-slate-200 bg-panel/80 backdrop-blur-md sticky top-0 z-10 justify-between">
-                    <div class="flex items-center text-sm text-slate-500 gap-2">
-                        <span class="hover:text-slate-700 font-medium">Admin Stage</span>
-                        <svg class="w-4 h-4 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
-                        <span id="header-title" class="font-bold text-slate-800">Dashboard</span>
+                <header class="h-16 flex items-center px-4 sm:px-8 border-b border-slate-200 bg-panel/80 backdrop-blur-md sticky top-0 z-10 justify-between gap-2 shrink-0">
+                    <div class="flex items-center text-sm text-slate-500 gap-2 min-w-0">
+                        <!-- Tombol Hamburger Mobile -->
+                        <button type="button" id="btn-mobile-menu" onclick="openMobileSidebar()" aria-label="Buka Menu"
+                            class="md:hidden p-2 -ml-1 rounded-lg text-slate-600 hover:bg-slate-100 shrink-0">
+                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+                            </svg>
+                        </button>
+                        <span class="hidden sm:inline hover:text-slate-700 font-medium whitespace-nowrap">Admin Stage</span>
+                        <svg class="hidden sm:block w-4 h-4 text-slate-300 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                        <span id="header-title" class="font-bold text-slate-800 truncate">Dashboard</span>
                     </div>
-                    <!-- Tombol Logout -->
-                    <button onclick="handleLogout()" class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-red-50 text-red-600 text-xs font-bold border border-red-100 hover:bg-red-100 transition-colors">
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
-                        Logout
-                    </button>
+
+                    <div class="flex items-center gap-2 sm:gap-3 shrink-0">
+                        <!-- Toggle Mode Terang / Gelap (Lebar Tetap -> 0px geser) -->
+                        <button type="button" id="theme-toggle-btn" onclick="toggleThemeWithInk(event)" title="Ganti Mode Terang / Gelap"
+                            class="theme-toggle-btn inline-flex items-center justify-center gap-1.5 h-9 w-9 sm:w-[96px] rounded-lg bg-slate-50 border border-slate-200 hover:bg-slate-100 active:scale-95 transition-transform duration-150 text-xs font-bold text-slate-700">
+                            <svg class="icon-moon w-4 h-4 shrink-0 text-blue-800" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z" />
+                            </svg>
+                            <svg class="icon-sun w-4 h-4 shrink-0 text-yellow-400 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+                                <circle cx="12" cy="12" r="4" />
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 2v2m0 16v2m10-10h-2M4 12H2m15.364-7.364l-1.414 1.414M8.05 15.95l-1.414 1.414m12.728 0l-1.414-1.414M8.05 8.05L6.636 6.636" />
+                            </svg>
+                            <span class="theme-toggle-label hidden sm:inline">Gelap</span>
+                        </button>
+
+                        <!-- Tombol Logout -->
+                        <button onclick="handleLogout()" class="inline-flex items-center justify-center gap-1.5 h-9 px-2.5 sm:px-3 rounded-lg bg-red-50 text-red-600 text-xs font-bold border border-red-100 hover:bg-red-100 transition-colors">
+                            <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+                            <span class="hidden sm:inline">Logout</span>
+                        </button>
+                    </div>
                 </header>
 
-                <div class="p-6 sm:p-10 max-w-6xl mx-auto w-full">
+                <div class="p-4 sm:p-6 lg:p-10 max-w-6xl mx-auto w-full">
                     <!-- TAB: DASHBOARD -->
                     <div id="tab-dashboard" class="admin-tab block">
-                        <div class="mb-8 p-8 bg-white border border-slate-200 rounded-2xl shadow-[0_2px_10px_rgba(0,0,0,0.02)] flex flex-col md:flex-row md:items-center justify-between gap-6 relative overflow-hidden">
-                            <div class="absolute right-0 top-0 w-[500px] h-full bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-brand-50 to-transparent opacity-60"></div>
+                        <div class="mb-6 sm:mb-8 p-6 sm:p-8 bg-white border border-slate-200 rounded-2xl shadow-[0_2px_10px_rgba(0,0,0,0.02)] flex flex-col md:flex-row md:items-center justify-between gap-6 relative overflow-hidden">
+                            <div class="hero-glow absolute right-0 top-0 w-[500px] h-full bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-brand-50 to-transparent opacity-60 pointer-events-none"></div>
                             <div class="relative z-10">
                                 <div class="flex items-center gap-3 mb-2">
                                     <span class="bg-brand-50 text-brand-600 border border-brand-100/50 text-[10px] font-black px-2.5 py-1 rounded-md uppercase tracking-widest">Workspace</span>
                                 </div>
-                                <h1 class="text-3xl font-black text-slate-900 tracking-tight">Stage Photobooth</h1>
+                                <h1 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">Stage Photobooth</h1>
                                 <p class="text-slate-500 mt-2 max-w-lg text-sm leading-relaxed">Pusat kendali utama. Kelola katalog gaya, pantau penjualan tiket harian, dan pastikan integrasi AI berjalan lancar.</p>
                             </div>
                             <div class="relative z-10 flex flex-col gap-3 min-w-[200px]">
@@ -135,7 +350,7 @@
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-8">
                             <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-[0_2px_10px_rgba(0,0,0,0.02)] flex flex-col hover:border-brand-200 hover:shadow-md transition-all">
                                 <div class="flex justify-between items-start mb-2">
                                     <div class="w-12 h-12 rounded-xl bg-green-50 text-green-600 flex items-center justify-center border border-green-100/50">
@@ -177,52 +392,62 @@
 
                     <!-- TAB: TICKETS -->
                     <div id="tab-tickets" class="admin-tab hidden">
-                        <div class="mb-6 flex justify-between items-end">
+                        <div class="mb-6 flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4">
                             <div>
-                                <h1 class="text-2xl font-bold text-slate-800">Manajemen Tiket</h1>
+                                <h1 class="text-xl sm:text-2xl font-bold text-slate-800">Manajemen Tiket</h1>
                                 <p class="text-sm text-slate-500 mt-1">Sistem akses Photobooth (1 Tiket = 1 Sesi)</p>
                             </div>
-                            <button onclick="generateTicket()" class="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-brand-500 transition-all shadow-sm">
+                            <button onclick="generateTicket()" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-brand-500 transition-all shadow-sm">
                                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg> Generate Tiket Baru
                             </button>
                         </div>
                         <div class="bg-panel rounded-2xl border border-slate-100 overflow-hidden shadow-sm">
-                            <table class="w-full text-left border-collapse">
-                                <thead>
-                                    <tr class="bg-slate-50 border-b border-slate-100 text-xs font-semibold text-slate-500 uppercase">
-                                        <th class="py-4 px-6">Kode Tiket</th><th class="py-4 px-6">Status</th><th class="py-4 px-6">Dibuat Pada</th><th class="py-4 px-6 text-right">Aksi</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="ticket-table-body" class="divide-y divide-slate-100 text-sm"></tbody>
-                            </table>
+                            <div class="overflow-x-auto">
+                                <table class="w-full min-w-[540px] text-left border-collapse">
+                                    <thead>
+                                        <tr class="bg-slate-50 border-b border-slate-100 text-xs font-semibold text-slate-500 uppercase">
+                                            <th class="py-4 px-5 sm:px-6">Kode Tiket</th>
+                                            <th class="py-4 px-5 sm:px-6">Status</th>
+                                            <th class="py-4 px-5 sm:px-6">Dibuat Pada</th>
+                                            <th class="py-4 px-5 sm:px-6 text-right">Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="ticket-table-body" class="divide-y divide-slate-100 text-sm"></tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
 
                     <!-- TAB: STYLE LIST -->
                     <div id="tab-style-list" class="admin-tab hidden">
-                        <div class="mb-6 flex justify-between items-end">
-                            <div><h1 class="text-2xl font-bold text-slate-800">Daftar Style</h1></div>
-                            <button onclick="openAddForm()" class="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-brand-500 transition-all shadow-sm">
+                        <div class="mb-6 flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4">
+                            <div><h1 class="text-xl sm:text-2xl font-bold text-slate-800">Daftar Style</h1></div>
+                            <button onclick="openAddForm()" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-brand-500 transition-all shadow-sm">
                                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg> Tambah Style
                             </button>
                         </div>
                         <div class="bg-panel rounded-2xl border border-slate-100 overflow-hidden shadow-sm">
-                            <table class="w-full text-left border-collapse">
-                                <thead>
-                                    <tr class="bg-slate-50 border-b border-slate-100 text-xs font-semibold text-slate-500 uppercase">
-                                        <th class="py-4 px-6">Cover</th><th class="py-4 px-6">Info</th><th class="py-4 px-6">Prompt</th><th class="py-4 px-6 text-right">Aksi</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="style-table-body" class="divide-y divide-slate-100 text-sm"></tbody>
-                            </table>
+                            <div class="overflow-x-auto">
+                                <table class="w-full min-w-[600px] text-left border-collapse">
+                                    <thead>
+                                        <tr class="bg-slate-50 border-b border-slate-100 text-xs font-semibold text-slate-500 uppercase">
+                                            <th class="py-4 px-5 sm:px-6">Cover</th>
+                                            <th class="py-4 px-5 sm:px-6">Info</th>
+                                            <th class="py-4 px-5 sm:px-6">Prompt</th>
+                                            <th class="py-4 px-5 sm:px-6 text-right">Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="style-table-body" class="divide-y divide-slate-100 text-sm"></tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
 
                     <!-- TAB: STYLES FORM -->
                     <div id="tab-styles" class="admin-tab hidden">
-                        <div class="mb-6 flex items-center justify-between">
-                            <h1 class="text-2xl font-bold text-slate-800" id="form-style-title">Tambah Style Baru</h1>
-                            <button onclick="switchTab('style-list')" class="text-sm font-medium text-slate-500 hover:text-slate-700 flex items-center gap-1">
+                        <div class="mb-6 flex items-center justify-between gap-4">
+                            <h1 class="text-xl sm:text-2xl font-bold text-slate-800 truncate" id="form-style-title">Tambah Style Baru</h1>
+                            <button onclick="switchTab('style-list')" class="text-sm font-medium text-slate-500 hover:text-slate-700 flex items-center gap-1 shrink-0">
                                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg> Kembali
                             </button>
                         </div>
@@ -232,15 +457,15 @@
                             <input type="hidden" name="optionsData" id="optionsDataJSON">
                             <input type="hidden" name="customData" id="customDataJSON">
                             
-                            <div class="bg-slate-50 border-b border-slate-100 p-4 px-8 flex gap-6 text-sm font-medium">
-                                <button type="button" onclick="goToStep(1)" id="step-1-btn" class="text-brand-600 flex items-center gap-2"><span id="step-1-circle" class="w-6 h-6 rounded-full bg-brand-100 border-0 flex items-center justify-center text-xs">1</span> Info Dasar</button>
-                                <button type="button" onclick="goToStep(2)" id="step-2-btn" class="text-slate-400 flex items-center gap-2"><span id="step-2-circle" class="w-6 h-6 rounded-full border border-slate-200 flex items-center justify-center text-xs">2</span> Prompt & Cover</button>
-                                <button type="button" onclick="goToStep(3)" id="step-3-btn" class="text-slate-400 flex items-center gap-2"><span id="step-3-circle" class="w-6 h-6 rounded-full border border-slate-200 flex items-center justify-center text-xs">3</span> Opsi Kustom</button>
+                            <div class="bg-slate-50 border-b border-slate-100 p-4 px-4 sm:px-8 flex flex-wrap gap-3 sm:gap-6 text-xs sm:text-sm font-medium">
+                                <button type="button" onclick="goToStep(1)" id="step-1-btn" class="text-brand-600 flex items-center gap-2"><span id="step-1-circle" class="w-6 h-6 rounded-full bg-brand-100 border-0 flex items-center justify-center text-xs shrink-0">1</span> Info Dasar</button>
+                                <button type="button" onclick="goToStep(2)" id="step-2-btn" class="text-slate-400 flex items-center gap-2"><span id="step-2-circle" class="w-6 h-6 rounded-full border border-slate-200 flex items-center justify-center text-xs shrink-0">2</span> Prompt & Cover</button>
+                                <button type="button" onclick="goToStep(3)" id="step-3-btn" class="text-slate-400 flex items-center gap-2"><span id="step-3-circle" class="w-6 h-6 rounded-full border border-slate-200 flex items-center justify-center text-xs shrink-0">3</span> Opsi Kustom</button>
                             </div>
 
                             <!-- Step 1 -->
-                            <div id="form-step-1" class="p-8 space-y-6 block">
-                                <div class="grid grid-cols-2 gap-6">
+                            <div id="form-step-1" class="p-5 sm:p-8 space-y-6 block">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6">
                                     <div class="space-y-2">
                                         <label class="block text-sm font-semibold text-slate-700">ID Style *</label>
                                         <input type="text" id="input-styleId" name="styleId" required class="block w-full rounded-xl border border-slate-200 py-2.5 px-4 outline-none bg-white focus:border-brand-500">
@@ -254,51 +479,56 @@
                                     <label class="block text-sm font-semibold text-slate-700">Deskripsi</label>
                                     <textarea id="input-description" name="description" rows="2" class="block w-full rounded-xl border border-slate-200 py-3 px-4 outline-none bg-white focus:border-brand-500"></textarea>
                                 </div>
-                                <div class="flex justify-end pt-4 border-t border-slate-100"><button type="button" onclick="goToStep(2)" class="rounded-xl bg-slate-800 px-6 py-2.5 text-white font-semibold hover:bg-slate-700 transition-colors">Lanjut &rarr;</button></div>
+                                <div class="flex justify-end pt-4 border-t border-slate-100">
+                                    <button type="button" onclick="goToStep(2)" class="btn-dark-action w-full sm:w-auto rounded-xl bg-slate-800 px-6 py-2.5 text-white font-semibold hover:bg-slate-700 transition-colors">Lanjut &rarr;</button>
+                                </div>
                             </div>
 
                             <!-- Step 2 -->
-                            <div id="form-step-2" class="p-8 space-y-6 hidden">
+                            <div id="form-step-2" class="p-5 sm:p-8 space-y-6 hidden">
                                 <div class="space-y-2">
                                     <label class="block text-sm font-semibold text-slate-700">Instruksi Prompt AI *</label>
                                     <textarea id="input-prompt" name="prompt_template" rows="4" required class="block w-full rounded-xl border border-slate-200 py-3 px-4 outline-none bg-white focus:border-brand-500"></textarea>
                                 </div>
                                 <div class="space-y-2">
                                     <label class="block text-sm font-semibold text-slate-700">Upload Gambar Cover Utama</label>
-                                    <div class="mt-2 flex justify-center rounded-xl border-2 border-dashed border-slate-200 py-8 cursor-pointer hover:bg-slate-50 transition-colors" onclick="document.getElementById('coverImage').click()">
+                                    <div class="mt-2 flex justify-center rounded-xl border-2 border-dashed border-slate-200 py-8 px-4 cursor-pointer hover:bg-slate-50 transition-colors" onclick="document.getElementById('coverImage').click()">
                                         <div class="text-center">
                                             <p class="text-sm font-semibold text-brand-600">Pilih gambar</p>
                                             <input id="coverImage" name="coverImage" type="file" class="sr-only" accept="image/png, image/jpeg, image/jpg" onchange="document.getElementById('file-name').innerText = this.files[0].name; document.getElementById('file-name-container').classList.remove('hidden');">
-                                            <div id="file-name-container" class="hidden mt-2 inline-flex bg-slate-100 border border-slate-200 py-1 px-3 rounded-md"><span id="file-name" class="text-xs font-medium text-slate-600"></span></div>
+                                            <div id="file-name-container" class="hidden mt-2 inline-flex bg-slate-100 border border-slate-200 py-1 px-3 rounded-md"><span id="file-name" class="text-xs font-medium text-slate-600 break-all"></span></div>
                                         </div>
                                     </div>
                                 </div>
-                                <div class="flex justify-between pt-4 border-t border-slate-100">
+                                <div class="flex justify-between items-center gap-3 pt-4 border-t border-slate-100">
                                     <button type="button" onclick="goToStep(1)" class="text-sm text-slate-500 font-medium hover:text-slate-800">&larr; Kembali</button>
-                                    <button type="button" onclick="goToStep(3)" class="rounded-xl bg-slate-800 px-6 py-2.5 text-white font-semibold hover:bg-slate-700 transition-colors">Lanjut ke Opsi &rarr;</button>
+                                    <button type="button" onclick="goToStep(3)" class="btn-dark-action rounded-xl bg-slate-800 px-5 sm:px-6 py-2.5 text-sm sm:text-base text-white font-semibold hover:bg-slate-700 transition-colors">Lanjut ke Opsi &rarr;</button>
                                 </div>
                             </div>
 
                             <!-- Step 3 -->
-                            <div id="form-step-3" class="p-8 space-y-6 hidden">
-                                <div class="flex justify-between items-center bg-slate-50 p-4 rounded-xl border border-slate-200 shadow-sm">
-                                    <div><h3 class="font-bold text-slate-800">Builder Opsi Sub-Style</h3><p class="text-xs text-slate-500 mt-0.5">Buat pilihan opsi standar untuk gaya ini.</p></div>
-                                    <button type="button" onclick="addOptionGroup()" class="bg-white border border-slate-200 text-slate-700 px-4 py-2 rounded-lg text-xs font-bold shadow-sm hover:bg-slate-50 transition-colors">+ Tambah Kategori Opsi</button>
+                            <div id="form-step-3" class="p-5 sm:p-8 space-y-6 hidden">
+                                <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 bg-slate-50 p-4 rounded-xl border border-slate-200 shadow-sm">
+                                    <div>
+                                        <h3 class="font-bold text-slate-800">Builder Opsi Sub-Style</h3>
+                                        <p class="text-xs text-slate-500 mt-0.5">Buat pilihan opsi standar untuk gaya ini.</p>
+                                    </div>
+                                    <button type="button" onclick="addOptionGroup()" class="w-full sm:w-auto bg-white border border-slate-200 text-slate-700 px-4 py-2 rounded-lg text-xs font-bold shadow-sm hover:bg-slate-50 transition-colors shrink-0">+ Tambah Kategori Opsi</button>
                                 </div>
                                 
                                 <div id="options-container" class="space-y-6"></div>
 
                                 <div class="mt-8 border-t border-slate-200 pt-6">
-                                    <div class="flex justify-between items-center mb-2">
+                                    <div class="flex flex-wrap justify-between items-center gap-2 mb-2">
                                         <h4 class="font-bold text-slate-800 text-sm">Mode Lanjut (Raw JSON)</h4>
                                         <span class="text-[10px] bg-amber-100 text-amber-700 border border-amber-200 px-2 py-1 rounded-md font-bold uppercase tracking-wider">Khusus Opsi Bertingkat</span>
                                     </div>
                                     <textarea id="input-customDataUI" rows="4" placeholder="{}" class="block w-full rounded-xl border border-slate-200 py-3 px-4 outline-none bg-slate-50 font-mono text-xs text-slate-600 focus:border-brand-500"></textarea>
                                 </div>
 
-                                <div class="flex justify-between pt-4 border-t border-slate-100">
+                                <div class="flex justify-between items-center gap-3 pt-4 border-t border-slate-100">
                                     <button type="button" onclick="goToStep(2)" class="text-sm text-slate-500 font-medium hover:text-slate-800">&larr; Kembali</button>
-                                    <button type="button" onclick="submitFormWithData()" id="btn-submit-style" class="rounded-xl bg-brand-600 px-8 py-2.5 font-bold text-white hover:bg-brand-500 shadow-sm transition-colors">Simpan & Upload Style</button>
+                                    <button type="button" onclick="submitFormWithData()" id="btn-submit-style" class="rounded-xl bg-brand-600 px-5 sm:px-8 py-2.5 text-sm sm:text-base font-bold text-white hover:bg-brand-500 shadow-sm transition-colors">Simpan & Upload Style</button>
                                 </div>
                             </div>
                         </form>
@@ -306,14 +536,14 @@
 
                     <!-- TAB: SETTINGS -->
                     <div id="tab-settings" class="admin-tab hidden">
-                        <div class="mb-6"><h1 class="text-2xl font-bold text-slate-800">API Settings</h1></div>
-                        <form id="settings-form" class="bg-panel rounded-2xl border border-slate-100 shadow-sm p-8 space-y-6">
-                            <div class="grid grid-cols-2 gap-6">
-                                <div class="col-span-2 space-y-2"><label class="block text-sm font-semibold text-slate-700">API Key</label><input type="password" id="set-apiKey" class="block w-full rounded-xl border border-slate-200 py-2.5 px-4 bg-white outline-none focus:border-brand-500"></div>
+                        <div class="mb-6"><h1 class="text-xl sm:text-2xl font-bold text-slate-800">API Settings</h1></div>
+                        <form id="settings-form" class="bg-panel rounded-2xl border border-slate-100 shadow-sm p-5 sm:p-8 space-y-6">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6">
+                                <div class="sm:col-span-2 space-y-2"><label class="block text-sm font-semibold text-slate-700">API Key</label><input type="password" id="set-apiKey" class="block w-full rounded-xl border border-slate-200 py-2.5 px-4 bg-white outline-none focus:border-brand-500"></div>
                                 <div class="space-y-2"><label class="block text-sm font-semibold text-slate-700">Base URL</label><input type="text" id="set-apiBaseUrl" class="block w-full rounded-xl border border-slate-200 py-2.5 px-4 bg-white outline-none focus:border-brand-500"></div>
                                 <div class="space-y-2"><label class="block text-sm font-semibold text-slate-700">AI Model</label><input type="text" id="set-aiModel" class="block w-full rounded-xl border border-slate-200 py-2.5 px-4 bg-white outline-none focus:border-brand-500"></div>
                             </div>
-                            <div class="flex justify-end pt-4 border-t border-slate-100"><button type="submit" class="rounded-xl bg-brand-600 px-8 py-2.5 text-white font-bold hover:bg-brand-500 shadow-sm transition-colors">Simpan Pengaturan</button></div>
+                            <div class="flex justify-end pt-4 border-t border-slate-100"><button type="submit" class="w-full sm:w-auto rounded-xl bg-brand-600 px-8 py-2.5 text-white font-bold hover:bg-brand-500 shadow-sm transition-colors">Simpan Pengaturan</button></div>
                         </form>
                     </div>
                 </div>
@@ -323,8 +553,8 @@
     </div>
 
     <!-- Modals -->
-    <div id="print-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/40 backdrop-blur-sm">
-        <div class="bg-white p-8 rounded-2xl shadow-2xl max-w-sm w-full text-center">
+    <div id="print-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+        <div class="bg-white p-6 sm:p-8 rounded-2xl shadow-2xl border border-slate-100 max-w-sm w-full text-center">
             <h2 class="text-xl font-bold text-slate-800 mb-6">Tiket Berhasil Dibuat!</h2>
             <div id="ticket-print-area" class="border-2 border-dashed border-slate-300 p-6 rounded-xl inline-block bg-white text-black mb-6">
                 <h3 class="font-bold text-lg mb-1">AI PHOTOBOOTH</h3>
@@ -334,35 +564,357 @@
                 <p id="ticket-code" class="text-4xl font-black tracking-widest text-slate-800"></p>
             </div>
             <div class="flex gap-4">
-                <button onclick="document.getElementById('print-modal').classList.add('hidden')" class="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-bold hover:bg-slate-50 transition-colors">Tutup</button>
+                <button onclick="closePrintModal()" class="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-bold hover:bg-slate-50 transition-colors">Tutup</button>
                 <button onclick="printTicket()" class="flex-1 py-2.5 rounded-xl bg-brand-600 text-white font-bold hover:bg-brand-500 transition-colors shadow-sm">Print Tiket</button>
             </div>
         </div>
     </div>
     
-    <div id="toast-notification" class="fixed top-6 right-6 z-[200] transform transition-all duration-300 translate-y-[-150%] opacity-0 flex w-full max-w-sm rounded-xl bg-white shadow-lg border border-slate-100 p-4">
+    <div id="toast-notification" class="fixed top-6 right-4 left-4 sm:left-auto sm:right-6 z-[200] transform transition-all duration-300 translate-y-[-150%] opacity-0 flex sm:w-full max-w-sm rounded-xl bg-white shadow-lg border border-slate-100 p-4">
         <div id="toast-title" class="text-sm font-bold text-slate-800 w-full text-center"></div>
     </div>
 
     <!-- ========================================== -->
-    <!-- SCRIPT LOGIKA APLIKASI DAN LOGIN -->
+    <!-- SCRIPT LOGIKA APLIKASI, SIDEBAR & VENOM INK -->
     <!-- ========================================== -->
     <script>
         const ADMIN_API_URL = 'https://api.agenticaicenter.id';
         let cachedStyles = {}; 
         let optionsBuilderData = []; 
-        
+
+        // ----------------------------------------------------
+        // MOBILE SIDEBAR DRAWER
+        // ----------------------------------------------------
+        function openMobileSidebar() {
+            const sidebar = document.getElementById('admin-sidebar');
+            const backdrop = document.getElementById('sidebar-backdrop');
+            if (sidebar) sidebar.classList.remove('-translate-x-full');
+            if (backdrop) backdrop.classList.remove('hidden');
+        }
+
+        function closeMobileSidebar() {
+            const sidebar = document.getElementById('admin-sidebar');
+            const backdrop = document.getElementById('sidebar-backdrop');
+            if (sidebar) sidebar.classList.add('-translate-x-full');
+            if (backdrop) backdrop.classList.add('hidden');
+        }
+
+        // ----------------------------------------------------
+        // ENGINE TRANSISI VENOM INK-BLEED 60 FPS (IDENTIK INDEX)
+        // ----------------------------------------------------
+        let isThemeAnimating = false;
+        let inkGL = null;
+        let inkProgram = null;
+        let inkCanvas = null;
+        let inkReady = false;
+        let inkBuiltW = 0;
+        let inkBuiltH = 0;
+        let inkBuiltOx = 0;
+        let inkBuiltOy = 0;
+        let inkResizeTimer = null;
+
+        const INK_SHARPNESS = 240;
+        const INK_ANIM_DURATION = 2900;
+
+        function initInkWebGL() {
+            if (inkGL) return true;
+            inkCanvas = document.createElement('canvas');
+            const gl = inkCanvas.getContext('webgl', { preserveDrawingBuffer: true, antialias: false });
+            if (!gl) return false;
+
+            const vsSrc = `
+                attribute vec2 a_pos;
+                void main() { gl_Position = vec4(a_pos, 0.0, 1.0); }
+            `;
+
+            const fsSrc = `
+                precision highp float;
+                uniform vec2 u_resolution;
+                uniform vec2 u_origin;
+                uniform float u_seed;
+
+                float hash(vec2 p) {
+                    p = fract(p * vec2(123.34, 456.21));
+                    p += dot(p, p + 45.32);
+                    return fract(p.x * p.y);
+                }
+
+                float noise(vec2 p) {
+                    vec2 i = floor(p);
+                    vec2 f = fract(p);
+                    vec2 u = f * f * (3.0 - 2.0 * f);
+                    return mix(
+                        mix(hash(i + vec2(0.0, 0.0)), hash(i + vec2(1.0, 0.0)), u.x),
+                        mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), u.x),
+                        u.y
+                    );
+                }
+
+                const mat2 rot = mat2(0.80, 0.60, -0.60, 0.80);
+
+                float fbm(vec2 p) {
+                    float v = 0.0;
+                    float a = 0.5;
+                    for (int i = 0; i < 5; i++) {
+                        v += a * noise(p);
+                        p = rot * p * 2.03 + vec2(1.7, 9.2);
+                        a *= 0.5;
+                    }
+                    return v;
+                }
+
+                float ridgedFbm(vec2 p) {
+                    float v = 0.0;
+                    float a = 0.52;
+                    for (int i = 0; i < 4; i++) {
+                        float n = 1.0 - abs(2.0 * noise(p) - 1.0);
+                        v += a * n * n;
+                        p = rot * p * 2.12 + vec2(3.1, 7.4);
+                        a *= 0.48;
+                    }
+                    return v;
+                }
+
+                void main() {
+                    vec2 uv = gl_FragCoord.xy / u_resolution;
+                    vec2 screenPos = vec2(uv.x, 1.0 - uv.y);
+                    float aspect = u_resolution.x / u_resolution.y;
+
+                    vec2 diff = (screenPos - u_origin) * vec2(aspect, 1.0);
+                    float d0 = length((vec2(0.0, 0.0) - u_origin) * vec2(aspect, 1.0));
+                    float d1 = length((vec2(1.0, 0.0) - u_origin) * vec2(aspect, 1.0));
+                    float d2 = length((vec2(0.0, 1.0) - u_origin) * vec2(aspect, 1.0));
+                    float d3 = length((vec2(1.0, 1.0) - u_origin) * vec2(aspect, 1.0));
+                    float maxDist = max(max(d0, d1), max(d2, d3));
+                    float L = length(diff);
+                    float dist = L / maxDist;
+
+                    vec2 p = screenPos * vec2(aspect, 1.0);
+
+                    vec2 st = p * 2.15;
+                    vec2 q = vec2(
+                        fbm(st + vec2(u_seed * 1.13, u_seed * 0.47)),
+                        fbm(st + vec2(5.2 + u_seed * 0.71, 1.3 + u_seed * 0.91))
+                    );
+                    vec2 r = vec2(
+                        fbm(st * 1.4 + 2.9 * q + vec2(1.7, 9.2) + u_seed * 0.37),
+                        fbm(st * 1.4 + 2.9 * q + vec2(8.3, 2.8) + u_seed * 0.83)
+                    );
+                    float inkWave = fbm(st * 1.3 + 2.7 * r);
+
+                    vec2 radialStretched = (diff / (L + 0.06)) * pow(L + 0.06, 0.56) * 3.8;
+                    float veinsPrimary = ridgedFbm(radialStretched + 1.9 * r + vec2(u_seed * 0.53));
+                    float veinsFine = ridgedFbm(radialStretched * 2.35 + 1.35 * q + vec2(4.2, 6.8) + u_seed * 0.29);
+                    float tendrils = clamp(veinsPrimary * 0.72 + veinsFine * 0.42, 0.0, 1.0);
+
+                    float splatterNoise = fbm(p * 7.8 + 2.8 * r + vec2(u_seed * 0.61));
+                    float droplets = smoothstep(0.54, 0.74, splatterNoise) * 0.36;
+
+                    float venomField = clamp(inkWave * 0.46 + tendrils * 0.64 + droplets, 0.0, 1.0);
+
+                    float env = smoothstep(0.0, 0.10, dist);
+                    float rawH = dist * 0.70 + (1.0 - venomField) * 0.44 * env;
+                    float h = clamp(rawH / 1.14, 0.0, 1.0);
+
+                    gl_FragColor = vec4(h, h, h, 1.0);
+                }
+            `;
+
+            const compile = (type, src) => {
+                const s = gl.createShader(type);
+                gl.shaderSource(s, src);
+                gl.compileShader(s);
+                return s;
+            };
+
+            const prog = gl.createProgram();
+            gl.attachShader(prog, compile(gl.VERTEX_SHADER, vsSrc));
+            gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, fsSrc));
+            gl.linkProgram(prog);
+            gl.useProgram(prog);
+
+            const buf = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, -1,1, 1,-1, 1,1]), gl.STATIC_DRAW);
+
+            const posLoc = gl.getAttribLocation(prog, 'a_pos');
+            gl.enableVertexAttribArray(posLoc);
+            gl.vertexAttribPointer(posLoc, 2, gl.FLOAT, false, 0, 0);
+
+            inkGL = gl;
+            inkProgram = prog;
+            return true;
+        }
+
+        function setInkMaskThreshold(threshold) {
+            const offset = (INK_SHARPNESS * threshold).toFixed(2);
+            const s = -INK_SHARPNESS;
+            const matrix = document.getElementById('ink-matrix');
+            if (matrix) {
+                matrix.setAttribute(
+                    'values',
+                    `${s} 0 0 0 ${offset}  ${s} 0 0 0 ${offset}  ${s} 0 0 0 ${offset}  0 0 0 0 1`
+                );
+            }
+        }
+
+        function getActiveToggleOrigin(triggerEl) {
+            const w = window.innerWidth;
+            const h = window.innerHeight;
+            let el = triggerEl;
+            if (!el) {
+                const btns = document.querySelectorAll('.theme-toggle-btn');
+                for (const b of btns) {
+                    const r = b.getBoundingClientRect();
+                    if (r.width > 0 && r.height > 0) { el = b; break; }
+                }
+            }
+            if (el) {
+                const rect = el.getBoundingClientRect();
+                if (rect.width > 0) {
+                    return {
+                        ox: (rect.left + rect.width / 2) / w,
+                        oy: (rect.top + rect.height / 2) / h
+                    };
+                }
+            }
+            return { ox: 0.88, oy: 0.05 };
+        }
+
+        function prepareInkHeightmap(seed, triggerEl) {
+            const w = window.innerWidth;
+            const h = window.innerHeight;
+            const { ox, oy } = getActiveToggleOrigin(triggerEl);
+
+            const inkMask = document.getElementById('ink-mask');
+            const inkFilter = document.getElementById('ink-threshold');
+            const inkImg = document.getElementById('ink-heightmap');
+            inkMask.setAttribute('width', w);
+            inkMask.setAttribute('height', h);
+            inkFilter.setAttribute('width', w);
+            inkFilter.setAttribute('height', h);
+            inkImg.setAttribute('width', w);
+            inkImg.setAttribute('height', h);
+
+            if (!initInkWebGL()) {
+                inkReady = false;
+                return;
+            }
+
+            const texW = Math.min(1024, Math.max(540, Math.round(w * 0.65)));
+            const texH = Math.max(360, Math.round(texW * (h / w)));
+            inkCanvas.width = texW;
+            inkCanvas.height = texH;
+
+            const gl = inkGL;
+            gl.viewport(0, 0, texW, texH);
+            gl.useProgram(inkProgram);
+            gl.uniform2f(gl.getUniformLocation(inkProgram, 'u_resolution'), texW, texH);
+            gl.uniform2f(gl.getUniformLocation(inkProgram, 'u_origin'), ox, oy);
+            gl.uniform1f(gl.getUniformLocation(inkProgram, 'u_seed'), seed !== undefined ? seed : Math.random() * 100);
+            gl.drawArrays(gl.TRIANGLES, 0, 6);
+
+            const dataUrl = inkCanvas.toDataURL('image/png');
+            inkImg.setAttribute('href', dataUrl);
+            inkImg.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', dataUrl);
+            setInkMaskThreshold(-0.02);
+            inkBuiltW = w;
+            inkBuiltH = h;
+            inkBuiltOx = ox;
+            inkBuiltOy = oy;
+            inkReady = true;
+        }
+
+        function updateThemeToggleUI() {
+            const isDark = document.documentElement.classList.contains('dark');
+            document.querySelectorAll('.icon-sun').forEach(el => el.classList.toggle('hidden', !isDark));
+            document.querySelectorAll('.icon-moon').forEach(el => el.classList.toggle('hidden', isDark));
+            document.querySelectorAll('.theme-toggle-label').forEach(el => {
+                el.textContent = isDark ? 'Terang' : 'Gelap';
+            });
+        }
+
+        function toggleThemeWithInk(event) {
+            if (isThemeAnimating) return;
+
+            const triggerEl = event ? event.currentTarget : null;
+
+            const applyTheme = () => {
+                const isDark = document.documentElement.classList.toggle('dark');
+                localStorage.setItem('photobooth-theme', isDark ? 'dark' : 'light');
+                updateThemeToggleUI();
+            };
+
+            if (!document.startViewTransition) {
+                applyTheme();
+                return;
+            }
+
+            const { ox, oy } = getActiveToggleOrigin(triggerEl);
+            const originMoved = Math.abs(ox - inkBuiltOx) > 0.03 || Math.abs(oy - inkBuiltOy) > 0.03;
+
+            if (!inkReady || inkBuiltW !== window.innerWidth || inkBuiltH !== window.innerHeight || originMoved) {
+                prepareInkHeightmap(Math.random() * 100, triggerEl);
+            }
+
+            if (!inkReady) {
+                applyTheme();
+                return;
+            }
+
+            isThemeAnimating = true;
+            setInkMaskThreshold(-0.02);
+
+            const transition = document.startViewTransition(() => {
+                applyTheme();
+            });
+
+            transition.ready.then(() => {
+                const startTime = performance.now();
+
+                function step(now) {
+                    const t = Math.min((now - startTime) / INK_ANIM_DURATION, 1);
+                    const eased = t * 0.45 + (t * t * (3 - 2 * t)) * 0.55;
+                    const threshold = -0.02 + eased * 1.06;
+
+                    setInkMaskThreshold(threshold);
+
+                    if (t < 1) {
+                        requestAnimationFrame(step);
+                    }
+                }
+
+                requestAnimationFrame(step);
+            });
+
+            transition.finished.finally(() => {
+                isThemeAnimating = false;
+                setTimeout(() => prepareInkHeightmap(Math.random() * 100), 80);
+            });
+        }
+
         // ----------------------------------------------------
         // SISTEM LOGIN SEDERHANA (Client-Side Security)
         // ----------------------------------------------------
         document.addEventListener("DOMContentLoaded", () => {
+            updateThemeToggleUI();
+
             const isLoggedIn = sessionStorage.getItem("adminLoggedIn");
             if (isLoggedIn === "true") {
                 document.getElementById('login-screen').classList.add('hidden');
                 document.getElementById('admin-dashboard').classList.remove('hidden');
                 switchTab('dashboard');
-                loadSettingsData(); // Menarik data API Settings saat load ulang tab
+                loadSettingsData();
             }
+
+            requestAnimationFrame(() => prepareInkHeightmap(Math.random() * 100));
+        });
+
+        window.addEventListener('resize', () => {
+            clearTimeout(inkResizeTimer);
+            inkResizeTimer = setTimeout(() => {
+                if (!isThemeAnimating) prepareInkHeightmap(Math.random() * 100);
+            }, 250);
         });
 
         async function handleLogin(e) {
@@ -391,7 +943,8 @@
                         loginScreen.classList.add('hidden');
                         document.getElementById('admin-dashboard').classList.remove('hidden');
                         switchTab('dashboard');
-                        loadSettingsData(); // Menarik data API Settings saat baru login
+                        loadSettingsData();
+                        requestAnimationFrame(() => prepareInkHeightmap(Math.random() * 100));
                     }, 300); 
                     
                 } else {
@@ -428,7 +981,6 @@
             }
         };
 
-        // KEMBALIKAN FUNGSI PENARIK DATA PENGATURAN API
         async function loadSettingsData() {
             try {
                 const res = await fetch(`${ADMIN_API_URL}/settings.php`);
@@ -475,15 +1027,15 @@
                         : '<span class="bg-slate-100 text-slate-500 px-2 py-0.5 rounded border border-slate-200 text-[10px] font-bold uppercase tracking-wider">Terpakai</span>';
                     
                     const actions = t.status === 'active' 
-                        ? `<button onclick="showPrintModal('${key}')" class="text-brand-600 hover:text-brand-800 text-sm font-semibold">Print Ulang</button>` 
-                        : `<button onclick="deleteTicket('${key}')" class="text-red-500 hover:text-red-700 text-sm font-semibold">Hapus</button>`;
+                        ? `<button onclick="showPrintModal('${key}')" class="text-brand-600 hover:text-brand-800 text-sm font-semibold whitespace-nowrap">Print Ulang</button>` 
+                        : `<button onclick="deleteTicket('${key}')" class="text-red-500 hover:text-red-700 text-sm font-semibold whitespace-nowrap">Hapus</button>`;
                     
                     tbody.innerHTML += `
                         <tr class="hover:bg-slate-50 border-b border-slate-50 transition-colors">
-                            <td class="py-4 px-6 font-mono font-bold text-lg tracking-widest text-slate-700">${key}</td>
-                            <td class="py-4 px-6">${badge}</td>
-                            <td class="py-4 px-6 text-slate-500 text-xs">${new Date(t.createdAt).toLocaleString('id-ID')}</td>
-                            <td class="py-4 px-6 text-right">${actions}</td>
+                            <td class="py-4 px-5 sm:px-6 font-mono font-bold text-base sm:text-lg tracking-widest text-slate-700 whitespace-nowrap">${key}</td>
+                            <td class="py-4 px-5 sm:px-6 whitespace-nowrap">${badge}</td>
+                            <td class="py-4 px-5 sm:px-6 text-slate-500 text-xs whitespace-nowrap">${new Date(t.createdAt).toLocaleString('id-ID')}</td>
+                            <td class="py-4 px-5 sm:px-6 text-right whitespace-nowrap">${actions}</td>
                         </tr>
                     `;
                 });
@@ -509,8 +1061,15 @@
         function showPrintModal(token) {
             document.getElementById('ticket-code').innerText = token;
             document.getElementById('ticket-qr').src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${token}`;
-            document.getElementById('print-modal').classList.remove('hidden');
-            document.getElementById('print-modal').classList.add('flex');
+            const modal = document.getElementById('print-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closePrintModal() {
+            const modal = document.getElementById('print-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
         }
 
         function printTicket() { window.print(); }
@@ -525,16 +1084,16 @@
                 Object.keys(cachedStyles).forEach(key => {
                     const style = cachedStyles[key];
                     const imgUrl = style.cover ? (style.cover.startsWith('http') ? style.cover : `${ADMIN_API_URL}/${style.cover}`) : '';
-                    const coverHtml = imgUrl ? `<div class="relative w-16 h-12 rounded-lg overflow-hidden bg-slate-100 border border-slate-200"><img src="${imgUrl}" class="absolute inset-0 w-full h-full object-cover z-10 transition-opacity"></div>` : `<div class="w-16 h-12 rounded-lg bg-slate-100 border flex items-center justify-center text-slate-400 text-[10px] font-bold uppercase tracking-wider">Kosong</div>`;
+                    const coverHtml = imgUrl ? `<div class="relative w-16 h-12 rounded-lg overflow-hidden bg-slate-100 border border-slate-200 shrink-0"><img src="${imgUrl}" class="absolute inset-0 w-full h-full object-cover z-10 transition-opacity"></div>` : `<div class="w-16 h-12 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400 text-[10px] font-bold uppercase tracking-wider shrink-0">Kosong</div>`;
                     const hasOptions = style.options && style.options.length > 0;
                     let optBadge = hasOptions ? `<span class="bg-blue-50 border border-blue-200 text-blue-700 text-[10px] font-bold px-2 py-0.5 rounded ml-2 uppercase tracking-wider">${style.options.length} Opsi</span>` : '';
 
                     tbody.innerHTML += `
                         <tr class="hover:bg-slate-50 border-b border-slate-50 transition-colors">
-                            <td class="py-4 px-6">${coverHtml}</td>
-                            <td class="py-4 px-6"><p class="font-bold text-slate-800">${style.name} ${optBadge}</p><p class="text-[11px] text-slate-500 font-mono mt-1">ID: ${key}</p></td>
-                            <td class="py-4 px-6 max-w-xs"><p class="text-xs text-slate-600 line-clamp-2">${style.prompt_template}</p></td>
-                            <td class="py-4 px-6 text-right">
+                            <td class="py-4 px-5 sm:px-6">${coverHtml}</td>
+                            <td class="py-4 px-5 sm:px-6"><p class="font-bold text-slate-800">${style.name} ${optBadge}</p><p class="text-[11px] text-slate-500 font-mono mt-1">ID: ${key}</p></td>
+                            <td class="py-4 px-5 sm:px-6 max-w-xs"><p class="text-xs text-slate-600 line-clamp-2">${style.prompt_template}</p></td>
+                            <td class="py-4 px-5 sm:px-6 text-right whitespace-nowrap">
                                 <button onclick="editStyle('${key}')" class="text-brand-600 hover:text-brand-800 font-semibold mr-3 text-sm">Edit</button>
                                 <button onclick="deleteStyle('${key}')" class="text-red-500 hover:text-red-700 font-semibold text-sm">Hapus</button>
                             </td>
@@ -597,26 +1156,26 @@
                     const imgPreviewId = `preview_img_${groupIdx}_${choiceIdx}`;
                     
                     const imgPreview = imgPreviewUrl 
-                        ? `<img id="${imgPreviewId}" src="${imgPreviewUrl}" class="w-12 h-12 rounded-lg object-cover border border-slate-200 shadow-sm">` 
-                        : `<img id="${imgPreviewId}" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MDAiIGhlaWdodD0iNDAwIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgZmlsbD0iIzFjMWYyOCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzY2NiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgYWxpZ25tZW50LWJhc2VsaW5lPSJtaWRkbGUiPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg==" class="w-12 h-12 rounded-lg object-cover border border-slate-200 shadow-sm">`;
+                        ? `<img id="${imgPreviewId}" src="${imgPreviewUrl}" class="w-12 h-12 rounded-lg object-cover border border-slate-200 shadow-sm shrink-0">` 
+                        : `<img id="${imgPreviewId}" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MDAiIGhlaWdodD0iNDAwIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgZmlsbD0iIzFjMWYyOCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzY2NiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgYWxpZ25tZW50LWJhc2VsaW5lPSJtaWRkbGUiPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg==" class="w-12 h-12 rounded-lg object-cover border border-slate-200 shadow-sm shrink-0">`;
                     
                     choicesHtml += `
-                        <div class="bg-white p-4 rounded-xl border border-slate-200 relative group flex flex-col gap-3 shadow-sm">
-                            <div class="grid grid-cols-2 gap-3 flex-1">
+                        <div class="bg-white p-4 pt-9 sm:pt-4 rounded-xl border border-slate-200 relative group flex flex-col gap-3 shadow-sm">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 flex-1">
                                 <div><span class="text-[10px] text-slate-400 font-bold block mb-1">ID (Value) *</span><input type="text" value="${choice.value || ''}" onchange="updateChoice(${groupIdx}, ${choiceIdx}, 'value', this.value)" class="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-brand-500" required></div>
                                 <div><span class="text-[10px] text-slate-400 font-bold block mb-1">Label UI *</span><input type="text" value="${choice.label || ''}" onchange="updateChoice(${groupIdx}, ${choiceIdx}, 'label', this.value)" class="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-brand-500" required></div>
                                 
                                 <div><span class="text-[10px] text-amber-500 font-bold block mb-1">Muncul Jika Induk Bernilai (Opsional)</span><input type="text" value="${choice.parent_value || ''}" onchange="updateChoice(${groupIdx}, ${choiceIdx}, 'parent_value', this.value)" placeholder="Contoh: jepang" class="w-full text-xs p-2.5 bg-amber-50 border border-amber-200 rounded-lg outline-none focus:border-amber-500"></div>
                                 <div><span class="text-[10px] text-slate-400 font-bold block mb-1">Instruksi Prompt</span><input type="text" value="${choice.prompt || ''}" onchange="updateChoice(${groupIdx}, ${choiceIdx}, 'prompt', this.value)" class="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-brand-500"></div>
                                 
-                                <div class="col-span-2 border-t border-slate-100 pt-3 mt-1">
+                                <div class="sm:col-span-2 border-t border-slate-100 pt-3 mt-1">
                                     <span class="text-[10px] text-slate-400 font-bold block mb-2">Gambar Opsi</span>
-                                    <div class="flex items-center gap-3">${imgPreview}<div class="flex-1">
+                                    <div class="flex items-center gap-3">${imgPreview}<div class="flex-1 min-w-0">
                                         <input type="file" name="optImg_${groupIdx}_${choiceIdx}" accept="image/png, image/jpeg, image/jpg" onchange="window.previewLiveImage(this, '${imgPreviewId}')" class="w-full text-xs p-1.5 bg-slate-50 border border-slate-200 rounded-lg text-slate-500 cursor-pointer">
                                     </div></div>
                                 </div>
                             </div>
-                            <button type="button" onclick="removeChoice(${groupIdx}, ${choiceIdx})" class="absolute top-2 right-2 text-red-500 bg-red-50 p-1.5 rounded-md opacity-0 group-hover:opacity-100 transition-opacity"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M6 18L18 6M6 6l12 12" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+                            <button type="button" onclick="removeChoice(${groupIdx}, ${choiceIdx})" title="Hapus Pilihan" class="absolute top-2 right-2 text-red-500 bg-red-50 p-1.5 rounded-md opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M6 18L18 6M6 6l12 12" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
                         </div>
                     `;
                 });
@@ -624,16 +1183,18 @@
                 const isOptionalChecked = optGroup.optional ? "checked" : "";
                 
                 container.innerHTML += `
-                    <div class="bg-slate-50 border border-slate-200 rounded-xl p-6 relative">
-                        <button type="button" onclick="removeOptionGroup(${groupIdx})" class="absolute top-5 right-5 text-red-500 text-xs font-bold hover:underline">Hapus Kategori</button>
-                        <div class="grid grid-cols-3 gap-4 w-11/12 mb-3">
-                            <div><span class="text-[10px] text-slate-400 font-bold block mb-1 uppercase tracking-wider">ID Kategori *</span><input type="text" value="${optGroup.id || ''}" onchange="updateOptionGroup(${groupIdx}, 'id', this.value)" class="text-sm font-bold p-2.5 border border-slate-200 rounded-lg w-full outline-none focus:border-brand-500" required></div>
-                            <div><span class="text-[10px] text-slate-400 font-bold block mb-1 uppercase tracking-wider">Judul UI *</span><input type="text" value="${optGroup.label || ''}" onchange="updateOptionGroup(${groupIdx}, 'label', this.value)" class="text-sm font-bold p-2.5 border border-slate-200 rounded-lg w-full outline-none focus:border-brand-500" required></div>
+                    <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 sm:p-6 relative">
+                        <div class="flex justify-end mb-2 sm:mb-0 sm:absolute sm:top-5 sm:right-5">
+                            <button type="button" onclick="removeOptionGroup(${groupIdx})" class="text-red-500 text-xs font-bold hover:underline">Hapus Kategori</button>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 w-full sm:w-10/12 mb-3">
+                            <div><span class="text-[10px] text-slate-400 font-bold block mb-1 uppercase tracking-wider">ID Kategori *</span><input type="text" value="${optGroup.id || ''}" onchange="updateOptionGroup(${groupIdx}, 'id', this.value)" class="text-sm font-bold p-2.5 bg-white border border-slate-200 rounded-lg w-full outline-none focus:border-brand-500" required></div>
+                            <div><span class="text-[10px] text-slate-400 font-bold block mb-1 uppercase tracking-wider">Judul UI *</span><input type="text" value="${optGroup.label || ''}" onchange="updateOptionGroup(${groupIdx}, 'label', this.value)" class="text-sm font-bold p-2.5 bg-white border border-slate-200 rounded-lg w-full outline-none focus:border-brand-500" required></div>
                             <div><span class="text-[10px] text-amber-500 font-bold block mb-1 uppercase tracking-wider">Bergantung Pada ID (Opsional)</span><input type="text" value="${optGroup.depends_on || ''}" onchange="updateOptionGroup(${groupIdx}, 'depends_on', this.value)" placeholder="Contoh: negara" class="text-sm font-bold p-2.5 bg-amber-50 border border-amber-200 rounded-lg w-full outline-none focus:border-amber-500"></div>
                         </div>
                         <div class="mb-5"><label class="flex items-center gap-2 text-xs font-bold text-slate-600 cursor-pointer w-fit"><input type="checkbox" onchange="updateOptionGroup(${groupIdx}, 'optional', this.checked)" ${isOptionalChecked} class="rounded border-slate-300 text-brand-500 focus:ring-brand-500"> Boleh Dikosongkan (Opsional)</label></div>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 p-5 bg-white/50 border border-dashed border-slate-200 rounded-xl">${choicesHtml}</div>
-                        <button type="button" onclick="addChoice(${groupIdx})" class="text-xs bg-white border border-slate-200 text-slate-700 px-4 py-2 rounded-lg font-bold hover:bg-slate-50 shadow-sm transition-colors">+ Tambah Pilihan</button>
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4 p-3 sm:p-5 bg-white/50 border border-dashed border-slate-200 rounded-xl">${choicesHtml}</div>
+                        <button type="button" onclick="addChoice(${groupIdx})" class="w-full sm:w-auto text-xs bg-white border border-slate-200 text-slate-700 px-4 py-2 rounded-lg font-bold hover:bg-slate-50 shadow-sm transition-colors">+ Tambah Pilihan</button>
                     </div>
                 `;
             });
@@ -673,6 +1234,7 @@
         }
 
         function switchTab(tabId, preserveForm = false) { 
+            closeMobileSidebar();
             document.querySelectorAll('.admin-tab').forEach(t=>t.classList.add('hidden')); 
             document.getElementById(`tab-${tabId}`).classList.remove('hidden'); 
             document.querySelectorAll('.nav-link').forEach(l=>{ l.classList.remove('bg-brand-50','text-brand-600','active'); l.classList.add('text-slate-600') }); 

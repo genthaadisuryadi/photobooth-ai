@@ -5,6 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Agentic AI Photobooth</title>
     
+    <!-- Cegah kedipan putih saat reload jika mode gelap aktif -->
+    <script>
+        if (localStorage.getItem('photobooth-theme') === 'dark') {
+            document.documentElement.classList.add('dark');
+        }
+    </script>
+
     <link rel="icon" href="logo.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -12,6 +19,7 @@
 
     <script>
         tailwind.config = {
+            darkMode: 'class',
             theme: {
                 extend: {
                     colors: {
@@ -26,6 +34,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 
     <style>
+        html { scrollbar-gutter: stable; }
         html, body { background: #f8fafc; margin: 0; padding: 0; color: #0f172a; min-height: 100vh; overflow-x: hidden; }
         .screen-hidden { display: none !important; }
         ::-webkit-scrollbar { width: 6px; }
@@ -42,16 +51,152 @@
         .welcome-gallery-reel { display: flex; flex-direction: column; gap: 16px; animation: welcome-gallery-up 34s linear infinite; }
         .welcome-gallery-lane:nth-child(2) .welcome-gallery-reel { animation-duration: 41s; animation-delay: -17s; }
         .proc-progress-fill { transition: width 0.3s ease-out; }
+
+        /* QR Scanner & Mirror Fix */
         #qr-reader { width: 100%; border: none !important; border-radius: 1rem; overflow: hidden; background: white; }
         #qr-reader img[alt="Info icon"] { display: none; }
         #qr-reader__dashboard_section_csr span { color: #334155 !important; }
-        #qr-reader video { object-fit: cover !important; border-radius: 1rem; }
+        #qr-reader video { object-fit: cover !important; border-radius: 1rem; transform: scaleX(-1); }
+
         .cover-img-safe { object-position: center center !important; }
         input:focus { outline: none; box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2); }
         #print-container { display: none; }
+
+        /* Logo wrapper: ukuran & padding IDENTIK di Light & Dark Mode agar posisi 0px bergeser */
+        .logo-wrap {
+            padding: 8px 14px;
+            margin-left: -14px;
+            border-radius: 14px;
+            background-color: transparent;
+        }
+        html.dark .logo-wrap {
+            background-color: rgba(255, 255, 255, 0.96);
+        }
+        html.dark .logo-wrap img {
+            mix-blend-mode: normal !important;
+        }
+
+        /* =========================================================
+           VENOM INK-BLEED VIEW TRANSITION (3.0s SLOW & CRISP)
+        ========================================================= */
+        ::view-transition-group(root) {
+            animation-duration: 3.0s;
+        }
+        ::view-transition-old(root),
+        ::view-transition-new(root) {
+            animation-duration: 3.0s;
+            animation-timing-function: linear;
+            mix-blend-mode: normal;
+        }
+        ::view-transition-old(root) {
+            animation-name: ink-hold;
+            z-index: 1;
+        }
+        ::view-transition-new(root) {
+            animation-name: ink-hold;
+            mask-image: url(#ink-mask);
+            -webkit-mask-image: url(#ink-mask);
+            z-index: 2;
+        }
+        @keyframes ink-hold {
+            from { opacity: 1; }
+            to { opacity: 1; }
+        }
+
+        /* =========================================================
+           DARK MODE GLOBAL (HANYA WARNA — ZERO LAYOUT SHIFT)
+        ========================================================= */
+        html.dark,
+        html.dark body {
+            background: #090d16 !important;
+            color: #f8fafc !important;
+        }
+        html.dark ::-webkit-scrollbar-track { background: #0f172a; }
+        html.dark ::-webkit-scrollbar-thumb { background: #334155; }
+        html.dark ::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+        html.dark .bg-booth-bg,
+        html.dark .bg-slate-50 { background-color: #090d16 !important; }
+        html.dark .bg-white { background-color: #0f172a !important; }
+        html.dark .bg-white\/95 { background-color: rgba(15, 23, 42, 0.95) !important; }
+        html.dark .bg-white\/90 { background-color: rgba(15, 23, 42, 0.9) !important; }
+        html.dark .bg-white\/80 { background-color: rgba(15, 23, 42, 0.82) !important; }
+        html.dark .bg-white\/60 { background-color: rgba(15, 23, 42, 0.65) !important; }
+        html.dark .bg-slate-100 { background-color: #1e293b !important; }
+        html.dark .bg-blue-50 { background-color: rgba(30, 58, 138, 0.28) !important; }
+        html.dark .bg-blue-100 { background-color: rgba(30, 58, 138, 0.38) !important; }
+        html.dark .hover\:bg-slate-50:hover,
+        html.dark .hover\:bg-slate-200:hover { background-color: #334155 !important; }
+
+        /* Redam blob ambient saat dark mode */
+        html.dark .welcome-ambient-blob {
+            opacity: 0.14 !important;
+        }
+
+        /* Teks */
+        html.dark .text-slate-900,
+        html.dark .text-slate-800,
+        html.dark .text-slate-700,
+        html.dark .text-booth-text { color: #f8fafc !important; }
+        html.dark .text-slate-600,
+        html.dark .text-slate-500 { color: #94a3b8 !important; }
+        html.dark .text-slate-400 { color: #64748b !important; }
+        html.dark .text-booth-accent { color: #60a5fa !important; }
+        html.dark #btn-capture { background-color: #ffffff !important; border-color: #2563eb !important; }
+        html.dark #btn-capture .text-booth-accent { color: #1e3a8a !important; }
+
+        /* Border (hanya warna, ketebalan tetap) */
+        html.dark .border-slate-100,
+        html.dark .border-slate-200,
+        html.dark .border-slate-300 { border-color: #1e293b !important; }
+        html.dark .border-blue-100,
+        html.dark .border-blue-200 { border-color: rgba(59, 130, 246, 0.35) !important; }
+
+        /* Grid, Glow & Gradient Fade Overlay */
+        html.dark .bg-grid {
+            background-image: linear-gradient(#1e293b 1px, transparent 1px), linear-gradient(90deg, #1e293b 1px, transparent 1px);
+            opacity: 0.35;
+        }
+        html.dark .radial-glow {
+            background: radial-gradient(ellipse 860px 600px at 50% 0%, rgba(37, 99, 235, 0.16), transparent 60%);
+        }
+        html.dark .welcome-fade-top {
+            background: linear-gradient(to bottom, #0f172a, transparent) !important;
+        }
+        html.dark .welcome-fade-bottom {
+            background: linear-gradient(to top, #0f172a, transparent) !important;
+        }
+        html.dark .preview-fade-overlay {
+            background: linear-gradient(to top, #0f172a, rgba(15, 23, 42, 0.55), transparent) !important;
+        }
+        html.dark .review-bg-gradient {
+            background: linear-gradient(135deg, #090d16 0%, #0f172a 55%, #090d16 100%) !important;
+        }
+        html.dark #countdown-display {
+            background-color: rgba(9, 13, 22, 0.78) !important;
+        }
+        html.dark #countdownNumber {
+            color: #facc15 !important;
+        }
+
+        /* Kartu Dinamis dari app.js */
+        html.dark #style-list-container > *,
+        html.dark #integrated-options-wrapper .bg-white {
+            background-color: #111827 !important;
+            border-color: #1e293b !important;
+        }
+        html.dark #qr-reader { background: #0f172a !important; }
+        html.dark #qr-reader__dashboard_section_csr span { color: #cbd5e1 !important; }
+
+        /* Kotak QR Code Result wajib tetap putih agar mudah di-scan kamera HP */
+        html.dark .qr-safe-box {
+            background-color: #ffffff !important;
+            border-color: #334155 !important;
+        }
+
         @media print {
             body, html { background: white !important; margin: 0 !important; padding: 0 !important; width: 100% !important; height: 100% !important; }
-            #app-container, #print-modal, #screen-frame { display: none !important; }
+            #app-container, #print-modal, #screen-frame, #theme-toggle-btn { display: none !important; }
             #print-container { display: flex !important; width: 100% !important; height: 100% !important; align-items: center; justify-content: center; margin: 0 !important; padding: 0 !important; }
             #print-image { width: 100% !important; height: 100% !important; object-fit: cover !important; }
             @page { margin: 0; }
@@ -60,20 +205,51 @@
 </head>
 <body class="font-sans text-booth-text antialiased select-none relative">
 
+    <!-- SVG LUMINANCE MASK TAJAM UNTUK TRANSISI VENOM INK-BLEED -->
+    <svg id="ink-transition-svg" width="0" height="0" style="position:fixed;top:0;left:0;pointer-events:none;z-index:-1;" aria-hidden="true">
+        <defs>
+            <filter id="ink-threshold" filterUnits="userSpaceOnUse" x="0" y="0" width="1920" height="1080" color-interpolation-filters="sRGB">
+                <feColorMatrix id="ink-matrix" type="matrix"
+                    values="-240 0 0 0 -5
+                            -240 0 0 0 -5
+                            -240 0 0 0 -5
+                             0   0 0 0  1" />
+            </filter>
+            <mask id="ink-mask" style="mask-type:luminance;" maskUnits="userSpaceOnUse" maskContentUnits="userSpaceOnUse" x="0" y="0" width="1920" height="1080">
+                <image id="ink-heightmap" x="0" y="0" width="1920" height="1080" preserveAspectRatio="none" filter="url(#ink-threshold)" />
+            </mask>
+        </defs>
+    </svg>
+
+    <!-- TOMBOL GLOBAL TOGGLE MODE TERANG / GELAP (UKURAN DIKUNCI TETAP) -->
+    <button id="theme-toggle-btn" onclick="toggleThemeWithInk(event)" title="Ganti Mode Terang / Gelap"
+        class="fixed top-6 right-5 sm:right-8 z-[100] inline-flex items-center justify-center gap-2 h-11 w-11 sm:w-[106px] rounded-full bg-white/90 backdrop-blur-md border border-slate-200 shadow-md hover:shadow-lg hover:scale-105 active:scale-95 transition-transform duration-150 text-xs font-bold text-slate-700">
+        <!-- Ikon Bulan (muncul di Light Mode) -->
+        <svg id="icon-moon" class="w-4 h-4 shrink-0 text-blue-800" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z" />
+        </svg>
+        <!-- Ikon Matahari (muncul di Dark Mode) -->
+        <svg id="icon-sun" class="w-4 h-4 shrink-0 text-yellow-400 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+            <circle cx="12" cy="12" r="4" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 2v2m0 16v2m10-10h-2M4 12H2m15.364-7.364l-1.414 1.414M8.05 15.95l-1.414 1.414m12.728 0l-1.414-1.414M8.05 8.05L6.636 6.636" />
+        </svg>
+        <span id="theme-toggle-label" class="hidden sm:inline">Gelap</span>
+    </button>
+
     <div id="app-container" class="relative w-full min-h-screen bg-booth-bg flex flex-col">
 
         <!-- SCREEN 1: WELCOME -->
         <section id="screen-welcome" class="w-full min-h-screen lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(520px,1fr)] bg-white relative">
             <div class="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
-                <div class="absolute -top-[10%] -left-[10%] w-[50%] h-[50%] rounded-full bg-blue-100/60 blur-[100px]"></div>
-                <div class="absolute top-[20%] right-[40%] w-[30%] h-[40%] rounded-full bg-yellow-100/60 blur-[100px]"></div>
-                <div class="absolute bottom-0 left-[20%] w-[40%] h-[40%] rounded-full bg-blue-50/70 blur-[100px]"></div>
+                <div class="welcome-ambient-blob absolute -top-[10%] -left-[10%] w-[50%] h-[50%] rounded-full bg-blue-100/60 blur-[100px]"></div>
+                <div class="welcome-ambient-blob absolute top-[20%] right-[40%] w-[30%] h-[40%] rounded-full bg-yellow-100/60 blur-[100px]"></div>
+                <div class="welcome-ambient-blob absolute bottom-0 left-[20%] w-[40%] h-[40%] rounded-full bg-blue-50/70 blur-[100px]"></div>
             </div>
 
             <div class="relative flex min-h-screen flex-col px-5 pb-8 pt-5 sm:px-8 sm:pb-10 sm:pt-7 lg:px-[clamp(36px,5vw,84px)] lg:pb-12 lg:pt-9 z-10 justify-between">
                 <header class="flex items-center justify-between border-b border-slate-100 pb-4">
                     <div class="flex items-center">
-                        <div class="h-16 sm:h-20 w-auto flex items-center justify-start shrink-0">
+                        <div class="logo-wrap h-16 sm:h-20 w-auto flex items-center justify-start shrink-0">
                             <img src="logo.png" alt="Logo Agentic AI Center" class="h-full w-auto object-contain mix-blend-multiply">
                         </div>
                     </div>
@@ -109,8 +285,8 @@
                         <div class="welcome-gallery-reel" id="welcome-gallery-right"></div>
                     </div>
                 </div>
-                <div class="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-white to-transparent pointer-events-none z-10"></div>
-                <div class="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-white to-transparent pointer-events-none z-10"></div>
+                <div class="welcome-fade-top absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-white to-transparent pointer-events-none z-10"></div>
+                <div class="welcome-fade-bottom absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-white to-transparent pointer-events-none z-10"></div>
             </aside>
         </section>
 
@@ -118,18 +294,18 @@
         <section id="screen-style" class="screen-hidden w-full min-h-screen flex flex-col bg-slate-50 relative fade-in">
             <header class="flex items-center justify-between min-h-[90px] py-3 px-5 sm:px-8 lg:px-10 border-b border-slate-200 shrink-0 bg-white relative z-20">
                 <div class="flex items-center">
-                    <div class="h-16 sm:h-20 w-auto flex items-center justify-start shrink-0">
+                    <div class="logo-wrap h-16 sm:h-20 w-auto flex items-center justify-start shrink-0">
                         <img src="logo.png" alt="Logo UCIC Agentic" class="h-full w-auto object-contain mix-blend-multiply">
                     </div>
                 </div>
-                <div class="flex items-center gap-3">
+                <div class="flex items-center gap-3 mr-16 sm:mr-28">
                     <span class="text-[11px] font-bold uppercase tracking-widest text-booth-accent bg-blue-50 px-3 py-1 rounded-full border border-blue-100">Langkah 1 dari 3</span>
                 </div>
             </header>
 
             <main class="grid min-h-[calc(100vh-90px)] flex-1 md:grid-cols-[minmax(340px,0.8fr)_minmax(0,1.2fr)] lg:grid-cols-[minmax(410px,0.8fr)_minmax(0,1.2fr)]">
                 <section class="flex min-h-0 flex-col border-r border-slate-200 bg-slate-50 relative">
-                    <div class="absolute inset-0 bg-gradient-to-b from-blue-50/50 to-transparent pointer-events-none"></div>
+                    <div class="absolute inset-0 bg-gradient-to-b from-blue-50/50 dark:from-blue-950/20 to-transparent pointer-events-none"></div>
                     <div class="shrink-0 border-b border-slate-200 px-5 py-5 sm:px-8 lg:px-10 lg:py-8 bg-white/60 backdrop-blur-sm relative z-10">
                         <h1 class="text-[32px] font-extrabold leading-none tracking-[-0.04em] text-slate-800">Pilih Tema</h1>
                         <p class="mt-2 text-[13px] font-medium text-slate-500">Pilih tema besarnya, lalu sesuaikan opsi detailnya.</p>
@@ -143,7 +319,7 @@
                     <div class="flex-1 overflow-y-auto pb-10">
                         <div class="relative w-full h-[45%] min-h-[300px] shrink-0 bg-slate-100">
                             <img id="integrated-preview-img" src="" class="cover-img-safe absolute inset-0 h-full w-full object-cover transition-opacity duration-300">
-                            <div class="absolute inset-0 bg-gradient-to-t from-white via-white/50 to-transparent pointer-events-none"></div>
+                            <div class="preview-fade-overlay absolute inset-0 bg-gradient-to-t from-white via-white/50 to-transparent pointer-events-none"></div>
                         </div>
 
                         <div class="px-6 lg:px-10 -mt-20 relative z-10 pb-6 border-b border-slate-100">
@@ -171,11 +347,11 @@
 
             <header class="flex items-center justify-between min-h-[90px] py-3 px-5 sm:px-8 lg:px-10 border-b border-slate-200 shrink-0 bg-white relative z-20">
                 <div class="flex items-center">
-                    <div class="h-16 sm:h-20 w-auto flex items-center justify-start shrink-0">
+                    <div class="logo-wrap h-16 sm:h-20 w-auto flex items-center justify-start shrink-0">
                         <img src="logo.png" alt="Logo UCIC Agentic" class="h-full w-auto object-contain mix-blend-multiply">
                     </div>
                 </div>
-                <div class="flex items-center gap-3">
+                <div class="flex items-center gap-3 mr-16 sm:mr-28">
                     <span class="text-[11px] font-bold uppercase tracking-widest text-slate-500 bg-slate-100 px-3 py-1 rounded-full border border-slate-200">Autentikasi Tiket</span>
                 </div>
             </header>
@@ -212,11 +388,11 @@
         <section id="screen-capture" class="screen-hidden w-full min-h-screen bg-slate-50 flex flex-col relative fade-in">
             <header class="flex items-center justify-between min-h-[90px] py-3 px-5 sm:px-8 lg:px-10 border-b border-slate-200 shrink-0 relative z-20 bg-white/80 backdrop-blur-md">
                 <div class="flex items-center">
-                    <div class="h-16 sm:h-20 w-auto flex items-center justify-start shrink-0">
+                    <div class="logo-wrap h-16 sm:h-20 w-auto flex items-center justify-start shrink-0">
                         <img src="logo.png" alt="Logo" class="h-full w-auto object-contain mix-blend-multiply">
                     </div>
                 </div>
-                <div class="flex items-center gap-3">
+                <div class="flex items-center gap-3 mr-16 sm:mr-28">
                     <span id="hand-detector-status" class="text-[11px] font-bold tracking-widest text-white bg-blue-500 px-3 py-1 rounded-full shadow-sm animate-pulse hidden">Menunggu Pose 5 Jari</span>
                     <span class="text-[11px] font-bold uppercase tracking-widest text-booth-accent bg-blue-50 px-3 py-1 rounded-full border border-blue-100">Langkah 2 dari 3</span>
                 </div>
@@ -258,8 +434,8 @@
             <div id="capture-decision" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-md overflow-y-auto p-4 flex items-center justify-center">
                 <div class="w-full max-w-[480px] bg-white rounded-3xl p-5 sm:p-6 flex flex-col gap-4 shadow-2xl border border-slate-100 my-auto">
                     <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-full bg-green-100 grid place-items-center shrink-0">
-                            <svg class="w-5 h-5 text-green-600" fill="none" viewBox="0 0 24 24"><path d="m5 13 4 4L19 7" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>
+                        <div class="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/40 grid place-items-center shrink-0">
+                            <svg class="w-5 h-5 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24"><path d="m5 13 4 4L19 7" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>
                         </div>
                         <div>
                             <h2 class="text-xl font-black text-slate-800">Foto Diambil!</h2>
@@ -283,14 +459,14 @@
         <section id="screen-review" class="screen-hidden w-full min-h-screen bg-slate-50 flex flex-col relative fade-in">
             <header class="flex items-center justify-between min-h-[90px] py-3 px-5 sm:px-8 lg:px-10 border-b border-slate-200 shrink-0 bg-white relative z-20">
                 <div class="flex items-center">
-                    <div class="h-16 sm:h-20 w-auto flex items-center justify-start shrink-0">
+                    <div class="logo-wrap h-16 sm:h-20 w-auto flex items-center justify-start shrink-0">
                         <img src="logo.png" alt="Logo" class="h-full w-auto object-contain mix-blend-multiply">
                     </div>
                 </div>
             </header>
-            <main class="min-h-[calc(100vh-90px)] flex-1 flex items-center justify-center p-6 sm:p-8 bg-gradient-to-br from-slate-50 via-blue-50/50 to-slate-50">
+            <main class="review-bg-gradient min-h-[calc(100vh-90px)] flex-1 flex items-center justify-center p-6 sm:p-8 bg-gradient-to-br from-slate-50 via-blue-50/50 to-slate-50">
                 <div class="grid w-full max-w-[1160px] gap-8 lg:grid-cols-[1.1fr_0.9fr] items-center">
-                    <div class="rounded-3xl border border-white bg-slate-100 overflow-hidden shadow-2xl relative min-h-[250px] sm:min-h-[350px]">
+                    <div class="rounded-3xl border border-slate-200 bg-slate-100 overflow-hidden shadow-2xl relative min-h-[250px] sm:min-h-[350px]">
                         <img id="review-blurred-img" src="" class="h-full w-full object-cover blur-2xl opacity-60 absolute inset-0">
                         <div class="absolute inset-0 bg-gradient-to-b from-transparent via-white/40 to-transparent h-[30%] animate-[welcome-gallery-up_2s_linear_infinite]"></div>
                     </div>
@@ -321,16 +497,16 @@
         <section id="screen-result" class="screen-hidden w-full min-h-screen bg-white flex flex-col relative fade-in overflow-y-auto">
             <header class="flex items-center justify-between min-h-[90px] py-3 px-8 lg:px-12 border-b border-slate-100 shrink-0 sticky top-0 bg-white/90 backdrop-blur z-20">
                 <div class="flex items-center">
-                    <div class="h-14 sm:h-16 w-auto flex items-center justify-start shrink-0">
+                    <div class="logo-wrap h-14 sm:h-16 w-auto flex items-center justify-start shrink-0">
                         <img src="logo.png" alt="Logo" class="h-full w-auto object-contain mix-blend-multiply">
                     </div>
                 </div>
-                <span class="text-xs font-bold uppercase tracking-widest text-slate-500">Selesai</span>
+                <span class="text-xs font-bold uppercase tracking-widest text-slate-500 mr-16 sm:mr-28">Selesai</span>
             </header>
             
             <main class="flex-1 p-6 max-w-[1100px] mx-auto w-full flex flex-col items-center py-12 pb-24 bg-white relative">
-                <div class="absolute top-[10%] left-[10%] w-[40%] h-[40%] bg-blue-50/60 rounded-full blur-[100px] -z-10 pointer-events-none"></div>
-                <div class="absolute top-[20%] right-[10%] w-[30%] h-[40%] bg-yellow-50/60 rounded-full blur-[100px] -z-10 pointer-events-none"></div>
+                <div class="welcome-ambient-blob absolute top-[10%] left-[10%] w-[40%] h-[40%] bg-blue-50/60 rounded-full blur-[100px] -z-10 pointer-events-none"></div>
+                <div class="welcome-ambient-blob absolute top-[20%] right-[10%] w-[30%] h-[40%] bg-yellow-50/60 rounded-full blur-[100px] -z-10 pointer-events-none"></div>
                 
                 <div class="w-full grid md:grid-cols-2 gap-10 items-start">
                     
@@ -343,7 +519,7 @@
                         </div>
                         
                         <div class="mt-6 flex flex-col items-center w-full">
-                            <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 w-36 h-36 flex items-center justify-center">
+                            <div class="qr-safe-box bg-slate-50 p-4 rounded-2xl border border-slate-100 w-36 h-36 flex items-center justify-center">
                                 <div id="qrcode-original"></div>
                             </div>
                             <p class="mt-3 text-[11px] font-bold text-center text-slate-400 uppercase tracking-widest">Unduh File Asli</p>
@@ -359,7 +535,7 @@
                         </div>
                         
                         <div class="mt-6 flex flex-col items-center w-full">
-                            <div class="bg-blue-50 p-4 rounded-2xl border border-blue-100 w-36 h-36 flex items-center justify-center shadow-sm">
+                            <div class="qr-safe-box bg-blue-50 p-4 rounded-2xl border border-blue-100 w-36 h-36 flex items-center justify-center shadow-sm">
                                 <div id="qrcode-ai"></div>
                             </div>
                             <p class="mt-3 text-[11px] font-bold text-center text-booth-accent uppercase tracking-widest">Unduh File AI</p>
@@ -403,14 +579,305 @@
         <img id="print-image" src="" alt="Hasil AI">
     </div>
 
-    <!-- Pemuatan Library MediaPipe Dipindah ke Sini -->
+    <!-- Pemuatan Library MediaPipe -->
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous" defer></script>
 
-    <!-- Fungsi Modifikasi UI Khusus Transisi -->
+    <!-- ENGINE TRANSISI VENOM INK-BLEED 60 FPS (WEBGL RIDGED TENDRILS + CRISP LUMINANCE MASK) -->
     <script>
+        let isThemeAnimating = false;
+        let inkGL = null;
+        let inkProgram = null;
+        let inkCanvas = null;
+        let inkReady = false;
+        let inkBuiltW = 0;
+        let inkBuiltH = 0;
+        let inkResizeTimer = null;
+
+        const INK_SHARPNESS = 240;     // Tepi tinta super tajam tanpa kabut abu-abu
+        const INK_ANIM_DURATION = 2900; // ms (sinkron dengan 3.0s CSS, slow & smooth)
+
+        function initInkWebGL() {
+            if (inkGL) return true;
+            inkCanvas = document.createElement('canvas');
+            const gl = inkCanvas.getContext('webgl', { preserveDrawingBuffer: true, antialias: false });
+            if (!gl) return false;
+
+            const vsSrc = `
+                attribute vec2 a_pos;
+                void main() { gl_Position = vec4(a_pos, 0.0, 1.0); }
+            `;
+
+            const fsSrc = `
+                precision highp float;
+                uniform vec2 u_resolution;
+                uniform vec2 u_origin;
+                uniform float u_seed;
+
+                float hash(vec2 p) {
+                    p = fract(p * vec2(123.34, 456.21));
+                    p += dot(p, p + 45.32);
+                    return fract(p.x * p.y);
+                }
+
+                float noise(vec2 p) {
+                    vec2 i = floor(p);
+                    vec2 f = fract(p);
+                    vec2 u = f * f * (3.0 - 2.0 * f);
+                    return mix(
+                        mix(hash(i + vec2(0.0, 0.0)), hash(i + vec2(1.0, 0.0)), u.x),
+                        mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), u.x),
+                        u.y
+                    );
+                }
+
+                const mat2 rot = mat2(0.80, 0.60, -0.60, 0.80);
+
+                float fbm(vec2 p) {
+                    float v = 0.0;
+                    float a = 0.5;
+                    for (int i = 0; i < 5; i++) {
+                        v += a * noise(p);
+                        p = rot * p * 2.03 + vec2(1.7, 9.2);
+                        a *= 0.5;
+                    }
+                    return v;
+                }
+
+                // Ridged multifractal untuk sulur/tentakel tajam ala Venom
+                float ridgedFbm(vec2 p) {
+                    float v = 0.0;
+                    float a = 0.52;
+                    for (int i = 0; i < 4; i++) {
+                        float n = 1.0 - abs(2.0 * noise(p) - 1.0);
+                        v += a * n * n;
+                        p = rot * p * 2.12 + vec2(3.1, 7.4);
+                        a *= 0.48;
+                    }
+                    return v;
+                }
+
+                void main() {
+                    vec2 uv = gl_FragCoord.xy / u_resolution;
+                    vec2 screenPos = vec2(uv.x, 1.0 - uv.y);
+                    float aspect = u_resolution.x / u_resolution.y;
+
+                    vec2 diff = (screenPos - u_origin) * vec2(aspect, 1.0);
+                    float d0 = length((vec2(0.0, 0.0) - u_origin) * vec2(aspect, 1.0));
+                    float d1 = length((vec2(1.0, 0.0) - u_origin) * vec2(aspect, 1.0));
+                    float d2 = length((vec2(0.0, 1.0) - u_origin) * vec2(aspect, 1.0));
+                    float d3 = length((vec2(1.0, 1.0) - u_origin) * vec2(aspect, 1.0));
+                    float maxDist = max(max(d0, d1), max(d2, d3));
+                    float L = length(diff);
+                    float dist = L / maxDist;
+
+                    vec2 p = screenPos * vec2(aspect, 1.0);
+
+                    // 1. Gelombang tinta besar yang meliuk organik
+                    vec2 st = p * 2.15;
+                    vec2 q = vec2(
+                        fbm(st + vec2(u_seed * 1.13, u_seed * 0.47)),
+                        fbm(st + vec2(5.2 + u_seed * 0.71, 1.3 + u_seed * 0.91))
+                    );
+                    vec2 r = vec2(
+                        fbm(st * 1.4 + 2.9 * q + vec2(1.7, 9.2) + u_seed * 0.37),
+                        fbm(st * 1.4 + 2.9 * q + vec2(8.3, 2.8) + u_seed * 0.83)
+                    );
+                    float inkWave = fbm(st * 1.3 + 2.7 * r);
+
+                    // 2. Sulur tajam menjulur keluar (Venom tendrils) tanpa seam
+                    vec2 radialStretched = (diff / (L + 0.06)) * pow(L + 0.06, 0.56) * 3.8;
+                    float veinsPrimary = ridgedFbm(radialStretched + 1.9 * r + vec2(u_seed * 0.53));
+                    float veinsFine = ridgedFbm(radialStretched * 2.35 + 1.35 * q + vec2(4.2, 6.8) + u_seed * 0.29);
+                    float tendrils = clamp(veinsPrimary * 0.72 + veinsFine * 0.42, 0.0, 1.0);
+
+                    // 3. Percikan bercak tinta kecil di depan sulur utama
+                    float splatterNoise = fbm(p * 7.8 + 2.8 * r + vec2(u_seed * 0.61));
+                    float droplets = smoothstep(0.54, 0.74, splatterNoise) * 0.36;
+
+                    float venomField = clamp(inkWave * 0.46 + tendrils * 0.64 + droplets, 0.0, 1.0);
+
+                    // Remap agar selalu mulai bersih dari tombol (0.0) & habis tuntas di sudut terjauh (1.0)
+                    float env = smoothstep(0.0, 0.10, dist);
+                    float rawH = dist * 0.70 + (1.0 - venomField) * 0.44 * env;
+                    float h = clamp(rawH / 1.14, 0.0, 1.0);
+
+                    gl_FragColor = vec4(h, h, h, 1.0);
+                }
+            `;
+
+            const compile = (type, src) => {
+                const s = gl.createShader(type);
+                gl.shaderSource(s, src);
+                gl.compileShader(s);
+                return s;
+            };
+
+            const prog = gl.createProgram();
+            gl.attachShader(prog, compile(gl.VERTEX_SHADER, vsSrc));
+            gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, fsSrc));
+            gl.linkProgram(prog);
+            gl.useProgram(prog);
+
+            const buf = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, -1,1, 1,-1, 1,1]), gl.STATIC_DRAW);
+
+            const posLoc = gl.getAttribLocation(prog, 'a_pos');
+            gl.enableVertexAttribArray(posLoc);
+            gl.vertexAttribPointer(posLoc, 2, gl.FLOAT, false, 0, 0);
+
+            inkGL = gl;
+            inkProgram = prog;
+            return true;
+        }
+
+        function setInkMaskThreshold(threshold) {
+            const offset = (INK_SHARPNESS * threshold).toFixed(2);
+            const s = -INK_SHARPNESS;
+            const matrix = document.getElementById('ink-matrix');
+            if (matrix) {
+                matrix.setAttribute(
+                    'values',
+                    `${s} 0 0 0 ${offset}  ${s} 0 0 0 ${offset}  ${s} 0 0 0 ${offset}  0 0 0 0 1`
+                );
+            }
+        }
+
+        function prepareInkHeightmap(seed) {
+            const btn = document.getElementById('theme-toggle-btn');
+            const w = window.innerWidth;
+            const h = window.innerHeight;
+            let ox = 0.94, oy = 0.06;
+
+            if (btn) {
+                const rect = btn.getBoundingClientRect();
+                if (rect.width > 0) {
+                    ox = (rect.left + rect.width / 2) / w;
+                    oy = (rect.top + rect.height / 2) / h;
+                }
+            }
+
+            const inkMask = document.getElementById('ink-mask');
+            const inkFilter = document.getElementById('ink-threshold');
+            const inkImg = document.getElementById('ink-heightmap');
+            inkMask.setAttribute('width', w);
+            inkMask.setAttribute('height', h);
+            inkFilter.setAttribute('width', w);
+            inkFilter.setAttribute('height', h);
+            inkImg.setAttribute('width', w);
+            inkImg.setAttribute('height', h);
+
+            if (!initInkWebGL()) {
+                inkReady = false;
+                return;
+            }
+
+            // Resolusi tinggi agar ujung sulur Venom tetap tajam & tidak pecah
+            const texW = Math.min(1024, Math.max(640, Math.round(w * 0.65)));
+            const texH = Math.max(360, Math.round(texW * (h / w)));
+            inkCanvas.width = texW;
+            inkCanvas.height = texH;
+
+            const gl = inkGL;
+            gl.viewport(0, 0, texW, texH);
+            gl.useProgram(inkProgram);
+            gl.uniform2f(gl.getUniformLocation(inkProgram, 'u_resolution'), texW, texH);
+            gl.uniform2f(gl.getUniformLocation(inkProgram, 'u_origin'), ox, oy);
+            gl.uniform1f(gl.getUniformLocation(inkProgram, 'u_seed'), seed !== undefined ? seed : Math.random() * 100);
+            gl.drawArrays(gl.TRIANGLES, 0, 6);
+
+            const dataUrl = inkCanvas.toDataURL('image/png');
+            inkImg.setAttribute('href', dataUrl);
+            inkImg.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', dataUrl);
+            setInkMaskThreshold(-0.02);
+            inkBuiltW = w;
+            inkBuiltH = h;
+            inkReady = true;
+        }
+
+        function updateThemeToggleUI() {
+            const isDark = document.documentElement.classList.contains('dark');
+            const iconSun = document.getElementById('icon-sun');
+            const iconMoon = document.getElementById('icon-moon');
+            const label = document.getElementById('theme-toggle-label');
+            if (iconSun && iconMoon) {
+                iconSun.classList.toggle('hidden', !isDark);
+                iconMoon.classList.toggle('hidden', isDark);
+            }
+            if (label) {
+                label.textContent = isDark ? 'Terang' : 'Gelap';
+            }
+        }
+
+        function toggleThemeWithInk() {
+            if (isThemeAnimating) return;
+
+            const applyTheme = () => {
+                const isDark = document.documentElement.classList.toggle('dark');
+                localStorage.setItem('photobooth-theme', isDark ? 'dark' : 'light');
+                updateThemeToggleUI();
+            };
+
+            if (!document.startViewTransition) {
+                applyTheme();
+                return;
+            }
+
+            if (!inkReady || inkBuiltW !== window.innerWidth || inkBuiltH !== window.innerHeight) {
+                prepareInkHeightmap(Math.random() * 100);
+            }
+
+            if (!inkReady) {
+                applyTheme();
+                return;
+            }
+
+            isThemeAnimating = true;
+            setInkMaskThreshold(-0.02);
+
+            const transition = document.startViewTransition(() => {
+                applyTheme();
+            });
+
+            transition.ready.then(() => {
+                const startTime = performance.now();
+
+                function step(now) {
+                    const t = Math.min((now - startTime) / INK_ANIM_DURATION, 1);
+                    const eased = t * 0.45 + (t * t * (3 - 2 * t)) * 0.55;
+                    const threshold = -0.02 + eased * 1.06;
+
+                    setInkMaskThreshold(threshold);
+
+                    if (t < 1) {
+                        requestAnimationFrame(step);
+                    }
+                }
+
+                requestAnimationFrame(step);
+            });
+
+            transition.finished.finally(() => {
+                isThemeAnimating = false;
+                setTimeout(() => prepareInkHeightmap(Math.random() * 100), 80);
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            updateThemeToggleUI();
+            requestAnimationFrame(() => prepareInkHeightmap(Math.random() * 100));
+        });
+
+        window.addEventListener('resize', () => {
+            clearTimeout(inkResizeTimer);
+            inkResizeTimer = setTimeout(() => {
+                if (!isThemeAnimating) prepareInkHeightmap(Math.random() * 100);
+            }, 250);
+        });
+
         window.confirmIntegratedOptionsAndGoToPin = function() {
             if (typeof window.AppState !== 'undefined') {
                 const isValid = AppState.selectedStyle && AppState.selectedStyleOptions && AppState.selectedStyleOptions.length > 0;
@@ -435,7 +902,7 @@
         };
     </script>
 
-    <!-- PEMANGGILAN SCRIPT UTAMA KEMBALI NORMAL -->
+    <!-- PEMANGGILAN SCRIPT UTAMA -->
     <script src="js/app.js"></script>
     <script src="js/camera.js"></script>
 </body>
