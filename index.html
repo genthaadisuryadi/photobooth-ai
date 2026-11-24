@@ -50,6 +50,8 @@
         @keyframes welcome-gallery-up { from { transform: translate3d(0, 0, 0); } to { transform: translate3d(0, calc(-50% - 6px), 0); } }
         .welcome-gallery-reel { display: flex; flex-direction: column; gap: 16px; animation: welcome-gallery-up 34s linear infinite; }
         .welcome-gallery-lane:nth-child(2) .welcome-gallery-reel { animation-duration: 41s; animation-delay: -17s; }
+        /* Pause galeri bergerak saat transisi tema agar kartu foto 100% diam & mulus */
+        html.theme-transitioning .welcome-gallery-reel { animation-play-state: paused !important; }
         .proc-progress-fill { transition: width 0.3s ease-out; }
 
         /* QR Scanner & Mirror Fix */
@@ -871,32 +873,41 @@
             isThemeAnimating = true;
             setInkMaskThreshold(-0.02);
 
-            const transition = document.startViewTransition(() => {
-                applyTheme();
-            });
+            // Pause galeri & tunggu 2 frame agar posisi kartu terkunci identik sebelum snapshot
+            document.documentElement.classList.add('theme-transitioning');
 
-            transition.ready.then(() => {
-                const startTime = performance.now();
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    const transition = document.startViewTransition(() => {
+                        applyTheme();
+                    });
 
-                function step(now) {
-                    const t = Math.min((now - startTime) / INK_ANIM_DURATION, 1);
-                    // Kurva slow & steady: langsung keluar dari tombol tanpa jeda, mengalir pelan sampai tuntas
-                    const eased = t * 0.45 + (t * t * (3 - 2 * t)) * 0.55;
-                    const threshold = -0.02 + eased * 1.06;
+                    transition.ready.then(() => {
+                        const startTime = performance.now();
 
-                    setInkMaskThreshold(threshold);
+                        function step(now) {
+                            const t = Math.min((now - startTime) / INK_ANIM_DURATION, 1);
+                            // Kurva slow & steady: langsung keluar dari tombol tanpa jeda, mengalir pelan sampai tuntas
+                            const eased = t * 0.45 + (t * t * (3 - 2 * t)) * 0.55;
+                            const threshold = -0.02 + eased * 1.06;
 
-                    if (t < 1) {
+                            setInkMaskThreshold(threshold);
+
+                            if (t < 1) {
+                                requestAnimationFrame(step);
+                            }
+                        }
+
                         requestAnimationFrame(step);
-                    }
-                }
+                    });
 
-                requestAnimationFrame(step);
-            });
-
-            transition.finished.finally(() => {
-                isThemeAnimating = false;
-                setTimeout(() => prepareInkHeightmap(Math.random() * 100), 80);
+                    transition.finished.finally(() => {
+                        // Lanjutkan galeri mulus dari posisi terakhir tanpa loncat
+                        document.documentElement.classList.remove('theme-transitioning');
+                        isThemeAnimating = false;
+                        setTimeout(() => prepareInkHeightmap(Math.random() * 100), 80);
+                    });
+                });
             });
         }
 
