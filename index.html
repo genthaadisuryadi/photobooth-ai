@@ -221,6 +221,9 @@
         </defs>
     </svg>
 
+    <!-- Probe Large Viewport agar SVG mask tidak terpotong toolbar browser HP -->
+    <div id="viewport-lvh-probe" style="position:fixed;top:0;left:0;width:100lvw;height:100lvh;pointer-events:none;visibility:hidden;z-index:-1;" aria-hidden="true"></div>
+
     <!-- TOMBOL GLOBAL TOGGLE MODE TERANG / GELAP (UKURAN DIKUNCI TETAP) -->
     <button id="theme-toggle-btn" onclick="toggleThemeWithInk(event)" title="Ganti Mode Terang / Gelap"
         class="fixed top-6 right-5 sm:right-8 z-[100] inline-flex items-center justify-center gap-2 h-11 w-11 sm:w-[106px] rounded-full bg-white/90 backdrop-blur-md border border-slate-200 shadow-md hover:shadow-lg hover:scale-105 active:scale-95 transition-transform duration-150 text-xs font-bold text-slate-700">
@@ -585,7 +588,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous" defer></script>
 
-    <!-- ENGINE TRANSISI VENOM INK-BLEED 60 FPS (WEBGL RIDGED TENDRILS + CRISP LUMINANCE MASK) -->
+    <!-- ENGINE TRANSISI VENOM INK-BLEED 60 FPS (WEBGL RIDGED TENDRILS + MOBILE LVH FIX) -->
     <script>
         let isThemeAnimating = false;
         let inkGL = null;
@@ -594,9 +597,11 @@
         let inkReady = false;
         let inkBuiltW = 0;
         let inkBuiltH = 0;
+        let inkBuiltOx = 0;
+        let inkBuiltOy = 0;
         let inkResizeTimer = null;
 
-        const INK_SHARPNESS = 240;     // Tepi tinta super tajam tanpa kabut abu-abu
+        const INK_SHARPNESS = 240;      // Tepi tinta super tajam tanpa kabut abu-abu
         const INK_ANIM_DURATION = 2900; // ms (sinkron dengan 3.0s CSS, slow & smooth)
 
         function initInkWebGL() {
@@ -699,7 +704,7 @@
 
                     float venomField = clamp(inkWave * 0.46 + tendrils * 0.64 + droplets, 0.0, 1.0);
 
-                    // Remap agar selalu mulai bersih dari tombol (0.0) & habis tuntas di sudut terjauh (1.0)
+                    // Remap agar mulai bersih dari tombol (0.0) & habis tuntas di sudut terjauh (1.0)
                     float env = smoothstep(0.0, 0.10, dist);
                     float rawH = dist * 0.70 + (1.0 - venomField) * 0.44 * env;
                     float h = clamp(rawH / 1.14, 0.0, 1.0);
@@ -746,19 +751,41 @@
             }
         }
 
-        function prepareInkHeightmap(seed) {
-            const btn = document.getElementById('theme-toggle-btn');
-            const w = window.innerWidth;
-            const h = window.innerHeight;
-            let ox = 0.94, oy = 0.06;
+        function getMaskDimensions() {
+            const probe = document.getElementById('viewport-lvh-probe');
+            const pr = probe ? probe.getBoundingClientRect() : null;
+            const w = Math.max(
+                window.innerWidth,
+                document.documentElement.clientWidth,
+                pr ? Math.ceil(pr.width) : 0
+            );
+            const h = Math.max(
+                window.innerHeight,
+                document.documentElement.clientHeight,
+                pr ? Math.ceil(pr.height) : 0
+            ) + 160; // Buffer aman melewati toolbar atas & bawah browser HP
+            return { w, h };
+        }
 
+        function getToggleOrigin(maskW, maskH) {
+            const w = maskW || window.innerWidth;
+            const h = maskH || window.innerHeight;
+            const btn = document.getElementById('theme-toggle-btn');
             if (btn) {
                 const rect = btn.getBoundingClientRect();
                 if (rect.width > 0) {
-                    ox = (rect.left + rect.width / 2) / w;
-                    oy = (rect.top + rect.height / 2) / h;
+                    return {
+                        ox: (rect.left + rect.width / 2) / w,
+                        oy: (rect.top + rect.height / 2) / h
+                    };
                 }
             }
+            return { ox: 0.94, oy: 0.06 };
+        }
+
+        function prepareInkHeightmap(seed) {
+            const { w, h } = getMaskDimensions();
+            const { ox, oy } = getToggleOrigin(w, h);
 
             const inkMask = document.getElementById('ink-mask');
             const inkFilter = document.getElementById('ink-threshold');
@@ -795,6 +822,8 @@
             setInkMaskThreshold(-0.02);
             inkBuiltW = w;
             inkBuiltH = h;
+            inkBuiltOx = ox;
+            inkBuiltOy = oy;
             inkReady = true;
         }
 
@@ -826,7 +855,11 @@
                 return;
             }
 
-            if (!inkReady || inkBuiltW !== window.innerWidth || inkBuiltH !== window.innerHeight) {
+            const { w, h } = getMaskDimensions();
+            const { ox, oy } = getToggleOrigin(w, h);
+            const originMoved = Math.abs(ox - inkBuiltOx) > 0.03 || Math.abs(oy - inkBuiltOy) > 0.03;
+
+            if (!inkReady || inkBuiltW !== w || inkBuiltH !== h || originMoved) {
                 prepareInkHeightmap(Math.random() * 100);
             }
 
@@ -847,6 +880,7 @@
 
                 function step(now) {
                     const t = Math.min((now - startTime) / INK_ANIM_DURATION, 1);
+                    // Kurva slow & steady: langsung keluar dari tombol tanpa jeda, mengalir pelan sampai tuntas
                     const eased = t * 0.45 + (t * t * (3 - 2 * t)) * 0.55;
                     const threshold = -0.02 + eased * 1.06;
 
@@ -866,17 +900,22 @@
             });
         }
 
+        function scheduleInkRebuild() {
+            clearTimeout(inkResizeTimer);
+            inkResizeTimer = setTimeout(() => {
+                if (!isThemeAnimating) prepareInkHeightmap(Math.random() * 100);
+            }, 250);
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             updateThemeToggleUI();
             requestAnimationFrame(() => prepareInkHeightmap(Math.random() * 100));
         });
 
-        window.addEventListener('resize', () => {
-            clearTimeout(inkResizeTimer);
-            inkResizeTimer = setTimeout(() => {
-                if (!isThemeAnimating) prepareInkHeightmap(Math.random() * 100);
-            }, 250);
-        });
+        window.addEventListener('resize', scheduleInkRebuild);
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener('resize', scheduleInkRebuild);
+        }
 
         window.confirmIntegratedOptionsAndGoToPin = function() {
             if (typeof window.AppState !== 'undefined') {
